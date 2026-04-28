@@ -28,7 +28,8 @@ export default function NotificationsPage() {
 
   async function fetchNotifications() {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
     if (user) {
       const { data } = await supabase
         .from("notifications")

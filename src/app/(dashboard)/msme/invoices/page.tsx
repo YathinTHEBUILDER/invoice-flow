@@ -35,7 +35,8 @@ export default function InvoicesPage() {
 
   async function fetchInvoices() {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
     if (user) {
       const { data } = await supabase
         .from("invoices")

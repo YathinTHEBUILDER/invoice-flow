@@ -22,7 +22,8 @@ import { createClient } from "@/lib/server";
 
 export default async function LandingPage() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
   const role = user?.user_metadata?.role || "investor";
   return (
     <div className="flex flex-col w-full items-center bg-background selection:bg-blue-500/30 overflow-hidden font-sans">

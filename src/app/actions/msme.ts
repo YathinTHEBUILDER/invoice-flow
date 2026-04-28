@@ -5,7 +5,8 @@ import { revalidatePath } from "next/cache";
 
 export async function uploadInvoiceAction(formData: FormData) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
 
   if (!user) return { error: "Unauthorized" };
 
@@ -44,7 +45,8 @@ export async function uploadInvoiceAction(formData: FormData) {
 
 export async function updateKYCAction(formData: FormData) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
 
   if (!user) return { error: "Unauthorized" };
 
@@ -88,7 +90,8 @@ export async function updateKYCAction(formData: FormData) {
 
 export async function createSupportTicketAction(formData: FormData) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
 
   if (!user) return { error: "Unauthorized" };
 
@@ -118,16 +121,17 @@ export async function createSupportTicketAction(formData: FormData) {
 
 export async function getMSMEStats() {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
 
   if (!user) return null;
 
-  const { data: invoices } = await supabase
+  const { data: invoices, error: invoicesError } = await supabase
     .from("invoices")
     .select("*")
     .eq("msme_id", user.id);
 
-  if (!invoices) return null;
+  if (invoicesError || !invoices) return null;
 
   const totalSubmitted = invoices.length;
   const underReview = invoices.filter(i => i.status === "pending_verification").length;
@@ -140,8 +144,9 @@ export async function getMSMEStats() {
     .select("*, invoices!inner(*)")
     .eq("invoices.msme_id", user.id);
 
-  const pendingRepayments = repayments?.filter(r => r.status === "scheduled").length || 0;
-  const totalOutstanding = repayments?.filter(r => r.status === "scheduled").reduce((sum, r) => sum + Number(r.amount_due), 0) || 0;
+  const safeRepayments = repayments || [];
+  const pendingRepayments = safeRepayments.filter(r => r.status === "scheduled").length;
+  const totalOutstanding = safeRepayments.filter(r => r.status === "scheduled").reduce((sum, r) => sum + Number(r.amount_due), 0);
 
   return {
     totalSubmitted,

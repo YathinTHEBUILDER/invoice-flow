@@ -27,7 +27,8 @@ const updateProfileSchema = z.object({
 
 async function logAdminAction(action: string, entityType: string, entityId: string | null, details: any = {}) {
   const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
+  const { data } = await supabase.auth.getUser();
+  const user = data?.user;
   
   if (!user) return;
 
@@ -249,7 +250,8 @@ export const updateProfileAction = actionClient
   .schema(updateProfileSchema)
   .action(async ({ parsedInput: { fullName, companyName } }) => {
     const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data } = await supabase.auth.getUser();
+    const user = data?.user;
     
     if (!user) throw new Error("Not authenticated");
 

@@ -33,7 +33,8 @@ export default function SupportPage() {
 
   async function fetchTickets() {
     const supabase = createClient();
-    const { data: { user } } = await supabase.auth.getUser();
+    const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
     if (user) {
       const { data } = await supabase
         .from("support_tickets")
