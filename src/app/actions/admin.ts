@@ -2,7 +2,7 @@
 
 import { createNotification } from "./notifications";
 
-import { createClient } from "@/lib/server";
+import { createClient, createAdminClient } from "@/lib/server";
 import { revalidatePath } from "next/cache";
 import { actionClient } from "@/lib/safe-action";
 import { z } from "zod";
@@ -155,6 +155,8 @@ export async function getKYCQueue() {
 
   if (error) throw new Error(error.message);
 
+  const supabaseAdmin = await createAdminClient();
+
   // Generate signed URLs for private documents
   const enrichedData = await Promise.all((data || []).map(async (req) => {
     const enrichedDocs: Record<string, string> = {};
@@ -166,7 +168,7 @@ export async function getKYCQueue() {
           continue;
         }
         
-        const { data: signedData, error: signedError } = await supabase.storage
+        const { data: signedData, error: signedError } = await supabaseAdmin.storage
           .from('kyc-documents')
           .createSignedUrl(path, 3600); // 1 hour access
           

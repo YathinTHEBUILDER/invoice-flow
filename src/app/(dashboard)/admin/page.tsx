@@ -415,7 +415,7 @@ export default function AdminDashboard() {
                             <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity z-10">
                               <Search className="w-8 h-8 text-white" />
                             </div>
-                            {url.endsWith('.pdf') ? (
+                            {url.split('?')[0].toLowerCase().endsWith('.pdf') ? (
                               <div className="w-full h-full flex flex-col items-center justify-center space-y-3">
                                 <FileText className="w-12 h-12 text-primary/40" />
                                 <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">PDF Document</span>
