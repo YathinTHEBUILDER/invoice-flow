@@ -1,6 +1,6 @@
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, ArrowUpRight, Clock, CheckCircle2, History, AlertCircle } from "lucide-react";
+import { Plus, ArrowUpRight, Clock, CheckCircle2, History, AlertCircle, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 import { getMSMEStats } from "@/app/actions/msme";
 import { formatINR } from "@/lib/format";
