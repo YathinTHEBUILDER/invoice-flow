@@ -67,7 +67,10 @@ export async function middleware(request: NextRequest) {
   const isFlowPage = request.nextUrl.pathname.startsWith('/auth/reset-password') ||
                      request.nextUrl.pathname.startsWith('/auth/verify')
 
-  const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
+  const isDashboardRoute = request.nextUrl.pathname.startsWith('/admin') ||
+                           request.nextUrl.pathname.startsWith('/msme') ||
+                           request.nextUrl.pathname.startsWith('/investor')
+
   const isProtectedRoute = isDashboardRoute || 
                            request.nextUrl.pathname.startsWith('/settings') ||
                            request.nextUrl.pathname.startsWith('/profile')
@@ -81,18 +84,25 @@ export async function middleware(request: NextRequest) {
 
   // 2. If logged in and visiting auth pages or root, redirect to specific dashboard
   if (user && (isAuthPage || isRoot)) {
-    const dashboardPath = `/dashboard/${role || 'investor'}`
+    const dashboardPath = `/${role || 'investor'}`
     return NextResponse.redirect(new URL(dashboardPath, request.url))
   }
 
   // 3. Role-based access control for dashboards
   if (user && isDashboardRoute) {
-    const segments = request.nextUrl.pathname.split('/')
-    const targetRole = segments[2] // /dashboard/[role]/...
+    const currentPath = request.nextUrl.pathname
     
-    // If the user is trying to access a dashboard that doesn't match their role
-    if (targetRole && role && targetRole !== role) {
-      return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url))
+    // Check if the user is trying to access a route that doesn't match their role
+    if (role) {
+      if (currentPath.startsWith('/admin') && role !== 'admin') {
+        return NextResponse.redirect(new URL(`/${role}`, request.url))
+      }
+      if (currentPath.startsWith('/msme') && role !== 'msme') {
+        return NextResponse.redirect(new URL(`/${role}`, request.url))
+      }
+      if (currentPath.startsWith('/investor') && role !== 'investor') {
+        return NextResponse.redirect(new URL(`/${role}`, request.url))
+      }
     }
   }
 

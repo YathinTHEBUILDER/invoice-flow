@@ -1,15 +1,18 @@
 "use client";
 
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, Lock } from "lucide-react";
+import { Loader2, Lock, Eye, EyeOff } from "lucide-react";
 import { resetPasswordAction } from "@/app/actions/auth";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { useAction } from "next-safe-action/hooks";
 
 export function ResetPasswordForm() {
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const router = useRouter();
 
   const { execute, isPending, result } = useAction(resetPasswordAction, {
@@ -46,12 +49,23 @@ export function ResetPasswordForm() {
           <Input 
             id="password" 
             name="password" 
-            type="password" 
+            type={showPassword ? "text" : "password"} 
             placeholder="••••••••" 
             required 
-            className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium pl-10"
+            className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium pl-10 pr-10"
           />
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
         </div>
         {validationErrors?.password && (
           <p className="text-[10px] text-destructive font-bold uppercase tracking-tight ml-1">{validationErrors.password._errors?.[0]}</p>
@@ -64,12 +78,23 @@ export function ResetPasswordForm() {
           <Input 
             id="confirmPassword" 
             name="confirmPassword" 
-            type="password" 
+            type={showConfirmPassword ? "text" : "password"} 
             placeholder="••••••••" 
             required 
-            className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium pl-10"
+            className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium pl-10 pr-10"
           />
           <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <button
+            type="button"
+            onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showConfirmPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
         </div>
       </div>
 

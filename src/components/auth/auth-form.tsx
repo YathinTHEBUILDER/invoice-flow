@@ -4,7 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2 } from "lucide-react";
+import { Loader2, Eye, EyeOff } from "lucide-react";
 import { useAction } from "next-safe-action/hooks";
 
 interface AuthFormProps {
@@ -15,6 +15,7 @@ interface AuthFormProps {
 }
 
 export function AuthForm({ type, role, action, onSuccess }: AuthFormProps) {
+  const [showPassword, setShowPassword] = useState(false);
   const { execute, isPending, result } = useAction(action, {
     onSuccess: ({ data }) => {
       const resultData = data as any;
@@ -94,14 +95,27 @@ export function AuthForm({ type, role, action, onSuccess }: AuthFormProps) {
 
       <div className="space-y-2">
         <Label htmlFor="password" className="text-xs font-black uppercase tracking-widest text-muted-foreground ml-1">Password</Label>
-        <Input 
-          id="password" 
-          name="password" 
-          type="password" 
-          placeholder="••••••••" 
-          required 
-          className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium"
-        />
+        <div className="relative">
+          <Input 
+            id="password" 
+            name="password" 
+            type={showPassword ? "text" : "password"} 
+            placeholder="••••••••" 
+            required 
+            className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium pr-10"
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {showPassword ? (
+              <EyeOff className="w-4 h-4" />
+            ) : (
+              <Eye className="w-4 h-4" />
+            )}
+          </button>
+        </div>
         {validationErrors?.password && (
           <p className="text-[10px] text-destructive font-bold uppercase tracking-tight ml-1">{validationErrors.password._errors?.[0]}</p>
         )}
