@@ -10,12 +10,16 @@ export async function uploadInvoiceAction(formData: FormData) {
 
   if (!user) return { error: "Unauthorized" };
 
-  // Strict KYC Check
+  // Strict Role & KYC Check
   const { data: profile } = await supabase
     .from("profiles")
-    .select("kyc_status")
+    .select("kyc_status, role")
     .eq("id", user.id)
     .single();
+
+  if (profile?.role !== 'msme') {
+    return { error: "Only MSME accounts can upload invoices." };
+  }
 
   if (profile?.kyc_status !== 'verified') {
     return { error: "KYC approval required before uploading invoices." };
@@ -27,6 +31,18 @@ export async function uploadInvoiceAction(formData: FormData) {
   const buyerGstin = formData.get("buyer_gstin") as string;
   const dueDate = formData.get("due_date") as string;
   const tenureDays = parseInt(formData.get("tenure_days") as string);
+
+  // Check for duplicate invoice number
+  const { data: existing } = await supabase
+    .from("invoices")
+    .select("id")
+    .eq("msme_id", user.id)
+    .eq("invoice_number", invoiceNumber)
+    .maybeSingle();
+
+  if (existing) {
+    return { error: `Invoice number ${invoiceNumber} has already been uploaded.` };
+  }
 
   const { data, error } = await supabase
     .from("invoices")
@@ -178,6 +194,29 @@ export async function getMSMEStats() {
     pendingRepayments,
     totalOutstanding,
     kycStatus: profile?.kyc_status || 'not_started',
-    kycNotes: profile?.kyc_notes
+    kycNotes: profile?.kyc_notes,
+    userRole: profile?.role
   };
+}
+
+export async function getRecentMSMEInvoices(limit = 5) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("msme_id", user.id)
+    .order("created_at", { ascending: false })
+    .limit(limit);
+
+  if (error) {
+    console.error("Recent invoices fetch error:", error);
+    return [];
+  }
+
+  return data;
 }

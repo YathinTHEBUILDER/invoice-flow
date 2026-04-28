@@ -21,6 +21,7 @@ import { formatINR } from "@/lib/format";
 export default function RepaymentsPage() {
   const [repayments, setRepayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showBankDetails, setShowBankDetails] = useState(false);
 
   useEffect(() => {
     fetchRepayments();
@@ -188,7 +189,10 @@ export default function RepaymentsPage() {
               </div>
 
               <div className="pt-6 border-t border-white/5">
-                <Button className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] border border-white/10">
+                <Button 
+                  onClick={() => setShowBankDetails(true)}
+                  className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] border border-white/10"
+                >
                   <ExternalLink className="mr-2 h-4 w-4" /> View Bank Details
                 </Button>
               </div>
@@ -208,6 +212,56 @@ export default function RepaymentsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Bank Details Modal */}
+      {showBankDetails && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowBankDetails(false)} />
+          <Card className="relative w-full max-w-md glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+            <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between">
+              <div>
+                <CardTitle className="text-2xl font-black italic">Settlement Account</CardTitle>
+                <CardDescription className="text-muted-foreground font-medium">NEFT / RTGS Transfer Details</CardDescription>
+              </div>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={() => setShowBankDetails(false)}
+                className="hover:bg-white/5"
+              >
+                <Clock className="w-5 h-5 rotate-45" />
+              </Button>
+            </CardHeader>
+            <CardContent className="p-8 space-y-6">
+              <div className="space-y-4">
+                {[
+                  { label: "Account Name", value: "INVOICE FLOW TECHNOLOGIES PVT LTD" },
+                  { label: "Account Number", value: "923020054812934" },
+                  { label: "Bank Name", value: "AXIS BANK LTD" },
+                  { label: "IFSC Code", value: "UTIB0000001" },
+                  { label: "Account Type", value: "CURRENT" },
+                ].map((item, i) => (
+                  <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
+                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{item.label}</span>
+                    <span className="text-xs font-black text-white">{item.value}</span>
+                  </div>
+                ))}
+              </div>
+              <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
+                <p className="text-[10px] text-muted-foreground font-bold leading-relaxed italic text-center">
+                  Please mention your Invoice ID in the transaction remarks for faster settlement processing.
+                </p>
+              </div>
+              <Button 
+                onClick={() => setShowBankDetails(false)}
+                className="w-full h-12 bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px]"
+              >
+                Done
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

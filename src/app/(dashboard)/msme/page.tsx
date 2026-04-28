@@ -6,7 +6,10 @@ import { getMSMEStats } from "@/app/actions/msme";
 import { formatINR } from "@/lib/format";
 
 export default async function MsmeDashboard() {
-  const stats = await getMSMEStats();
+  const [stats, recentInvoices] = await Promise.all([
+    getMSMEStats(),
+    getRecentMSMEInvoices(3)
+  ]);
 
   if (!stats) {
     return (
@@ -24,15 +27,21 @@ export default async function MsmeDashboard() {
           <h2 className="text-5xl font-black tracking-tighter text-white">Dashboard</h2>
           <p className="text-muted-foreground font-medium text-lg italic">Operational overview of your invoice financing activity.</p>
         </div>
-        <Link href={stats.kycStatus === 'verified' ? "/msme/invoices" : "/msme/kyc"}>
-          <Button 
-            disabled={stats.kycStatus !== 'verified'}
-            className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 disabled:opacity-50"
-          >
-            <Plus className="mr-2 h-5 w-5" /> 
-            {stats.kycStatus === 'verified' ? "Raise New Funding" : "Verify KYC to Start"}
-          </Button>
-        </Link>
+        <div className="flex gap-4">
+          <Link href="/msme/support">
+            <Button variant="outline" className="h-14 px-6 border-white/10 text-white font-black uppercase tracking-widest text-[10px]">
+              Support
+            </Button>
+          </Link>
+          <Link href={stats.kycStatus === 'verified' ? "/msme/invoices" : "/msme/kyc"}>
+            <Button 
+              className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20"
+            >
+              <Plus className="mr-2 h-5 w-5" /> 
+              {stats.kycStatus === 'verified' ? "Raise New Funding" : "Verify KYC to Start"}
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {stats.kycStatus !== 'verified' && (
@@ -92,58 +101,115 @@ export default async function MsmeDashboard() {
             </Link>
           </CardHeader>
           <CardContent className="p-0">
-            <div className="text-center py-32 space-y-6">
-              <div className="mx-auto w-20 h-20 rounded-3xl bg-white/[0.02] flex items-center justify-center border border-white/10 group-hover:rotate-12 transition-transform">
-                <Plus className="w-10 h-10 text-white/20" />
+            {recentInvoices.length === 0 ? (
+              <div className="text-center py-32 space-y-6">
+                <div className="mx-auto w-20 h-20 rounded-3xl bg-white/[0.02] flex items-center justify-center border border-white/10 group-hover:rotate-12 transition-transform">
+                  <Plus className="w-10 h-10 text-white/20" />
+                </div>
+                <div className="space-y-2">
+                  <p className="text-white font-black text-xl italic">No Active Operations</p>
+                  <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">Upload an invoice to start your financing request and unlock liquidity.</p>
+                </div>
+                <Link href="/msme/invoices">
+                  <Button variant="outline" className="h-12 px-10 border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-[10px]">Initialize First Request</Button>
+                </Link>
               </div>
-              <div className="space-y-2">
-                <p className="text-white font-black text-xl italic">No Active Operations</p>
-                <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">Upload an invoice to start your financing request and unlock liquidity.</p>
+            ) : (
+              <div className="divide-y divide-white/5">
+                {recentInvoices.map((invoice) => (
+                  <div key={invoice.id} className="p-6 flex items-center justify-between hover:bg-white/[0.01] transition-colors">
+                    <div className="flex items-center gap-4">
+                      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-muted-foreground">
+                        <ArrowUpRight className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <p className="text-sm font-black text-white">{invoice.invoice_number}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{invoice.buyer_name}</p>
+                      </div>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm font-black text-white">{formatINR(invoice.amount)}</p>
+                      <Badge variant="outline" className="text-[8px] font-black uppercase mt-1">
+                        {invoice.status.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                  </div>
+                ))}
               </div>
-              <Link href="/msme/invoices">
-                <Button variant="outline" className="h-12 px-10 border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-[10px]">Initialize First Request</Button>
+            )}
+          </CardContent>
+        </Card>
+
+        <div className="space-y-8">
+          <Card className="glass-dark border-white/5 overflow-hidden h-fit">
+            <CardHeader className="p-8 border-b border-white/5">
+              <CardTitle className="text-2xl font-black italic">Financial Summary</CardTitle>
+              <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">Snapshot of your liquidity</p>
+            </CardHeader>
+            <CardContent className="p-8 space-y-8">
+              <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                  <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Platform Limit</span>
+                  <span className="text-sm font-black text-white">
+                    {stats.kycStatus === 'verified' ? "₹ 50,00,000" : "KYC Pending"}
+                  </span>
+                </div>
+                <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-primary transition-all duration-1000" 
+                    style={{ width: stats.kycStatus === 'verified' ? '40%' : '0%' }} 
+                  />
+                </div>
+                <p className="text-[10px] text-muted-foreground font-bold leading-relaxed">
+                  {stats.kycStatus === 'verified' 
+                    ? "Your current utilization is at 40% of the maximum allowed limit for your business profile."
+                    : "Complete KYC to receive your initial platform credit limit and start raising capital."
+                  }
+                </p>
+              </div>
+
+              <div className="pt-6 border-t border-white/5 space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-orange-500">Immediate Dues</span>
+                  <span className="text-sm font-black text-white">{formatINR(stats.totalOutstanding)}</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Processing Fee</span>
+                  <span className="text-sm font-black text-white">1.0% Fixed</span>
+                </div>
+              </div>
+
+              <Link href="/msme/repayments" className="block">
+                <Button className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] border border-white/10">
+                  Manage Repayments
+                </Button>
               </Link>
-            </div>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
 
-        <Card className="glass-dark border-white/5 overflow-hidden">
-          <CardHeader className="p-8 border-b border-white/5">
-            <CardTitle className="text-2xl font-black italic">Financial Summary</CardTitle>
-            <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">Snapshot of your liquidity</p>
-          </CardHeader>
-          <CardContent className="p-8 space-y-8">
-            <div className="space-y-6">
-              <div className="flex justify-between items-center">
-                <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Available Limits</span>
-                <span className="text-sm font-black text-white">Manual Review Required</span>
-              </div>
-              <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                <div className="h-full bg-primary w-0" />
-              </div>
-              <p className="text-[10px] text-muted-foreground font-bold leading-relaxed">
-                Your financing limits are determined manually based on your KYC documents and business history. Please ensure your <Link href="/msme/kyc" className="text-primary hover:underline">KYC is verified</Link> for higher limits.
-              </p>
-            </div>
-
-            <div className="pt-6 border-t border-white/5 space-y-4">
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider text-orange-500">Immediate Dues</span>
-                <span className="text-sm font-black text-white">{formatINR(stats.totalOutstanding)}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs font-bold text-muted-foreground uppercase tracking-wider">Processing Fee</span>
-                <span className="text-sm font-black text-white">1.0% Fixed</span>
-              </div>
-            </div>
-
-            <Link href="/msme/repayments" className="block">
-              <Button className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] border border-white/10">
-                Manage Repayments
-              </Button>
-            </Link>
-          </CardContent>
-        </Card>
+          <Card className="glass-dark border-white/5 overflow-hidden">
+            <CardHeader className="p-8 border-b border-white/5">
+              <CardTitle className="text-xl font-black italic">Quick Actions</CardTitle>
+            </CardHeader>
+            <CardContent className="p-4 space-y-2">
+              <Link href="/msme/invoices">
+                <Button variant="ghost" className="w-full justify-start text-[10px] font-black uppercase tracking-widest hover:bg-white/5">
+                  <Plus className="mr-2 h-4 w-4" /> New Invoice
+                </Button>
+              </Link>
+              <Link href="/msme/support">
+                <Button variant="ghost" className="w-full justify-start text-[10px] font-black uppercase tracking-widest hover:bg-white/5">
+                  <AlertCircle className="mr-2 h-4 w-4" /> Open Ticket
+                </Button>
+              </Link>
+              <Link href="/profile">
+                <Button variant="ghost" className="w-full justify-start text-[10px] font-black uppercase tracking-widest hover:bg-white/5">
+                  <Users className="mr-2 h-4 w-4" /> Profile
+                </Button>
+              </Link>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     </div>
   );

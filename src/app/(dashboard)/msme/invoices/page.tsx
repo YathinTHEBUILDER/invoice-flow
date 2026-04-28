@@ -25,9 +25,12 @@ import { toast } from "sonner";
 
 export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([]);
+  const [filteredInvoices, setFilteredInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
     fetchInvoices();
@@ -46,6 +49,7 @@ export default function InvoicesPage() {
         .eq("msme_id", user.id)
         .order("created_at", { ascending: false });
       setInvoices(invoicesData || []);
+      setFilteredInvoices(invoicesData || []);
 
       const { data: profileData } = await supabase
         .from("profiles")
@@ -56,6 +60,23 @@ export default function InvoicesPage() {
     }
     setLoading(false);
   }
+
+  useEffect(() => {
+    let result = invoices;
+    
+    if (searchQuery) {
+      result = result.filter(inv => 
+        inv.invoice_number.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        inv.buyer_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+
+    if (statusFilter !== "all") {
+      result = result.filter(inv => inv.status === statusFilter);
+    }
+
+    setFilteredInvoices(result);
+  }, [searchQuery, statusFilter, invoices]);
 
   const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -119,12 +140,34 @@ export default function InvoicesPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input 
                   placeholder="Search by invoice number or buyer..." 
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 w-[350px] bg-white/5 border-white/10 h-11 font-bold text-xs"
                 />
               </div>
-              <Button variant="outline" className="h-11 border-white/10 text-white font-black uppercase tracking-widest text-[9px]">
-                <Filter className="w-3.5 h-3.5 mr-2" /> Filter
-              </Button>
+              <div className="flex items-center gap-2">
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStatusFilter("all")}
+                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[9px] ${statusFilter === 'all' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
+                >
+                  All
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStatusFilter("pending_verification")}
+                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[9px] ${statusFilter === 'pending_verification' ? 'bg-blue-500/20 border-blue-500/40 text-blue-500' : 'text-white'}`}
+                >
+                  Review
+                </Button>
+                <Button 
+                  variant="outline" 
+                  onClick={() => setStatusFilter("funded")}
+                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[9px] ${statusFilter === 'funded' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
+                >
+                  Funded
+                </Button>
+              </div>
             </div>
             <div className="text-right">
               <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Invoices</p>
@@ -167,7 +210,7 @@ export default function InvoicesPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
-                    {invoices.map((invoice) => (
+                    {filteredInvoices.map((invoice) => (
                       <tr key={invoice.id} className="hover:bg-white/[0.02] transition-colors group">
                         <td className="px-8 py-6">
                           <div className="flex items-center gap-4">
