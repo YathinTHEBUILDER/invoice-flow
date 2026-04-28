@@ -8,14 +8,14 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Input } from "@/components/ui/input";
-import { 
-  Users, 
-  TrendingUp, 
-  CheckCircle2, 
-  XCircle, 
-  IndianRupee, 
-  Settings, 
-  History, 
+import {
+  Users,
+  TrendingUp,
+  CheckCircle2,
+  XCircle,
+  IndianRupee,
+  Settings,
+  History,
   Search,
   Gavel,
   Loader2,
@@ -25,10 +25,10 @@ import {
   FileText
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
-import { 
-  getAdminStats, 
-  getKYCQueue, 
-  getInvoices, 
+import {
+  getAdminStats,
+  getKYCQueue,
+  getInvoices,
   approveKYCAction,
   rejectKYCAction,
   getPlatformSettings,
@@ -43,7 +43,7 @@ export default function AdminDashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
   const tabParam = searchParams.get("tab") || "overview";
-  
+
   const [activeTab, setActiveTab] = useState(tabParam);
   const [stats, setStats] = useState<any>(null);
   const [kycQueue, setKycQueue] = useState<any[]>([]);
@@ -65,9 +65,9 @@ export default function AdminDashboard() {
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
-      
+
       const userRole = user?.app_metadata?.role || user?.user_metadata?.role;
-      
+
       if (!user || userRole !== 'admin') {
         toast.error("Access Denied: Administrative authority required.");
         router.push("/");
@@ -171,8 +171,8 @@ export default function AdminDashboard() {
             Manual administrative control and oversight for the InvoiceFlow liquidity ecosystem.
           </p>
         </div>
-        <Button 
-          variant="outline" 
+        <Button
+          variant="outline"
           onClick={loadData}
           className="glass border-white/5 font-black uppercase tracking-widest text-[10px] h-12 px-6 hover:bg-white/5"
         >
@@ -186,14 +186,14 @@ export default function AdminDashboard() {
             <TabsList className="bg-white/5 p-1 h-14 border border-white/5 inline-flex w-max md:w-full justify-start md:justify-center">
               <TabsTrigger value="overview" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Overview</TabsTrigger>
               <TabsTrigger value="kyc" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
-                Compliance 
+                Compliance
                 {stats.pendingKYC > 0 && (
                   <Badge className="ml-2 bg-primary text-white border-none px-2 h-4 text-[10px] font-black">{stats.pendingKYC}</Badge>
                 )}
               </TabsTrigger>
               <TabsTrigger value="invoices" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Assets</TabsTrigger>
               <TabsTrigger value="disputes" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
-                Conflicts 
+                Conflicts
                 {stats.disputes > 0 && (
                   <Badge className="ml-2 bg-red-500 text-white border-none px-2 h-4 text-[10px] font-black">{stats.disputes}</Badge>
                 )}
@@ -263,7 +263,7 @@ export default function AdminDashboard() {
                 </CardHeader>
                 <CardContent className="p-6 space-y-4">
                   {stats.pendingKYC > 0 && (
-                    <div 
+                    <div
                       onClick={() => router.push("/admin?tab=kyc")}
                       className="flex gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10 hover:border-primary/30 transition-all cursor-pointer group"
                     >
@@ -275,7 +275,7 @@ export default function AdminDashboard() {
                     </div>
                   )}
                   {stats.disputes > 0 && (
-                    <div 
+                    <div
                       onClick={() => router.push("/admin?tab=disputes")}
                       className="flex gap-4 p-4 rounded-xl bg-red-500/5 border border-red-500/10 hover:border-red-500/30 transition-all cursor-pointer group"
                     >
@@ -294,7 +294,7 @@ export default function AdminDashboard() {
                   )}
                 </CardContent>
               </Card>
-              
+
 
             </div>
           </div>
@@ -305,8 +305,8 @@ export default function AdminDashboard() {
           {selectedRequest ? (
             <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
               <div className="flex items-center justify-between">
-                <Button 
-                  variant="ghost" 
+                <Button
+                  variant="ghost"
                   onClick={() => setSelectedRequest(null)}
                   className="font-black uppercase tracking-widest text-[10px] hover:bg-white/5"
                 >
@@ -330,9 +330,9 @@ export default function AdminDashboard() {
                       {Object.entries(selectedRequest.documents || {}).filter(([key]) => key !== 'selfie').map(([key, url]: [string, any]) => (
                         <div key={key} className="space-y-4">
                           <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">{key.replace('_', ' ')}</label>
-                          <a 
-                            href={url} 
-                            target="_blank" 
+                          <a
+                            href={url}
+                            target="_blank"
                             rel="noopener noreferrer"
                             className="group relative block aspect-video rounded-2xl border border-white/10 bg-white/5 overflow-hidden hover:border-primary/30 transition-all shadow-2xl"
                           >
@@ -340,12 +340,12 @@ export default function AdminDashboard() {
                               <Search className="w-8 h-8 text-white" />
                             </div>
                             {url.endsWith('.pdf') ? (
-                                <div className="w-full h-full flex flex-col items-center justify-center space-y-3">
-                                  <FileText className="w-12 h-12 text-primary/40" />
-                                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">PDF Document</span>
-                                </div>
+                              <div className="w-full h-full flex flex-col items-center justify-center space-y-3">
+                                <FileText className="w-12 h-12 text-primary/40" />
+                                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">PDF Document</span>
+                              </div>
                             ) : (
-                                <img src={url} alt={key} className="w-full h-full object-cover" />
+                              <img src={url} alt={key} className="w-full h-full object-cover" />
                             )}
                           </a>
                         </div>
@@ -360,15 +360,15 @@ export default function AdminDashboard() {
                     <CardContent className="p-8 space-y-8">
                       <div className="space-y-4">
                         <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Rejection Remarks (Required if rejecting)</label>
-                        <Input 
-                          placeholder="Provide detailed feedback for the MSME..." 
+                        <Input
+                          placeholder="Provide detailed feedback for the MSME..."
                           value={rejectionNotes}
                           onChange={(e) => setRejectionNotes(e.target.value)}
                           className="bg-white/5 border-white/10 h-16 font-bold focus:bg-white/10 transition-all"
                         />
                       </div>
                       <div className="flex gap-6">
-                        <Button 
+                        <Button
                           className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-emerald-500/20"
                           onClick={() => handleKYCUpdate(selectedRequest.id, "approved", selectedRequest.user_id)}
                           disabled={actionLoading === selectedRequest.id}
@@ -376,7 +376,7 @@ export default function AdminDashboard() {
                           {actionLoading === selectedRequest.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
                           Confirm Clearance
                         </Button>
-                        <Button 
+                        <Button
                           variant="destructive"
                           className="flex-1 h-14 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-red-500/20"
                           onClick={() => handleKYCUpdate(selectedRequest.id, "rejected", selectedRequest.user_id)}
@@ -489,16 +489,16 @@ export default function AdminDashboard() {
                             </td>
                             <td className="px-8 py-8">
                               <Badge className={
-                                req.status === "approved" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
-                                req.status === "pending" ? "bg-primary/10 text-primary border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
-                                "bg-orange-500/10 text-orange-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
+                                req.status === "approved" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" :
+                                  req.status === "pending" ? "bg-primary/10 text-primary border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" :
+                                    "bg-orange-500/10 text-orange-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
                               }>
                                 {req.status}
                               </Badge>
                             </td>
                             <td className="px-8 py-8 text-right">
-                              <Button 
-                                size="sm" 
+                              <Button
+                                size="sm"
                                 className="h-10 px-6 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[9px] border border-white/10 opacity-0 group-hover:opacity-100 transition-all shadow-xl"
                                 onClick={() => setSelectedRequest(req)}
                               >
@@ -514,9 +514,7 @@ export default function AdminDashboard() {
               </CardContent>
             </Card>
           )}
-        </TabsContent>
-
-        {/* --- INVOICES TAB --- */}
+        </TabsContent>        {/* --- INVOICES TAB --- */}
         <TabsContent value="invoices" className="focus-visible:outline-none">
           <Card className="glass-dark border-white/5">
             <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
@@ -524,7 +522,6 @@ export default function AdminDashboard() {
                 <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Asset Monitoring</CardTitle>
                 <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Active Invoice Debt Instruments</CardDescription>
               </div>
-
             </CardHeader>
             <CardContent className="p-0">
               <div className="overflow-x-auto">
@@ -535,7 +532,7 @@ export default function AdminDashboard() {
                       <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Issuer (MSME)</th>
                       <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Face Value</th>
                       <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
-
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -559,13 +556,41 @@ export default function AdminDashboard() {
                           <td className="px-8 py-8">
                             <Badge className={
                               inv.status === "funded" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
-                              inv.status === "active" ? "bg-primary/10 text-primary border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
+                              inv.status === "approved" ? "bg-primary/10 text-primary border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
+                              inv.status === "pending_verification" ? "bg-blue-500/10 text-blue-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" :
                               "bg-white/5 text-muted-foreground border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
                             }>
-                              {inv.status}
+                              {inv.status.replace('_', ' ')}
                             </Badge>
                           </td>
-
+                          <td className="px-8 py-8 text-right">
+                            {inv.status === "pending_verification" && (
+                              <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleInvoiceUpdate(inv.id, "approved")}
+                                  disabled={actionLoading === inv.id}
+                                  className="h-8 bg-emerald-500 hover:bg-emerald-600 text-[8px] font-black uppercase"
+                                >
+                                  Approve
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  onClick={() => {
+                                    const reason = prompt("Enter rejection reason:");
+                                    if (reason) {
+                                      setRejectionNotes(reason);
+                                      handleInvoiceUpdate(inv.id, "rejected");
+                                    }
+                                  }}
+                                  className="h-8 text-[8px] font-black uppercase"
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -592,7 +617,7 @@ export default function AdminDashboard() {
                       <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Raised By</th>
                       <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Subject</th>
                       <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
-
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -622,11 +647,27 @@ export default function AdminDashboard() {
                             </div>
                           </td>
                           <td className="px-8 py-8">
-                            <Badge className="bg-red-500/10 text-red-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]">
+                            <Badge className={`border-none px-3 py-1 font-black uppercase tracking-widest text-[9px] ${dispute.status === 'resolved' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
                               {dispute.status}
                             </Badge>
                           </td>
-
+                          <td className="px-8 py-8 text-right">
+                            {dispute.status !== 'resolved' && (
+                              <Button 
+                                size="sm" 
+                                onClick={() => {
+                                  const res = prompt("Enter resolution details:");
+                                  if (res) {
+                                    setResolutionNotes(res);
+                                    handleResolveDispute(dispute.id);
+                                  }
+                                }}
+                                className="h-8 bg-white/5 border border-white/10 text-[8px] font-black uppercase hover:bg-white/10 opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                Mediate
+                              </Button>
+                            )}
+                          </td>
                         </tr>
                       ))
                     )}
@@ -719,8 +760,8 @@ export default function AdminDashboard() {
                       <Badge className="bg-primary/10 text-primary border-none text-[10px] font-black">{settings.platform_commission || "1.0"}%</Badge>
                     </div>
                     <div className="flex gap-4">
-                      <Input 
-                        type="number" 
+                      <Input
+                        type="number"
                         defaultValue={settings.platform_commission}
                         step="0.1"
                         className="bg-white/5 border-white/10 h-12 font-black text-white text-lg focus:bg-white/10 transition-all"
@@ -735,8 +776,8 @@ export default function AdminDashboard() {
                       <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Preclosure Penalty (%)</label>
                       <Badge className="bg-orange-500/10 text-orange-400 border-none text-[10px] font-black">{settings.preclosure_penalty || "2.5"}%</Badge>
                     </div>
-                    <Input 
-                      type="number" 
+                    <Input
+                      type="number"
                       defaultValue={settings.preclosure_penalty}
                       step="0.1"
                       className="bg-white/5 border-white/10 h-12 font-black text-white text-lg focus:bg-white/10 transition-all"

@@ -73,11 +73,11 @@ export async function getAdminStats() {
   await ensureAdmin();
   const supabase = await createClient();
 
-  // 1. Calculate GMV (Sum of all active/funded invoices)
+  // 1. Calculate GMV (Sum of all active/funded/repaid invoices)
   const { data: invoices } = await supabase
     .from('invoices')
     .select('amount, status')
-    .in('status', ['active', 'funded', 'repaid']);
+    .in('status', ['approved', 'funded', 'repaid']);
   
   const gmv = invoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
   
@@ -102,11 +102,11 @@ export async function getAdminStats() {
     .select('*', { count: 'exact', head: true })
     .eq('role', 'investor');
 
-  // 4. Active Invoices
+  // 4. Active Assets (Approved & Funded)
   const { count: activeInvoices } = await supabase
     .from('invoices')
     .select('*', { count: 'exact', head: true })
-    .eq('status', 'active');
+    .in('status', ['approved', 'funded']);
 
   // 5. Pending KYC
   const { count: pendingKYC } = await supabase
@@ -389,5 +389,88 @@ export const updateProfileAction = actionClient
     });
 
     revalidatePath("/profile");
+    return { success: true };
+  });
+
+/**
+ * Approve Invoice Action
+ */
+export const approveInvoiceAction = actionClient
+  .schema(z.object({ invoiceId: z.string().uuid() }))
+  .action(async ({ parsedInput: { invoiceId } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    const { error } = await supabase
+      .from('invoices')
+      .update({ 
+        status: 'approved', 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', invoiceId);
+
+    if (error) throw new Error(error.message);
+    
+    await logAdminAction('approve_invoice', 'invoice', invoiceId, { status: 'approved' });
+    
+    revalidatePath("/admin");
+    return { success: true };
+  });
+
+/**
+ * Reject Invoice Action
+ */
+export const rejectInvoiceAction = actionClient
+  .schema(z.object({ 
+    invoiceId: z.string().uuid(), 
+    notes: z.string().min(5, "Reason required") 
+  }))
+  .action(async ({ parsedInput: { invoiceId, notes } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    const { error } = await supabase
+      .from('invoices')
+      .update({ 
+        status: 'rejected', 
+        admin_notes: notes,
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', invoiceId);
+
+    if (error) throw new Error(error.message);
+    
+    await logAdminAction('reject_invoice', 'invoice', invoiceId, { status: 'rejected', notes });
+    
+    revalidatePath("/admin");
+    return { success: true };
+  });
+
+/**
+ * Resolve Dispute Action
+ */
+export const resolveDisputeAction = actionClient
+  .schema(z.object({ 
+    disputeId: z.string().uuid(),
+    resolution: z.string().min(10, "Detail required")
+  }))
+  .action(async ({ parsedInput: { disputeId, resolution } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    const { error } = await supabase
+      .from('disputes')
+      .update({ 
+        status: 'resolved', 
+        resolution,
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', disputeId);
+
+    if (error) throw new Error(error.message);
+    
+    await logAdminAction('resolve_dispute', 'dispute', disputeId, { resolution });
+    
+    revalidatePath("/admin");
     return { success: true };
   });
