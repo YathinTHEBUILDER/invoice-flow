@@ -6,16 +6,39 @@ import { Button } from "@/components/ui/button";
 import { Activity, Users, FileText, AlertTriangle, TrendingUp, DollarSign } from "lucide-react";
 
 export default async function AdminDashboard() {
-  // Real-time Platform Analytics
-  const [totalInvoices] = await db.select({ value: count() }).from(invoices);
-  const [pendingKyc] = await db.select({ value: count() }).from(kycDocuments).where(eq(kycDocuments.status, "pending"));
-  const [activeInvestors] = await db.select({ value: count() }).from(users).where(eq(users.role, "investor"));
-  
-  const totalFunding = await db.select({ sum: sql<string>`sum(${fundingRequests.requestedAmount})` }).from(fundingRequests).where(eq(fundingRequests.status, "filled"));
-  const totalRepaid = await db.select({ sum: sql<string>`sum(${repayments.amount})` }).from(repayments).where(eq(repayments.status, "completed"));
+  let stats;
+  try {
+    const [
+      totalInvoicesResult,
+      pendingKycResult,
+      activeInvestorsResult,
+      totalFundingResult,
+      totalRepaidResult
+    ] = await Promise.all([
+      db.select({ value: count() }).from(invoices),
+      db.select({ value: count() }).from(kycDocuments).where(eq(kycDocuments.status, "pending")),
+      db.select({ value: count() }).from(users).where(eq(users.role, "investor")),
+      db.select({ sum: sql<string>`sum(${fundingRequests.requestedAmount})` }).from(fundingRequests).where(eq(fundingRequests.status, "filled")),
+      db.select({ sum: sql<string>`sum(${repayments.amount})` }).from(repayments).where(eq(repayments.status, "completed"))
+    ]);
 
-  const liquidityValue = parseFloat(totalFunding[0]?.sum || "0");
-  const repaidValue = parseFloat(totalRepaid[0]?.sum || "0");
+    stats = {
+      totalInvoices: totalInvoicesResult[0]?.value || 0,
+      pendingKyc: pendingKycResult[0]?.value || 0,
+      activeInvestors: activeInvestorsResult[0]?.value || 0,
+      liquidityValue: parseFloat(totalFundingResult[0]?.sum || "0"),
+      repaidValue: parseFloat(totalRepaidResult[0]?.sum || "0")
+    };
+  } catch (error) {
+    console.error("Admin Dashboard data fetch error:", error);
+    stats = {
+      totalInvoices: 0,
+      pendingKyc: 0,
+      activeInvestors: 0,
+      liquidityValue: 0,
+      repaidValue: 0
+    };
+  }
 
   return (
     <div className="flex-1 space-y-6">
@@ -34,7 +57,7 @@ export default async function AdminDashboard() {
             <DollarSign className="h-4 w-4 text-primary" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">₹{(liquidityValue / 100000).toFixed(1)}L</div>
+            <div className="text-2xl font-bold">₹{(stats.liquidityValue / 100000).toFixed(1)}L</div>
             <p className="text-xs text-muted-foreground">Across all funded invoices</p>
           </CardContent>
         </Card>
@@ -44,7 +67,7 @@ export default async function AdminDashboard() {
             <Users className="h-4 w-4 text-amber-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-amber-600">{pendingKyc.value}</div>
+            <div className="text-2xl font-bold text-amber-600">{stats.pendingKyc}</div>
             <p className="text-xs text-muted-foreground">Applications awaiting review</p>
           </CardContent>
         </Card>
@@ -54,7 +77,7 @@ export default async function AdminDashboard() {
             <TrendingUp className="h-4 w-4 text-emerald-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold text-emerald-600">{activeInvestors.value}</div>
+            <div className="text-2xl font-bold text-emerald-600">{stats.activeInvestors}</div>
             <p className="text-xs text-muted-foreground">Institutional & individual</p>
           </CardContent>
         </Card>
@@ -64,7 +87,7 @@ export default async function AdminDashboard() {
             <Activity className="h-4 w-4 text-destructive" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{liquidityValue > 0 ? ((repaidValue / liquidityValue) * 100).toFixed(1) : 100}%</div>
+            <div className="text-2xl font-bold">{stats.liquidityValue > 0 ? ((stats.repaidValue / stats.liquidityValue) * 100).toFixed(1) : 100}%</div>
             <p className="text-xs text-muted-foreground">Platform health metric</p>
           </CardContent>
         </Card>
@@ -82,7 +105,7 @@ export default async function AdminDashboard() {
                      <FileText className="h-5 w-5 text-primary" />
                      <span className="font-medium">Total Managed Invoices</span>
                   </div>
-                  <span className="font-bold">{totalInvoices.value}</span>
+                  <span className="font-bold">{stats.totalInvoices}</span>
                </div>
                <div className="flex items-center justify-between p-4 bg-muted/50 rounded-xl">
                   <div className="flex items-center gap-3">

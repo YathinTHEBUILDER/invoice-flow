@@ -5,9 +5,13 @@ export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
 }
 
-export function formatCurrency(amount: number | string) {
+export function formatCurrency(amount: number | string | null | undefined) {
+  const val = amount === null || amount === undefined ? 0 : Number(amount);
+  if (isNaN(val)) return "₹0.00";
+  
   return new Intl.NumberFormat("en-IN", {
     style: "currency",
     currency: "INR",
-  }).format(Number(amount));
+    maximumFractionDigits: 0,
+  }).format(val);
 }

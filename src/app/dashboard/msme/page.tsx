@@ -15,18 +15,30 @@ export default async function MSMEDashboard() {
 
   if (!user) return null;
 
-  const analytics = await getMSMEAnalytics(user.id);
-  const recentActivity = await db.query.activityLogs.findMany({
-    where: eq(activityLogs.userId, user.id),
-    orderBy: [desc(activityLogs.createdAt)],
-    limit: 5,
-  });
-
-  const userRecord = await db.query.users.findFirst({
-    where: eq(users.id, user.id)
-  });
+  let analytics, recentActivity, userRecord;
+  try {
+    [analytics, recentActivity, userRecord] = await Promise.all([
+      getMSMEAnalytics(user.id),
+      db.query.activityLogs.findMany({
+        where: eq(activityLogs.userId, user.id),
+        orderBy: [desc(activityLogs.createdAt)],
+        limit: 5,
+      }),
+      db.query.users.findFirst({
+        where: eq(users.id, user.id)
+      })
+    ]);
+  } catch (error) {
+    console.error("MSME Dashboard data fetch error:", error);
+  }
 
   const kycStatus = userRecord?.kycStatus || "pending";
+  const safeAnalytics = {
+    totalFunded: analytics?.totalFunded || "0.00",
+    activeInvoices: analytics?.activeInvoices || 0,
+    repaidSuccessfully: analytics?.repaidSuccessfully || 0,
+    pendingRepayments: analytics?.pendingRepayments || "0.00",
+  };
 
   return (
     <div className="flex-1 space-y-8 p-2">
@@ -57,7 +69,7 @@ export default async function MSMEDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-primary">₹{analytics?.totalFunded || "0.00"}</div>
+            <div className="text-3xl font-bold text-primary">{formatCurrency(safeAnalytics.totalFunded)}</div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center">
               <ArrowUpRight className="h-3 w-3 mr-1 text-emerald-500" />
               Lifetime liquidity unlocked
@@ -73,7 +85,7 @@ export default async function MSMEDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{analytics?.activeInvoices || 0}</div>
+            <div className="text-3xl font-bold">{safeAnalytics.activeInvoices}</div>
             <p className="text-xs text-muted-foreground mt-1">Currently on marketplace</p>
           </CardContent>
         </Card>
@@ -86,7 +98,7 @@ export default async function MSMEDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{analytics?.repaidSuccessfully || 0}</div>
+            <div className="text-3xl font-bold">{safeAnalytics.repaidSuccessfully}</div>
             <p className="text-xs text-muted-foreground mt-1 text-emerald-600">Completed obligations</p>
           </CardContent>
         </Card>
@@ -99,7 +111,7 @@ export default async function MSMEDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-amber-600">₹{analytics?.pendingRepayments || "0.00"}</div>
+            <div className="text-3xl font-bold text-amber-600">{formatCurrency(safeAnalytics.pendingRepayments)}</div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center">
               <AlertCircle className="h-3 w-3 mr-1 text-amber-500" />
               Due in next 30 days
@@ -117,7 +129,7 @@ export default async function MSMEDashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            {recentActivity.length > 0 ? (
+            {recentActivity && recentActivity.length > 0 ? (
               <div className="space-y-6">
                 {recentActivity.map((activity) => (
                   <div key={activity.id} className="flex items-start gap-4">

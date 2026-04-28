@@ -50,25 +50,16 @@ export default async function InvestorDashboard() {
         .limit(3)
     ]);
   } catch (error: any) {
-    console.error("Dashboard data fetch error:", error);
-    return (
-      <div className="flex h-screen items-center justify-center bg-background p-4 text-center">
-        <div className="max-w-md space-y-4">
-          <h1 className="text-2xl font-bold text-destructive">Dashboard Error</h1>
-          <p className="text-muted-foreground">We encountered an issue while loading your data.</p>
-          <div className="rounded-md bg-muted p-4 text-left font-mono text-xs">
-            {error.message || "Unknown error"}
-          </div>
-          <a 
-            href="/dashboard/investor"
-            className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
-          >
-            Try Again
-          </a>
-        </div>
-      </div>
-    );
+    console.error("Investor Dashboard data fetch error:", error);
   }
+
+  const safeAnalytics = {
+    totalInvested: analytics?.totalInvested || 0,
+    activeInvestments: analytics?.activeInvestments || 0,
+    walletBalance: analytics?.walletBalance || 0,
+    expectedReturns: analytics?.expectedReturns || 0,
+    kycStatus: analytics?.kycStatus || "pending",
+  };
 
   return (
     <div className="flex-1 space-y-8 p-2">
@@ -81,7 +72,7 @@ export default async function InvestorDashboard() {
           <Button variant="outline" asChild className="shadow-sm">
             <Link href="/dashboard/investor/wallet">
               <Wallet className="mr-2 h-4 w-4" />
-              Wallet: {formatCurrency(analytics?.walletBalance || 0)}
+              Wallet: {formatCurrency(safeAnalytics.walletBalance)}
             </Link>
           </Button>
           <Button asChild className="bg-primary shadow-lg shadow-primary/20 transition-all hover:translate-y-[-1px]">
@@ -93,7 +84,7 @@ export default async function InvestorDashboard() {
         </div>
       </div>
 
-      {analytics?.kycStatus !== 'approved' && (
+      {safeAnalytics.kycStatus !== 'approved' && (
         <Card className="border-none bg-amber-500/10 text-amber-900 shadow-sm overflow-hidden">
           <div className="p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
@@ -121,10 +112,10 @@ export default async function InvestorDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(analytics?.totalInvested || 0)}</div>
+            <div className="text-3xl font-bold">{formatCurrency(safeAnalytics.totalInvested)}</div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center">
               <CheckCircle2 className="h-3 w-3 mr-1 text-emerald-500" />
-              {analytics?.activeInvestments} Active Positions
+              {safeAnalytics.activeInvestments} Active Positions
             </p>
           </CardContent>
         </Card>
@@ -137,7 +128,7 @@ export default async function InvestorDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-emerald-600">{formatCurrency(analytics?.expectedReturns || 0)}</div>
+            <div className="text-3xl font-bold text-emerald-600">{formatCurrency(safeAnalytics.expectedReturns)}</div>
             <p className="text-xs text-muted-foreground mt-1 flex items-center">
               <ArrowUpRight className="h-3 w-3 mr-1 text-emerald-500" />
               ~12.4% Average Yield
@@ -184,7 +175,7 @@ export default async function InvestorDashboard() {
             </Button>
           </CardHeader>
           <CardContent>
-            {activeInvestments.length > 0 ? (
+            {activeInvestments && activeInvestments.length > 0 ? (
               <div className="space-y-6">
                 {activeInvestments.map((inv) => (
                   <div key={inv.id} className="flex items-center justify-between p-4 rounded-xl border border-muted-foreground/10 bg-muted/5 group hover:bg-muted/10 transition-colors">
@@ -227,7 +218,7 @@ export default async function InvestorDashboard() {
             <CardDescription>Global platform events relevant to you.</CardDescription>
           </CardHeader>
           <CardContent>
-            {recentActivity.length > 0 ? (
+            {recentActivity && recentActivity.length > 0 ? (
               <div className="space-y-6">
                 {recentActivity.map((log) => (
                   <div key={log.id} className="flex gap-4">
