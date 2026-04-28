@@ -32,11 +32,25 @@ export function NavAuth({ initialUser }: { initialUser: User | null }) {
     await signOutAction();
   };
 
+  const role = user?.user_metadata?.role || "investor";
+
   if (user) {
     return (
-      <Button variant="ghost" onClick={handleSignOut} className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
-        Logout
-      </Button>
+      <div className="flex items-center gap-6">
+        <Link 
+          href={`/dashboard/${role}`} 
+          className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all"
+        >
+          Dashboard
+        </Link>
+        <Button 
+          variant="ghost" 
+          onClick={handleSignOut} 
+          className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-red-400 transition-all px-0"
+        >
+          Logout
+        </Button>
+      </div>
     );
   }
 

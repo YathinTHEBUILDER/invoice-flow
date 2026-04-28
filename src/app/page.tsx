@@ -17,8 +17,12 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
+import { createClient } from "@/lib/server";
 
-export default function LandingPage() {
+export default async function LandingPage() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const role = user?.user_metadata?.role || "investor";
   return (
     <div className="flex flex-col w-full items-center bg-background selection:bg-blue-500/30 overflow-hidden font-sans">
       
@@ -49,16 +53,26 @@ export default function LandingPage() {
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 w-full sm:w-auto">
-            <Button size="lg" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
-              <Link href="/signup?role=msme">
-                Get Funded Now
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto border-white/10 glass-dark hover:bg-white/10 transition-all hover:scale-[1.05] active:scale-[0.95]">
-              <Link href="/get-started">
-                Investor Access <ArrowRight className="ml-2 h-5 w-5" />
-              </Link>
-            </Button>
+            {user ? (
+              <Button size="lg" asChild className="h-16 px-12 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
+                <Link href={`/dashboard/${role}`}>
+                  Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
+                  <Link href="/signup?role=msme">
+                    Get Funded Now
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto border-white/10 glass-dark hover:bg-white/10 transition-all hover:scale-[1.05] active:scale-[0.95]">
+                  <Link href="/get-started">
+                    Investor Access <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
 
           {/* Stats Bar */}
@@ -257,16 +271,26 @@ export default function LandingPage() {
           </div>
           
           <div className="flex flex-col sm:flex-row justify-center gap-6 pt-4">
-            <Button size="lg" asChild className="h-16 px-12 bg-foreground text-background hover:bg-foreground/90 transition-all hover:scale-105 active:scale-95 shadow-2xl text-lg font-black tracking-tight">
-              <Link href="/signup">
-                Create Account
-              </Link>
-            </Button>
-            <Button size="lg" variant="outline" asChild className="h-16 px-12 glass border-white/10 hover:bg-white/10 transition-all hover:scale-105 active:scale-95 text-lg font-black tracking-tight">
-              <Link href="/transparency">
-                Learn More
-              </Link>
-            </Button>
+            {user ? (
+              <Button size="lg" asChild className="h-16 px-12 bg-primary text-primary-foreground hover:bg-primary/90 transition-all hover:scale-105 active:scale-95 shadow-2xl text-lg font-black tracking-tight">
+                <Link href={`/dashboard/${role}`}>
+                  Open Dashboard
+                </Link>
+              </Button>
+            ) : (
+              <>
+                <Button size="lg" asChild className="h-16 px-12 bg-foreground text-background hover:bg-foreground/90 transition-all hover:scale-105 active:scale-95 shadow-2xl text-lg font-black tracking-tight">
+                  <Link href="/signup">
+                    Create Account
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="h-16 px-12 glass border-white/10 hover:bg-white/10 transition-all hover:scale-105 active:scale-95 text-lg font-black tracking-tight">
+                  <Link href="/transparency">
+                    Learn More
+                  </Link>
+                </Button>
+              </>
+            )}
           </div>
         </div>
       </section>

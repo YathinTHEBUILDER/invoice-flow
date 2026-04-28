@@ -56,6 +56,8 @@ export async function middleware(request: NextRequest) {
 
   const { data: { user } } = await supabase.auth.getUser()
 
+  const role = user?.user_metadata?.role
+
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
                      request.nextUrl.pathname.startsWith('/signup') || 
                      request.nextUrl.pathname.startsWith('/get-started') ||
@@ -65,16 +67,33 @@ export async function middleware(request: NextRequest) {
   const isFlowPage = request.nextUrl.pathname.startsWith('/auth/reset-password') ||
                      request.nextUrl.pathname.startsWith('/auth/verify')
 
-  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
+  const isDashboardRoute = request.nextUrl.pathname.startsWith('/dashboard')
+  const isProtectedRoute = isDashboardRoute || 
                            request.nextUrl.pathname.startsWith('/settings') ||
                            request.nextUrl.pathname.startsWith('/profile')
 
+  const isRoot = request.nextUrl.pathname === '/'
+
+  // 1. If trying to access protected route without user, redirect to login
   if (isProtectedRoute && !user) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  if (isAuthPage && user) {
-    return NextResponse.redirect(new URL('/', request.url))
+  // 2. If logged in and visiting auth pages or root, redirect to specific dashboard
+  if (user && (isAuthPage || isRoot)) {
+    const dashboardPath = `/dashboard/${role || 'investor'}`
+    return NextResponse.redirect(new URL(dashboardPath, request.url))
+  }
+
+  // 3. Role-based access control for dashboards
+  if (user && isDashboardRoute) {
+    const segments = request.nextUrl.pathname.split('/')
+    const targetRole = segments[2] // /dashboard/[role]/...
+    
+    // If the user is trying to access a dashboard that doesn't match their role
+    if (targetRole && role && targetRole !== role) {
+      return NextResponse.redirect(new URL(`/dashboard/${role}`, request.url))
+    }
   }
 
   return response
