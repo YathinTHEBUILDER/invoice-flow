@@ -54,51 +54,7 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  const { data: { user } } = await supabase.auth.getUser()
-
-  const url = new URL(request.nextUrl.href)
-  const isDashboard = url.pathname.startsWith('/dashboard')
-  const isLoginPage = url.pathname === '/login'
-  const isRegisterPage = url.pathname.startsWith('/register')
-  const isVerifyPage = url.pathname === '/verify'
-  const isAuthCallback = url.pathname === '/auth/callback'
-
-  // 1. If no user and trying to access dashboard, redirect to login
-  if (!user && isDashboard) {
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // 2. If user exists, handle verification and role-based redirection
-  if (user) {
-    const isEmailVerified = !!user.email_confirmed_at
-    const role = user.app_metadata?.role || user.user_metadata?.role
-    
-    // Redirect unverified users to verification page if trying to access dashboard
-    if (isDashboard && !isEmailVerified && !isVerifyPage) {
-      return NextResponse.redirect(new URL('/verify', request.url))
-    }
-
-    // Redirect logged-in and verified users away from auth/verify pages
-    if (isLoginPage || isRegisterPage || (isVerifyPage && isEmailVerified)) {
-      if (role === 'admin') return NextResponse.redirect(new URL('/dashboard/admin', request.url))
-      if (role === 'investor') return NextResponse.redirect(new URL('/dashboard/investor', request.url))
-      if (role === 'msme') return NextResponse.redirect(new URL('/dashboard/msme', request.url))
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-
-    // Role-based route protection
-    if (isDashboard) {
-      if (url.pathname.startsWith('/dashboard/admin') && role !== 'admin') {
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-      if (url.pathname.startsWith('/dashboard/investor') && role !== 'investor') {
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-      if (url.pathname.startsWith('/dashboard/msme') && role !== 'msme') {
-        return NextResponse.redirect(new URL('/unauthorized', request.url))
-      }
-    }
-  }
+  await supabase.auth.getUser()
 
   return response
 }

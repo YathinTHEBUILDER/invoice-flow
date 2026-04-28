@@ -36,12 +36,12 @@ export default function LandingPage() {
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full sm:w-auto">
             <Button size="lg" asChild className="h-14 px-8 text-base font-semibold w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98]">
-              <Link href="/register/msme">
+              <Link href="#">
                 Get Funded Today
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="h-14 px-8 text-base font-semibold w-full sm:w-auto border-border/60 hover:bg-muted/50 transition-all hover:scale-[1.02] active:scale-[0.98]">
-              <Link href="/register/investor">
+              <Link href="#">
                 Investor Portal <ArrowRight className="ml-2 h-4 w-4" />
               </Link>
             </Button>
@@ -204,7 +204,7 @@ export default function LandingPage() {
           </p>
           <div className="flex justify-center gap-4 pt-4">
             <Button size="lg" asChild className="h-14 px-10 bg-foreground text-background hover:bg-foreground/90 transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xl text-base font-semibold">
-              <Link href="/register">
+              <Link href="#">
                 Create Your Account
               </Link>
             </Button>
@@ -226,9 +226,9 @@ export default function LandingPage() {
             <div>
               <h4 className="font-semibold mb-6 text-foreground">Platform</h4>
               <ul className="space-y-4 text-sm text-muted-foreground">
-                <li><Link href="/register/msme" className="hover:text-blue-500 transition-colors">For MSMEs</Link></li>
-                <li><Link href="/register/investor" className="hover:text-blue-500 transition-colors">For Investors</Link></li>
-                <li><Link href="/login" className="hover:text-blue-500 transition-colors">Login to Portal</Link></li>
+                <li><Link href="#" className="hover:text-blue-500 transition-colors">For MSMEs</Link></li>
+                <li><Link href="#" className="hover:text-blue-500 transition-colors">For Investors</Link></li>
+                <li><Link href="#" className="hover:text-blue-500 transition-colors">Login to Portal</Link></li>
               </ul>
             </div>
             <div>

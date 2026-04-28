@@ -34,17 +34,9 @@ export function NavAuth({ initialUser }: { initialUser: User | null }) {
 
   if (user) {
     return (
-      <>
-        <Link href="/dashboard" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-          Dashboard
-        </Link>
-        <Link href="/dashboard/profile" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
-          Profile
-        </Link>
-        <Button variant="ghost" onClick={handleSignOut} className="text-sm font-medium text-muted-foreground hover:text-foreground">
-          Logout
-        </Button>
-      </>
+      <Button variant="ghost" onClick={handleSignOut} className="text-sm font-medium text-muted-foreground hover:text-foreground">
+        Logout
+      </Button>
     );
   }
 
