@@ -62,7 +62,7 @@ export async function updateKYCAction(formData: FormData) {
       pan,
       bank_account_no: bankAccountNo,
       ifsc_code: ifscCode,
-      company_address,
+      company_address: companyAddress,
       kyc_status: "pending"
     })
     .eq("id", user.id);
