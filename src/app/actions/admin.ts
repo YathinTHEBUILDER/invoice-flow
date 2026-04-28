@@ -11,7 +11,7 @@ import { z } from "zod";
 
 const updateKYCSchema = z.object({
   requestId: z.string().uuid(),
-  status: z.enum(["pending", "approved", "rejected", "under_review"]),
+  status: z.enum(["pending", "verified", "rejected", "under_review"]),
   notes: z.string().optional(),
 });
 
@@ -300,7 +300,7 @@ export const approveKYCAction = actionClient
     // 2. Update KYC Request status
     const { error: kycError } = await supabase
       .from('kyc_requests')
-      .update({ status: 'approved', updated_at: new Date().toISOString() })
+      .update({ status: 'verified', updated_at: new Date().toISOString() })
       .eq('id', requestId);
 
     if (kycError) throw new Error(kycError.message);
