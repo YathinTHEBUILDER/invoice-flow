@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, timestamp, pgEnum, numeric, boolean } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, timestamp, pgEnum, numeric, boolean, unique } from "drizzle-orm/pg-core";
 import { relations } from "drizzle-orm";
 
 // ----------------------------------------------------------------------
@@ -47,7 +47,9 @@ export const kycDocuments = pgTable("kyc_documents", {
   verifiedAt: timestamp("verified_at"),
   rejectionReason: text("rejection_reason"),
   createdAt: timestamp("created_at").defaultNow().notNull(),
-});
+}, (t) => ({
+  unq: unique().on(t.userId, t.documentType),
+}));
 
 export const invoices = pgTable("invoices", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -63,7 +65,9 @@ export const invoices = pgTable("invoices", {
     .defaultNow()
     .notNull()
     .$onUpdate(() => new Date()),
-});
+}, (t) => ({
+  unq: unique().on(t.msmeId, t.invoiceNumber),
+}));
 
 export const fundingRequests = pgTable("funding_requests", {
   id: uuid("id").primaryKey().defaultRandom(),

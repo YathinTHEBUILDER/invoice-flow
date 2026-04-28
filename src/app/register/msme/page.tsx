@@ -37,7 +37,16 @@ export default function MSMERegistrationPage() {
       toast.success("Account created! Verification code dispatched.");
       setStep("verify");
     } else {
-      toast.error(result?.data?.error || "Registration failed.");
+      if (result?.data?.exists) {
+        toast.error(result?.data?.error, {
+          action: {
+            label: "Login Instead",
+            onClick: () => router.push("/login"),
+          },
+        });
+      } else {
+        toast.error(result?.data?.error || "Registration failed.");
+      }
     }
     setLoading(false);
   };

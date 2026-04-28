@@ -58,8 +58,25 @@ export const signUpAction = actionClient
     try {
       const supabase = await createClient();
       
+      // 1. Strict Duplicate Check: Check if user already exists in public.users
+      // We check this first to provide a friendly "Account exists" message instead of a generic signup error
+      const { data: existingUser, error: checkError } = await supabase
+        .from("users")
+        .select("id, role")
+        .eq("email", email.toLowerCase())
+        .single();
+
+      if (existingUser) {
+        return { 
+          success: false, 
+          error: "An account with this email already exists. Please login instead.",
+          exists: true 
+        };
+      }
+
+      // 2. Perform Signup
       const { data, error } = await supabase.auth.signUp({
-        email,
+        email: email.toLowerCase(),
         password,
         options: {
           emailRedirectTo: `${APP_URL}/auth/callback`,
@@ -71,11 +88,21 @@ export const signUpAction = actionClient
         },
       });
 
-      if (error) return { success: false, error: error.message };
+      if (error) {
+        // If Supabase returns an error that email is already registered (even if check above missed it somehow)
+        if (error.message.toLowerCase().includes("already registered") || error.message.toLowerCase().includes("unique constraint")) {
+          return { 
+            success: false, 
+            error: "An account with this email already exists. Please login instead.",
+            exists: true 
+          };
+        }
+        return { success: false, error: error.message };
+      }
       
       return { 
         success: true, 
-        message: "Signup successful. A verification code has been sent to your email.",
+        message: "Signup initiated. A verification code has been sent to your email.",
       };
     } catch (error: any) {
       return { success: false, error: error.message || "An unexpected error occurred" };
@@ -109,22 +136,34 @@ export const signInAction = actionClient
       const supabase = await createClient();
       
       const { data, error } = await supabase.auth.signInWithPassword({
-        email,
+        email: email.toLowerCase(),
         password,
       });
 
       if (error) {
         if (error.message.includes("Email not confirmed")) {
-          return { success: false, error: "Please verify your email before signing in.", needsVerification: true };
+          return { 
+            success: false, 
+            error: "Email not verified. Please check your inbox or resend the verification code.", 
+            needsVerification: true,
+            email: email.toLowerCase()
+          };
+        }
+        if (error.message.includes("Invalid login credentials")) {
+          return { success: false, error: "Invalid email or password. Please try again." };
         }
         return { success: false, error: error.message };
       }
 
-      // Check if email is confirmed (extra safety)
+      // Check if email is confirmed (extra safety for session management)
       if (data.user && !data.user.email_confirmed_at) {
-        // Sign out if not confirmed to prevent partial sessions
         await supabase.auth.signOut();
-        return { success: false, error: "Please verify your email before signing in.", needsVerification: true };
+        return { 
+          success: false, 
+          error: "Email not verified. Please verify your email to continue.", 
+          needsVerification: true,
+          email: email.toLowerCase()
+        };
       }
 
       return { success: true, message: "Signed in successfully" };
