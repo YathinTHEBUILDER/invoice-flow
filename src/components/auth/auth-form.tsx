@@ -17,10 +17,11 @@ interface AuthFormProps {
 export function AuthForm({ type, role, action, onSuccess }: AuthFormProps) {
   const { execute, isPending, result } = useAction(action, {
     onSuccess: ({ data }) => {
-      if (data?.unverified) {
-        onSuccess?.({ unverified: true, email: data.email });
+      const resultData = data as any;
+      if (resultData?.unverified) {
+        onSuccess?.({ unverified: true, email: resultData.email });
       } else {
-        onSuccess?.(data);
+        onSuccess?.(resultData);
       }
     },
   });
@@ -33,8 +34,8 @@ export function AuthForm({ type, role, action, onSuccess }: AuthFormProps) {
     execute(data);
   };
 
-  const serverError = result.serverError;
-  const validationErrors = result.validationErrors;
+  const serverError = result.serverError as any;
+  const validationErrors = result.validationErrors as any;
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6 w-full max-w-sm">
