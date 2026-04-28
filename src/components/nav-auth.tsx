@@ -6,6 +6,7 @@ import { createClient } from "@/lib/client";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { User } from "@supabase/supabase-js";
+import { signOutAction } from "@/app/actions/auth";
 
 export function NavAuth({ initialUser }: { initialUser: User | null }) {
   const [user, setUser] = useState<User | null>(initialUser);
@@ -28,8 +29,7 @@ export function NavAuth({ initialUser }: { initialUser: User | null }) {
   }, [supabase, router]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push("/");
+    await signOutAction();
   };
 
   if (user) {
@@ -46,7 +46,7 @@ export function NavAuth({ initialUser }: { initialUser: User | null }) {
         Login
       </Link>
       <Button asChild className="hidden md:inline-flex h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all hover:scale-105 active:scale-95">
-        <Link href="/register">
+        <Link href="/get-started">
           Get Started
         </Link>
       </Button>

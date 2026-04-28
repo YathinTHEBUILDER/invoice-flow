@@ -36,7 +36,7 @@ export default function LandingPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
             </span>
-            <span className="tracking-wide uppercase">Institutional-Grade Invoice Factoring</span>
+            <span className="tracking-wide uppercase">Asset-Backed Invoice Factoring</span>
           </div>
           
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter max-w-6xl text-balance leading-[0.9] text-gradient">
@@ -45,17 +45,17 @@ export default function LandingPage() {
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground/80 max-w-3xl mx-auto text-balance leading-relaxed font-medium">
-            The high-performance marketplace where verified MSMEs access reliable capital, and institutional investors discover secure, asset-backed yields.
+            The high-performance marketplace where verified MSMEs access liquidity with a fixed 1% platform fee, and individual investors discover secure, asset-backed yields.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 w-full sm:w-auto">
             <Button size="lg" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
-              <Link href="#">
+              <Link href="/signup?role=msme">
                 Get Funded Now
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto border-white/10 glass-dark hover:bg-white/10 transition-all hover:scale-[1.05] active:scale-[0.95]">
-              <Link href="#">
+              <Link href="/get-started">
                 Investor Access <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
@@ -64,10 +64,10 @@ export default function LandingPage() {
           {/* Stats Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 pt-20 w-full max-w-5xl">
             {[
-              { label: "Total GMV", value: "Rs. 1,200 Cr+", icon: Globe },
-              { label: "Active MSMEs", value: "5,000+", icon: Users },
-              { label: "Avg. Yield", value: "12-14%", icon: Activity },
-              { label: "Success Rate", value: "99.9%", icon: ShieldCheck },
+              { label: "Target Yields", value: "12-15% ARR", icon: Activity },
+              { label: "Platform Fee", value: "Fixed 1%", icon: LineChart },
+              { label: "Asset-Backed", value: "100% Verified", icon: ShieldCheck },
+              { label: "Origin", value: "Mysuru, KA", icon: Globe },
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center space-y-2 group">
                 <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
@@ -87,8 +87,8 @@ export default function LandingPage() {
         <div className="max-w-7xl mx-auto px-4 md:px-8">
           <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
             <div className="space-y-4 max-w-2xl text-left">
-              <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-none">Built for <br />Enterprises.</h2>
-              <p className="text-lg md:text-xl text-muted-foreground font-medium">Professional infrastructure designed to handle high-volume invoice factoring with complete transparency.</p>
+              <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-none">Built for <br />MSMEs.</h2>
+              <p className="text-lg md:text-xl text-muted-foreground font-medium">Professional infrastructure designed to provide reliable liquidity with complete transparency and a fixed 1% fee.</p>
             </div>
             <div className="flex gap-4">
               <div className="glass-dark p-4 rounded-2xl border-white/5">
@@ -103,23 +103,23 @@ export default function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: "Bank-Grade Security",
-                desc: "End-to-end encryption and multi-sig wallet infrastructure for institutional peace of mind.",
-                icon: Lock,
+                title: "Fixed 1% Fee",
+                desc: "Transparent and predictable pricing. No hidden charges—we charge a flat 1% platform fee for every invoice funded.",
+                icon: LineChart,
                 color: "text-blue-500",
                 bg: "bg-blue-500/10"
               },
               {
-                title: "Verified Ecosystem",
-                desc: "Rigorous KYC/AML framework ensuring every participant on the marketplace is fully vetted.",
+                title: "MSME Verification",
+                desc: "Every MSME on our platform undergoes a multi-step verification process to ensure asset integrity and stability.",
                 icon: Shield,
                 color: "text-indigo-500",
                 bg: "bg-indigo-500/10"
               },
               {
-                title: "Real-Time Settlements",
-                desc: "Automated routing and instant capital deployment driven by our proprietary risk engine.",
-                icon: Zap,
+                title: "Targeted Yields",
+                desc: "Individual investors access asset-backed opportunities with projected annualized returns between 12% and 15%.",
+                icon: Activity,
                 color: "text-emerald-500",
                 bg: "bg-emerald-500/10"
               }
@@ -134,9 +134,9 @@ export default function LandingPage() {
                     <h3 className="text-2xl font-black tracking-tight">{pillar.title}</h3>
                     <p className="text-muted-foreground leading-relaxed font-medium">{pillar.desc}</p>
                   </div>
-                  <div className="pt-4 flex items-center text-sm font-bold text-primary group-hover:gap-2 transition-all">
+                  <Link href="/transparency" className="pt-4 flex items-center text-sm font-bold text-primary group-hover:gap-2 transition-all">
                     Learn more <ArrowRight className="ml-1 w-4 h-4" />
-                  </div>
+                  </Link>
                 </CardContent>
               </Card>
             ))}
@@ -152,15 +152,15 @@ export default function LandingPage() {
               <div className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">The Engine</div>
               <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.95]">Precision <br />Capital Flow.</h2>
               <p className="text-xl text-muted-foreground font-medium max-w-lg">
-                Our platform automates the entire invoice lifecycle, from risk assessment to institutional settlement.
+                Our platform automates the entire invoice lifecycle, from risk assessment to secure settlement.
               </p>
             </div>
 
             <div className="space-y-10 relative">
               {[
-                { step: "01", title: "Smart Ingestion", desc: "MSMEs upload invoices; our AI verifies integrity instantly." },
-                { step: "02", title: "Risk Stratification", desc: "Corporate buyer credit profiles are analyzed in real-time." },
-                { step: "03", title: "Fractional Funding", desc: "Institutional investors deploy capital into verified assets." }
+                { step: "01", title: "Smart Ingestion", desc: "MSMEs upload invoices; our system verifies document integrity." },
+                { step: "02", title: "Risk Assessment", desc: "Corporate buyer credit profiles are evaluated for marketplace stability." },
+                { step: "03", title: "Funding", desc: "Individual investors deploy capital into verified, asset-backed invoices." }
               ].map((item, i) => (
                 <div key={i} className="flex gap-6 group">
                   <div className="text-4xl font-black text-primary/20 group-hover:text-primary transition-colors duration-500 leading-none">{item.step}</div>
@@ -198,8 +198,8 @@ export default function LandingPage() {
                 
                 <div className="space-y-4">
                   <div className="flex justify-between text-xs font-black uppercase tracking-widest text-muted-foreground">
-                    <span>Platform Utilization</span>
-                    <span className="text-emerald-500">84.2%</span>
+                    <span>Marketplace Activity</span>
+                    <span className="text-emerald-500">Live</span>
                   </div>
                   <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden p-1 border border-white/5">
                     <div className="h-full bg-gradient-to-r from-primary to-blue-400 w-[84%] rounded-full relative shadow-[0_0_20px_rgba(59,130,246,0.5)]">
@@ -210,8 +210,8 @@ export default function LandingPage() {
 
                 <div className="grid gap-4">
                   {[
-                    { id: "INV-2025-092", buyer: "Global Logistics Ltd.", amount: "Rs. 24.5 L", tenure: "45 Days", yield: "12.5%" },
-                    { id: "INV-2025-104", buyer: "Tech Solutions Corp.", amount: "Rs. 8.2 L", tenure: "60 Days", yield: "13.2%" }
+                    { id: "SAMPLE-092", buyer: "Logistics Partner A", amount: "Rs. 24.5 L", tenure: "45 Days", yield: "12.5%" },
+                    { id: "SAMPLE-104", buyer: "Tech Vendor B", amount: "Rs. 8.2 L", tenure: "60 Days", yield: "13.2%" }
                   ].map((inv, i) => (
                     <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-white/5 glass-dark hover:border-primary/30 transition-all gap-4">
                       <div className="flex items-center gap-4">
@@ -250,7 +250,7 @@ export default function LandingPage() {
           </div>
           
           <div className="space-y-6">
-            <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">Ready for institutional <br />liquidity?</h2>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">Ready for premium <br />liquidity?</h2>
             <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
               Join the elite marketplace building the future of transparent, asset-backed supply chain financing.
             </p>
@@ -258,13 +258,13 @@ export default function LandingPage() {
           
           <div className="flex flex-col sm:flex-row justify-center gap-6 pt-4">
             <Button size="lg" asChild className="h-16 px-12 bg-foreground text-background hover:bg-foreground/90 transition-all hover:scale-105 active:scale-95 shadow-2xl text-lg font-black tracking-tight">
-              <Link href="#">
+              <Link href="/signup">
                 Create Account
               </Link>
             </Button>
             <Button size="lg" variant="outline" asChild className="h-16 px-12 glass border-white/10 hover:bg-white/10 transition-all hover:scale-105 active:scale-95 text-lg font-black tracking-tight">
-              <Link href="#">
-                Schedule Demo
+              <Link href="/transparency">
+                Learn More
               </Link>
             </Button>
           </div>
@@ -278,7 +278,7 @@ export default function LandingPage() {
             <div className="col-span-2 md:col-span-1 space-y-8">
               <Logo className="scale-110 origin-left" />
               <p className="text-base text-muted-foreground font-medium pr-8 leading-relaxed">
-                The modern infrastructure for institutional-grade invoice factoring and supply chain finance.
+                The modern infrastructure for premium-grade invoice factoring and supply chain finance.
               </p>
               <div className="flex gap-4">
                 {[Globe, Users, Shield].map((Icon, i) => (
@@ -291,25 +291,24 @@ export default function LandingPage() {
             <div>
               <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Solutions</h4>
               <ul className="space-y-5 text-base font-bold text-muted-foreground">
-                <li><Link href="#" className="hover:text-primary transition-colors">For MSMEs</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">For Investors</Link></li>
-                <li><Link href="#" className="hover:text-primary transition-colors">Enterprise API</Link></li>
+                <li><Link href="/signup?role=msme" className="hover:text-primary transition-colors">For MSMEs</Link></li>
+                <li><Link href="/signup?role=investor" className="hover:text-primary transition-colors">For Investors</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Company</h4>
               <ul className="space-y-5 text-base font-bold text-muted-foreground">
-                <li><Link href="#" className="hover:text-foreground transition-colors">About Us</Link></li>
-                <li><Link href="#" className="hover:text-foreground transition-colors">Transparency</Link></li>
-                <li><Link href="#" className="hover:text-foreground transition-colors">Contact</Link></li>
+                <li><Link href="/about" className="hover:text-foreground transition-colors">About Us</Link></li>
+                <li><Link href="/transparency" className="hover:text-foreground transition-colors">Transparency</Link></li>
+                <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Legal</h4>
               <ul className="space-y-5 text-base font-bold text-muted-foreground">
-                <li><Link href="#" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-                <li><Link href="#" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-                <li><Link href="#" className="hover:text-foreground transition-colors">Compliance</Link></li>
+                <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
+                <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+                <li><Link href="/compliance" className="hover:text-foreground transition-colors">Compliance</Link></li>
               </ul>
             </div>
           </div>

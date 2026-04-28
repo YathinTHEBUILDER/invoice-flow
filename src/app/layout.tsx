@@ -9,8 +9,8 @@ import { Navbar } from "@/components/navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "InvoiceFlow | Institutional Grade Factoring",
-  description: "Secure, transparent MSME invoice discounting for institutional investors.",
+  title: "InvoiceFlow | Premium Grade Factoring",
+  description: "Secure, transparent MSME invoice discounting for individual investors.",
 };
 
 export default function RootLayout({

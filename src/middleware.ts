@@ -54,7 +54,28 @@ export async function middleware(request: NextRequest) {
     }
   )
 
-  await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
+                     request.nextUrl.pathname.startsWith('/signup') || 
+                     request.nextUrl.pathname.startsWith('/get-started') ||
+                     request.nextUrl.pathname.startsWith('/auth/forgot-password')
+
+  // These pages require a session or are part of a verification flow
+  const isFlowPage = request.nextUrl.pathname.startsWith('/auth/reset-password') ||
+                     request.nextUrl.pathname.startsWith('/auth/verify')
+
+  const isProtectedRoute = request.nextUrl.pathname.startsWith('/dashboard') || 
+                           request.nextUrl.pathname.startsWith('/settings') ||
+                           request.nextUrl.pathname.startsWith('/profile')
+
+  if (isProtectedRoute && !user) {
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
+
+  if (isAuthPage && user) {
+    return NextResponse.redirect(new URL('/', request.url))
+  }
 
   return response
 }
