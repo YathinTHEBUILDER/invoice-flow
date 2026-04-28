@@ -15,7 +15,7 @@ interface OtpFormProps {
 }
 
 export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
-  const [otp, setOtp] = useState(["", "", "", "", "", ""]);
+  const [otp, setOtp] = useState(["", "", "", "", "", "", "", ""]);
   const [resendTimer, setResendTimer] = useState(0);
   const inputRefs = useRef<(HTMLInputElement | null)[]>([]);
   const router = useRouter();
@@ -56,7 +56,7 @@ export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    if (value !== "" && index < 5) {
+    if (value !== "" && index < 7) {
       inputRefs.current[index + 1]?.focus();
     }
   };
@@ -70,8 +70,8 @@ export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = otp.join("");
-    if (token.length !== 6) {
-      toast.error("Please enter all 6 digits");
+    if (token.length !== 8) {
+      toast.error("Please enter all 8 digits");
       return;
     }
     executeVerify({ email, token, type });
@@ -84,7 +84,7 @@ export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-8 w-full max-w-sm mx-auto">
-      <div className="flex justify-between gap-2">
+      <div className="flex justify-center gap-1.5 sm:gap-2">
         {otp.map((digit, index) => (
           <input
             key={index}
@@ -95,7 +95,7 @@ export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
             value={digit}
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
-            className="w-12 h-14 text-center text-2xl font-black rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+            className="w-9 h-12 sm:w-11 sm:h-14 text-center text-xl sm:text-2xl font-black rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
           />
         ))}
       </div>

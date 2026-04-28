@@ -25,7 +25,7 @@ const signInSchema = z.object({
 
 const verifyOtpSchema = z.object({
   email: z.string().email(),
-  token: z.string().length(6, "Token must be 6 digits"),
+  token: z.string().length(8, "Token must be 8 digits"),
   type: z.enum(["signup", "recovery", "email_change"]).default("signup"),
 });
 

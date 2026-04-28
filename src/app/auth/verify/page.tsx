@@ -38,7 +38,7 @@ function VerifyContent() {
           </h1>
           
           <p className="text-muted-foreground text-sm max-w-sm mx-auto font-medium">
-            We've sent a 6-digit verification code to <span className="text-foreground font-bold">{email}</span>. Please enter it below to continue.
+            We've sent an 8-digit verification code to <span className="text-foreground font-bold">{email}</span>. Please enter it below to continue.
           </p>
         </div>
 
