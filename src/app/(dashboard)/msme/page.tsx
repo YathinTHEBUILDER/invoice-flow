@@ -6,6 +6,8 @@ import Link from "next/link";
 import { getMSMEStats, getRecentMSMEInvoices } from "@/app/actions/msme";
 import { formatINR } from "@/lib/format";
 
+export const dynamic = "force-dynamic";
+
 export default async function MsmeDashboard() {
   const [stats, recentInvoices] = await Promise.all([
     getMSMEStats(),
