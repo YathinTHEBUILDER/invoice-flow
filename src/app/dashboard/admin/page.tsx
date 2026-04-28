@@ -6,7 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Activity, Users, FileText, AlertTriangle, TrendingUp, DollarSign } from "lucide-react";
 
 export default async function AdminDashboard() {
-  let stats;
+  // 1. Initialize with safe defaults to prevent ReferenceErrors
+  let stats = {
+    totalInvoices: 0,
+    pendingKyc: 0,
+    activeInvestors: 0,
+    liquidityValue: 0,
+    repaidValue: 0
+  };
+
   try {
     const [
       totalInvoicesResult,
@@ -31,13 +39,6 @@ export default async function AdminDashboard() {
     };
   } catch (error) {
     console.error("Admin Dashboard data fetch error:", error);
-    stats = {
-      totalInvoices: 0,
-      pendingKyc: 0,
-      activeInvestors: 0,
-      liquidityValue: 0,
-      repaidValue: 0
-    };
   }
 
   return (

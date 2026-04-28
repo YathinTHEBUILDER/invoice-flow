@@ -15,9 +15,13 @@ export default async function MSMEDashboard() {
 
   if (!user) return null;
 
-  let analytics, recentActivity, userRecord;
+  // 1. Initialize with safe defaults to prevent ReferenceErrors
+  let analytics: any = null;
+  let recentActivity: any[] = [];
+  let userRecord: any = null;
+
   try {
-    [analytics, recentActivity, userRecord] = await Promise.all([
+    const [analyticsResult, activityResult, userResult] = await Promise.all([
       getMSMEAnalytics(user.id),
       db.query.activityLogs.findMany({
         where: eq(activityLogs.userId, user.id),
@@ -28,6 +32,10 @@ export default async function MSMEDashboard() {
         where: eq(users.id, user.id)
       })
     ]);
+
+    analytics = analyticsResult;
+    recentActivity = activityResult;
+    userRecord = userResult;
   } catch (error) {
     console.error("MSME Dashboard data fetch error:", error);
   }

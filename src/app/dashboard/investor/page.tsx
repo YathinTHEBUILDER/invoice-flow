@@ -26,9 +26,13 @@ export default async function InvestorDashboard() {
 
   if (!user) return null;
 
-  let analytics, recentActivity, activeInvestments;
+  // 1. Initialize with safe defaults to prevent ReferenceErrors
+  let analytics: any = null;
+  let recentActivity: any[] = [];
+  let activeInvestments: any[] = [];
+
   try {
-    [analytics, recentActivity, activeInvestments] = await Promise.all([
+    const [analyticsResult, activityResult, investmentsResult] = await Promise.all([
       getInvestorAnalytics(user.id),
       db.query.activityLogs.findMany({
         where: eq(activityLogs.userId, user.id),
@@ -49,8 +53,13 @@ export default async function InvestorDashboard() {
         .where(and(eq(investments.investorId, user.id), eq(investments.status, 'active')))
         .limit(3)
     ]);
+
+    analytics = analyticsResult;
+    recentActivity = activityResult;
+    activeInvestments = investmentsResult;
   } catch (error: any) {
     console.error("Investor Dashboard data fetch error:", error);
+    // Continue rendering with defaults
   }
 
   const safeAnalytics = {
