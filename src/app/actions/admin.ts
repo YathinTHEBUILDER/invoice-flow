@@ -305,20 +305,34 @@ export const approveKYCAction = actionClient
 
     if (kycError) throw new Error(kycError.message);
 
+    const { data: userProfile } = await supabase.from('profiles').select('role').eq('id', userId).single();
+
     await logAdminAction('approve_kyc', 'profile', userId, { requestId });
     
     revalidatePath("/admin");
     revalidatePath("/msme");
     revalidatePath("/msme/kyc");
+    revalidatePath("/investor");
+    revalidatePath("/investor/kyc");
 
     // Notify User
-    await createNotification(
-      userId,
-      "KYC Approved! ✅",
-      "Your business profile has been verified. You can now upload invoices and seek funding.",
-      "success",
-      "/msme"
-    );
+    if (userProfile?.role === 'msme') {
+      await createNotification(
+        userId,
+        "KYC Approved! ✅",
+        "Your business profile has been verified. You can now upload invoices and seek funding.",
+        "success",
+        "/msme"
+      );
+    } else if (userProfile?.role === 'investor') {
+      await createNotification(
+        userId,
+        "Compliance Cleared! 🛡️",
+        "Your investor credentials have been formally vetted. Capital deployment is now unlocked.",
+        "success",
+        "/investor"
+      );
+    }
 
     return { success: true };
   });
@@ -354,14 +368,16 @@ export const rejectKYCAction = actionClient
     revalidatePath("/admin");
     revalidatePath("/msme");
     revalidatePath("/msme/kyc");
+    revalidatePath("/investor");
+    revalidatePath("/investor/kyc");
 
     // Notify User
     await createNotification(
       userId,
-      "KYC Rejected ❌",
-      `Your KYC was rejected. Reason: ${notes}`,
+      "Compliance Issue ⚠️",
+      `Your verification request was not approved. Reason: ${notes}`,
       "error",
-      "/msme"
+      "/profile"
     );
 
     return { success: true };

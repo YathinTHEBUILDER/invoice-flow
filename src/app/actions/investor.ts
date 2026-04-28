@@ -16,32 +16,66 @@ export async function getInvestorStats() {
 
   if (!user) return null;
 
-  // 1. Fetch investments (we need a way to track which investor funded which invoice)
-  // For now, let's assume we add an 'investor_id' column to the invoices table
-  // or a separate 'investments' table. 
-  // Let's check the schema again or just use 'investor_id' on invoices for simplicity if it exists.
-  
-  const { data: myInvestments } = await supabase
+  // 1. Fetch investments (Invoices funded by this investor)
+  const { data: myInvoices } = await supabase
     .from('invoices')
-    .select('amount, status')
+    .select('*, repayments(*)')
     .eq('investor_id', user.id);
 
-  const totalInvested = myInvestments?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-  const activeAssets = myInvestments?.filter(inv => inv.status === 'funded').length || 0;
+  const totalInvested = myInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
+  const activeAssets = myInvoices?.filter(inv => inv.status === 'funded').length || 0;
 
-  // 2. Fetch Wallet Balance (from profiles or a dedicated table)
+  // 2. Fetch Repayment Data for Yields
+  const { data: repayments } = await supabase
+    .from('repayments')
+    .select('*, invoices!inner(*)')
+    .eq('invoices.investor_id', user.id);
+
+  const totalReturns = repayments?.filter(r => r.status === 'paid').reduce((sum, r) => sum + (Number(r.amount_paid) - Number(r.invoices.amount)), 0) || 0;
+  const pendingReturns = repayments?.filter(r => r.status === 'scheduled').reduce((sum, r) => sum + (Number(r.amount_due) - Number(r.invoices.amount)), 0) || 0;
+  const receivedPayouts = repayments?.filter(r => r.status === 'paid').reduce((sum, r) => sum + Number(r.amount_paid), 0) || 0;
+
+  // 3. Fetch Wallet Balance & KYC Status
   const { data: profile } = await supabase
     .from('profiles')
-    .select('wallet_balance')
+    .select('wallet_balance, kyc_status')
     .eq('id', user.id)
     .single();
 
   return {
     totalInvested,
     activeAssets,
+    totalReturns,
+    pendingReturns,
+    receivedPayouts,
     walletBalance: profile?.wallet_balance || 0,
-    expectedARR: 14.5 // Hardcoded for now
+    kycStatus: profile?.kyc_status || 'not_started',
+    expectedARR: 14.5
   };
+}
+
+/**
+ * Fetch Detailed Portfolio
+ */
+export async function getInvestorPortfolio() {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from('invoices')
+    .select(`
+      *,
+      profiles:msme_id (company_name),
+      repayments (*)
+    `)
+    .eq('investor_id', user.id)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data;
 }
 
 /**
@@ -67,6 +101,92 @@ export async function getMarketplaceInvoices() {
 }
 
 /**
+ * Helper to upload KYC documents to Supabase Storage
+ */
+async function uploadKYCDocument(supabase: any, userId: string, file: File | Blob, type: string) {
+  const fileName = `${userId}/${type}-${Date.now()}`;
+  const { data, error } = await supabase.storage
+    .from('kyc_documents')
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: false
+    });
+
+  if (error) throw new Error(`Upload failed for ${type}: ${error.message}`);
+  
+  const { data: { publicUrl } } = supabase.storage
+    .from('kyc_documents')
+    .getPublicUrl(data.path);
+
+  return publicUrl;
+}
+
+/**
+ * Submit Investor KYC Action
+ */
+export async function submitInvestorKYCAction(formData: FormData) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return { error: "Unauthorized" };
+
+  try {
+    const documents: Record<string, string> = {};
+    
+    // Process File Uploads
+    const panFile = formData.get("pan") as File | null;
+    const aadhaarFile = formData.get("aadhaar") as File | null;
+    const bankFile = formData.get("bank_proof") as File | null;
+    const addressFile = formData.get("address_proof") as File | null;
+    const selfieBlob = formData.get("selfie") as Blob | null;
+
+    if (panFile) documents.pan = await uploadKYCDocument(supabase, user.id, panFile, "pan");
+    if (aadhaarFile) documents.aadhaar = await uploadKYCDocument(supabase, user.id, aadhaarFile, "aadhaar");
+    if (bankFile) documents.bank_proof = await uploadKYCDocument(supabase, user.id, bankFile, "bank");
+    if (addressFile) documents.address_proof = await uploadKYCDocument(supabase, user.id, addressFile, "address");
+    if (selfieBlob) documents.selfie = await uploadKYCDocument(supabase, user.id, selfieBlob, "selfie");
+
+    const { error: kycError } = await supabase
+      .from('kyc_requests')
+      .upsert({
+        user_id: user.id,
+        status: 'pending',
+        documents,
+        updated_at: new Date().toISOString()
+      }, { onConflict: 'user_id' });
+
+    if (kycError) throw new Error(kycError.message);
+
+    await supabase
+      .from('profiles')
+      .update({ kyc_status: 'pending' })
+      .eq('id', user.id);
+
+    // Notify Admins
+    const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+    if (admins) {
+      for (const admin of admins) {
+        await createNotification(
+          admin.id,
+          "Investor Documents Submitted 🛡️",
+          `Investor ${user.email} has submitted credentials for manual audit.`,
+          "info",
+          "/admin?tab=kyc"
+        );
+      }
+    }
+
+    revalidatePath("/investor/kyc");
+    revalidatePath("/investor");
+    return { success: true };
+  } catch (error: any) {
+    console.error("KYC Submission Error:", error);
+    return { error: error.message };
+  }
+}
+
+/**
  * Fund Invoice Action
  */
 export const fundInvoiceAction = actionClient
@@ -78,10 +198,21 @@ export const fundInvoiceAction = actionClient
 
     if (!user) throw new Error("Not authenticated");
 
-    // 1. Check if invoice is still available
+    // 1. Check Profile & KYC
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('wallet_balance, kyc_status')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.kyc_status !== 'verified') {
+      throw new Error("Compliance Clearance Required. Please complete KYC verification.");
+    }
+
+    // 2. Check if invoice is still available
     const { data: invoice } = await supabase
       .from('invoices')
-      .select('amount, status, msme_id, invoice_number')
+      .select('amount, status, msme_id, invoice_number, discount_rate, tenure_days')
       .eq('id', invoiceId)
       .single();
 
@@ -89,19 +220,11 @@ export const fundInvoiceAction = actionClient
       throw new Error("Asset no longer available for liquidity.");
     }
 
-    // 2. Check investor balance
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('wallet_balance')
-      .eq('id', user.id)
-      .single();
-
     if ((profile?.wallet_balance || 0) < Number(invoice.amount)) {
       throw new Error("Insufficient wallet liquidity to fund this asset.");
     }
 
-    // 3. Perform atomic update (deduct balance and mark funded)
-    // Note: In production, use a Postgres RPC/Function for atomicity
+    // 3. Perform atomic update (In RPC for production)
     const { error: updateError } = await supabase
       .from('invoices')
       .update({ 
@@ -129,13 +252,16 @@ export const fundInvoiceAction = actionClient
       reference_id: invoiceId
     });
 
-    // 5. Create Repayment Schedule for MSME
+    // 5. Create Repayment Schedule (Principal + Yield)
     const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + 45); // Standard 45-day tenure
+    dueDate.setDate(dueDate.getDate() + (invoice.tenure_days || 45));
+    
+    // Simple yield calculation for example
+    const yieldAmount = Number(invoice.amount) * ((invoice.discount_rate || 0.12) / 365 * (invoice.tenure_days || 45));
     
     await supabase.from('repayments').insert({
       invoice_id: invoiceId,
-      amount_due: Number(invoice.amount) * 1.02, // 2% markup for example
+      amount_due: Number(invoice.amount) + yieldAmount,
       due_date: dueDate.toISOString(),
       status: 'scheduled'
     });
@@ -144,17 +270,9 @@ export const fundInvoiceAction = actionClient
     await createNotification(
       user.id,
       "Investment Successful! 🚀",
-      `You have successfully funded Invoice #${invoice.invoice_number}.`,
+      `You have funded Invoice #${invoice.invoice_number}. Target Yield: ${((yieldAmount/Number(invoice.amount))*100).toFixed(2)}%`,
       "success",
       "/investor"
-    );
-
-    await createNotification(
-      invoice.msme_id,
-      "Invoice Funded! 💰",
-      `Your Invoice #${invoice.invoice_number} has been funded by an investor. Funds will be disbursed shortly.`,
-      "success",
-      "/msme"
     );
 
     revalidatePath("/investor");

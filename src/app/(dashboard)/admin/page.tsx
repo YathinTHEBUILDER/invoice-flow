@@ -437,7 +437,7 @@ export default function AdminDashboard() {
                       <div className="space-y-4">
                         <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Rejection Remarks (Required if rejecting)</label>
                         <Input
-                          placeholder="Provide detailed feedback for the MSME..."
+                          placeholder={`Provide detailed feedback for the ${selectedRequest.profiles?.role === 'msme' ? 'MSME' : 'Investor'}...`}
                           value={rejectionNotes}
                           onChange={(e) => setRejectionNotes(e.target.value)}
                           className="bg-white/5 border-white/10 h-16 font-bold focus:bg-white/10 transition-all"
