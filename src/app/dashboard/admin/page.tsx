@@ -3,7 +3,7 @@ import { invoices, users, kycDocuments, fundingRequests, repayments, fraudFlags 
 import { eq, sql, count, desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Activity, Users, FileText, AlertTriangle, TrendingUp, DollarSign, History } from "lucide-react";
+import { Activity, Users, FileText, AlertTriangle, TrendingUp, DollarSign, History, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
 export default async function AdminDashboard() {

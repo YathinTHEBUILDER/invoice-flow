@@ -6,7 +6,7 @@ import { relations } from "drizzle-orm";
 // ----------------------------------------------------------------------
 export const roleEnum = pgEnum("role", ["admin", "investor", "msme"]);
 export const kycStatusEnum = pgEnum("kyc_status", ["pending", "approved", "rejected"]);
-export const documentTypeEnum = pgEnum("document_type", ["pan", "gstin", "udyam", "bank_statement"]);
+export const documentTypeEnum = pgEnum("document_type", ["pan", "gstin", "udyam", "bank_statement", "aadhaar", "cancelled_cheque"]);
 export const invoiceStatusEnum = pgEnum("invoice_status", ["pending_verification", "approved", "rejected", "funded", "repaid"]);
 export const fundingStatusEnum = pgEnum("funding_status", ["open", "filled", "cancelled", "completed"]);
 export const investmentStatusEnum = pgEnum("investment_status", ["active", "completed", "defaulted"]);

@@ -4,8 +4,8 @@ import { createSafeActionClient } from "next-safe-action";
 import { z } from "zod";
 import { createClient } from "@/lib/server";
 import { db } from "@/db";
-import { invoices, fundingRequests, repayments, transactions, activityLogs, users, disputes, preClosureRequests, notifications, kycDocuments } from "@/db/schema";
-import { eq, and, desc, sum, count } from "drizzle-orm";
+import { invoices, fundingRequests, repayments, transactions, activityLogs, users, disputes, preClosureRequests, notifications, kycDocuments, investments } from "@/db/schema";
+import { eq, and, desc, sum, count, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 const actionClient = createSafeActionClient();

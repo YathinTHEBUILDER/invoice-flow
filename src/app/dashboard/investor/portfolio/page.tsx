@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/server";
 import { db } from "@/db";
-import { investments, fundingRequests, invoices, repayments } from "@/db/schema";
+import { investments, fundingRequests, invoices, repayments, users, transactions } from "@/db/schema";
 import { eq, desc, and } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";

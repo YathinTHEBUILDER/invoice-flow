@@ -1,7 +1,7 @@
 import { createClient } from "@/lib/server";
 import { db } from "@/db";
-import { fundingRequests, invoices } from "@/db/schema";
-import { eq, desc, and } from "drizzle-orm";
+import { fundingRequests, invoices, investments } from "@/db/schema";
+import { eq, desc, and, sql } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
