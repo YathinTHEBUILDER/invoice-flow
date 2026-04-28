@@ -26,26 +26,49 @@ export default async function InvestorDashboard() {
 
   if (!user) return null;
 
-  const analytics = await getInvestorAnalytics(user.id);
-  const recentActivity = await db.query.activityLogs.findMany({
-    where: eq(activityLogs.userId, user.id),
-    orderBy: [desc(activityLogs.createdAt)],
-    limit: 5,
-  });
-
-  const activeInvestments = await db
-    .select({
-      id: investments.id,
-      amount: investments.amount,
-      createdAt: investments.createdAt,
-      yieldRate: fundingRequests.yieldRate,
-      invoiceNumber: invoices.invoiceNumber,
-    })
-    .from(investments)
-    .innerJoin(fundingRequests, eq(investments.fundingRequestId, fundingRequests.id))
-    .innerJoin(invoices, eq(fundingRequests.invoiceId, invoices.id))
-    .where(and(eq(investments.investorId, user.id), eq(investments.status, 'active')))
-    .limit(3);
+  let analytics, recentActivity, activeInvestments;
+  try {
+    [analytics, recentActivity, activeInvestments] = await Promise.all([
+      getInvestorAnalytics(user.id),
+      db.query.activityLogs.findMany({
+        where: eq(activityLogs.userId, user.id),
+        orderBy: [desc(activityLogs.createdAt)],
+        limit: 5,
+      }),
+      db
+        .select({
+          id: investments.id,
+          amount: investments.amount,
+          createdAt: investments.createdAt,
+          yieldRate: fundingRequests.yieldRate,
+          invoiceNumber: invoices.invoiceNumber,
+        })
+        .from(investments)
+        .innerJoin(fundingRequests, eq(investments.fundingRequestId, fundingRequests.id))
+        .innerJoin(invoices, eq(fundingRequests.invoiceId, invoices.id))
+        .where(and(eq(investments.investorId, user.id), eq(investments.status, 'active')))
+        .limit(3)
+    ]);
+  } catch (error: any) {
+    console.error("Dashboard data fetch error:", error);
+    return (
+      <div className="flex h-screen items-center justify-center bg-background p-4 text-center">
+        <div className="max-w-md space-y-4">
+          <h1 className="text-2xl font-bold text-destructive">Dashboard Error</h1>
+          <p className="text-muted-foreground">We encountered an issue while loading your data.</p>
+          <div className="rounded-md bg-muted p-4 text-left font-mono text-xs">
+            {error.message || "Unknown error"}
+          </div>
+          <a 
+            href="/dashboard/investor"
+            className="inline-block rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:bg-primary/90"
+          >
+            Try Again
+          </a>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex-1 space-y-8 p-2">
