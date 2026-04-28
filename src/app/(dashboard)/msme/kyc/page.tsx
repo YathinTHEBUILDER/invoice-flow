@@ -184,17 +184,48 @@ export default function KYCPage() {
       </div>
 
       <div className="max-w-5xl mx-auto space-y-12">
-        {profile?.kyc_status === 'rejected' && (
-          <div className="p-6 rounded-3xl bg-red-500/5 border border-red-500/20 space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
-            <div className="flex items-center gap-3 text-red-500">
-              <AlertTriangle className="w-5 h-5" />
-              <p className="text-sm font-black italic">Rejection Remarks</p>
-            </div>
-            <p className="text-sm text-white font-medium pl-8">{profile.kyc_notes || "No specific reason provided. Please ensure all documents are clear and valid."}</p>
+        {profile?.kyc_status === 'verified' ? (
+          <div className="animate-in fade-in zoom-in duration-700">
+            <Card className="glass-dark border-white/5 overflow-hidden text-center p-20 space-y-8">
+              <div className="mx-auto w-24 h-24 rounded-[30px] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-2xl shadow-emerald-500/10">
+                <ShieldCheck className="w-12 h-12 text-emerald-500" />
+              </div>
+              <div className="space-y-3">
+                <h3 className="text-4xl font-black text-white italic">Compliance Cleared</h3>
+                <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
+                  Your business entity has been formally vetted and approved. All financing operations, invoice discounting, and liquidity deployment features are now fully unlocked.
+                </p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
+                <Button 
+                  onClick={() => router.push("/msme")}
+                  className="h-14 px-10 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20"
+                >
+                  Return to Dashboard
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => router.push("/msme/invoices")}
+                  className="h-14 px-10 border-white/10 hover:bg-white/5 text-white font-black uppercase tracking-widest text-[10px]"
+                >
+                  Raise New Funding
+                </Button>
+              </div>
+            </Card>
           </div>
-        )}
+        ) : (
+          <>
+            {profile?.kyc_status === 'rejected' && (
+              <div className="p-6 rounded-3xl bg-red-500/5 border border-red-500/20 space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
+                <div className="flex items-center gap-3 text-red-500">
+                  <AlertTriangle className="w-5 h-5" />
+                  <p className="text-sm font-black italic">Rejection Remarks</p>
+                </div>
+                <p className="text-sm text-white font-medium pl-8">{profile.kyc_notes || "No specific reason provided. Please ensure all documents are clear and valid."}</p>
+              </div>
+            )}
 
-        <form onSubmit={handleSubmit} className="space-y-12">
+            <form onSubmit={handleSubmit} className="space-y-12">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
             {/* Left: Document Checklist */}
             <div className="lg:col-span-2 space-y-8">
@@ -420,6 +451,8 @@ export default function KYCPage() {
             </div>
           </div>
         </form>
+        </>
+      )}
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4">
