@@ -27,8 +27,8 @@ const updateProfileSchema = z.object({
 
 async function logAdminAction(action: string, entityType: string, entityId: string | null, details: any = {}) {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user;
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
   
   if (!user) return;
 

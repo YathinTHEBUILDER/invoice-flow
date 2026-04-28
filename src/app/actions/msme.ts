@@ -5,8 +5,8 @@ import { revalidatePath } from "next/cache";
 
 export async function uploadInvoiceAction(formData: FormData) {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user;
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
 
   if (!user) return { error: "Unauthorized" };
 
@@ -45,8 +45,8 @@ export async function uploadInvoiceAction(formData: FormData) {
 
 export async function updateKYCAction(formData: FormData) {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user;
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
 
   if (!user) return { error: "Unauthorized" };
 
@@ -90,8 +90,8 @@ export async function updateKYCAction(formData: FormData) {
 
 export async function createSupportTicketAction(formData: FormData) {
   const supabase = await createClient();
-  const { data } = await supabase.auth.getUser();
-  const user = data?.user;
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
 
   if (!user) return { error: "Unauthorized" };
 
