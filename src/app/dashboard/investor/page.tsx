@@ -67,6 +67,8 @@ export default async function InvestorDashboard() {
     activeInvestments: analytics?.activeInvestments || 0,
     walletBalance: analytics?.walletBalance || 0,
     expectedReturns: analytics?.expectedReturns || 0,
+    totalReceived: analytics?.totalReceived || 0,
+    defaultExposure: analytics?.defaultExposure || 0,
     kycStatus: analytics?.kycStatus || "pending",
   };
 
@@ -153,7 +155,7 @@ export default async function InvestorDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">₹0.00</div>
+            <div className="text-3xl font-bold">{formatCurrency(safeAnalytics.totalReceived)}</div>
             <p className="text-xs text-muted-foreground mt-1">Capital + Profit returned</p>
           </CardContent>
         </Card>
@@ -166,8 +168,10 @@ export default async function InvestorDashboard() {
             </div>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold text-rose-500">0.0%</div>
-            <p className="text-xs text-muted-foreground mt-1 text-emerald-600 font-medium">No overdue payments</p>
+            <div className="text-3xl font-bold text-rose-500">{safeAnalytics.defaultExposure.toFixed(1)}%</div>
+            <p className={`text-xs mt-1 font-medium ${safeAnalytics.defaultExposure > 0 ? 'text-rose-600' : 'text-emerald-600'}`}>
+              {safeAnalytics.defaultExposure > 0 ? `${safeAnalytics.defaultExposure.toFixed(1)}% portfolio overdue` : 'No overdue payments'}
+            </p>
           </CardContent>
         </Card>
       </div>

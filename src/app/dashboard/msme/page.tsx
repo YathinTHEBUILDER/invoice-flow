@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { getMSMEAnalytics } from "@/actions/msme";
 import { db } from "@/db";
-import { activityLogs, users } from "@/db/schema";
+import { activityLogs, users, kycDocuments } from "@/db/schema";
 import { eq, desc } from "drizzle-orm";
 import { formatCurrency } from "@/lib/utils";
 
@@ -15,37 +15,38 @@ export default async function MSMEDashboard() {
 
   if (!user) return null;
 
-  // 1. Initialize with safe defaults to prevent ReferenceErrors
-  let analytics: any = null;
-  let recentActivity: any[] = [];
-  let userRecord: any = null;
+  // 1. Initialize data
+  const [analyticsResult, activityResult, userResult, kycDocs] = await Promise.all([
+    getMSMEAnalytics(user.id),
+    db.query.activityLogs.findMany({
+      where: eq(activityLogs.userId, user.id),
+      orderBy: [desc(activityLogs.createdAt)],
+      limit: 5,
+    }),
+    db.query.users.findFirst({
+      where: eq(users.id, user.id)
+    }),
+    db.query.kycDocuments.findMany({
+      where: eq(kycDocuments.userId, user.id)
+    })
+  ]);
 
-  try {
-    const [analyticsResult, activityResult, userResult] = await Promise.all([
-      getMSMEAnalytics(user.id),
-      db.query.activityLogs.findMany({
-        where: eq(activityLogs.userId, user.id),
-        orderBy: [desc(activityLogs.createdAt)],
-        limit: 5,
-      }),
-      db.query.users.findFirst({
-        where: eq(users.id, user.id)
-      })
-    ]);
-
-    analytics = analyticsResult;
-    recentActivity = activityResult;
-    userRecord = userResult;
-  } catch (error) {
-    console.error("MSME Dashboard data fetch error:", error);
-  }
-
+  const analytics = analyticsResult;
+  const recentActivity = activityResult;
+  const userRecord = userResult;
   const kycStatus = userRecord?.kycStatus || "pending";
+
   const safeAnalytics = {
     totalFunded: analytics?.totalFunded || "0.00",
     activeInvoices: analytics?.activeInvoices || 0,
     repaidSuccessfully: analytics?.repaidSuccessfully || 0,
     pendingRepayments: analytics?.pendingRepayments || "0.00",
+  };
+
+  const getDocStatus = (type: string) => {
+    const doc = kycDocs.find(d => d.documentType === type);
+    if (!doc) return "Not Uploaded";
+    return doc.status.charAt(0).toUpperCase() + doc.status.slice(1);
   };
 
   return (
@@ -56,8 +57,11 @@ export default async function MSMEDashboard() {
           <p className="text-muted-foreground">Here's what's happening with your invoice financing today.</p>
         </div>
         <div className="flex gap-3">
-          <Button asChild variant="outline">
-            <Link href="/dashboard/msme/kyc">KYC Status: <span className="ml-2 capitalize font-bold text-primary">{kycStatus}</span></Link>
+          <Button variant="outline" asChild className="shadow-sm">
+            <Link href="/dashboard/msme/wallet">
+              <Wallet className="mr-2 h-4 w-4" />
+              Wallet: {formatCurrency(userRecord?.walletBalance || 0)}
+            </Link>
           </Button>
           <Button asChild className="bg-primary hover:bg-primary/90 shadow-lg shadow-primary/20 transition-all">
             <Link href="/dashboard/msme/invoices/new">
@@ -185,20 +189,29 @@ export default async function MSMEDashboard() {
             <div className="space-y-3 text-sm">
               <p className="font-medium text-xs text-muted-foreground uppercase tracking-wider">Required Documents</p>
               <div className="space-y-2">
-                {['PAN Card', 'GST Certificate', 'Bank Statement'].map((doc) => (
-                  <div key={doc} className="flex items-center justify-between text-xs py-1 border-b border-muted/50 last:border-0">
-                    <span>{doc}</span>
-                    <span className="text-emerald-500 font-medium">Verified</span>
-                  </div>
-                ))}
+                {[
+                  { label: 'PAN Card', type: 'pan_card' },
+                  { label: 'GST Certificate', type: 'gst_certificate' },
+                  { label: 'Bank Statement', type: 'bank_statement' }
+                ].map((doc) => {
+                  const status = getDocStatus(doc.type);
+                  return (
+                    <div key={doc.type} className="flex items-center justify-between text-xs py-1 border-b border-muted/50 last:border-0">
+                      <span>{doc.label}</span>
+                      <span className={`${
+                        status === 'Approved' ? 'text-emerald-500' : 
+                        status === 'Rejected' ? 'text-rose-500' : 
+                        'text-amber-500'
+                      } font-medium`}>{status}</span>
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {kycStatus !== 'approved' && (
-              <Button asChild className="w-full" variant="outline">
-                <Link href="/dashboard/msme/kyc">Manage Documents</Link>
-              </Button>
-            )}
+            <Button asChild className="w-full" variant="outline">
+              <Link href="/dashboard/msme/kyc">{kycStatus === 'approved' ? 'Manage Documents' : 'Complete Verification'}</Link>
+            </Button>
           </CardContent>
         </Card>
       </div>

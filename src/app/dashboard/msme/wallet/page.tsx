@@ -1,10 +1,9 @@
 import { db } from "@/db";
-import { transactions, users, investments } from "@/db/schema";
+import { transactions, users } from "@/db/schema";
 import { createClient } from "@/lib/server";
-import { eq, desc, and } from "drizzle-orm";
+import { eq, desc } from "drizzle-orm";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { WalletOperations } from "./wallet-operations";
 import { 
   ArrowUpRight, 
   ArrowDownRight, 
@@ -14,11 +13,13 @@ import {
   Info,
   CreditCard,
   Building,
-  Lock
+  Lock,
+  Wallet
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
+import { WalletOperations } from "@/app/dashboard/investor/wallet/wallet-operations"; // Reuse the same component for now
 
-export default async function InvestorWalletPage() {
+export default async function MSMEWalletPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
 
@@ -34,42 +35,29 @@ export default async function InvestorWalletPage() {
     limit: 20
   });
 
-  const activeInvestments = await db.query.investments.findMany({
-    where: and(eq(investments.investorId, user.id), eq(investments.status, 'active')),
-    with: {
-      fundingRequest: true
-    }
-  });
-
-  const deployedCapital = activeInvestments.reduce((sum, inv) => sum + parseFloat(inv.amount), 0);
-  const estMonthlyReturn = activeInvestments.reduce((sum, inv) => {
-    const yieldRate = parseFloat(inv.fundingRequest.yieldRate) / 100;
-    return sum + (parseFloat(inv.amount) * yieldRate / 12);
-  }, 0);
-
   return (
     <div className="flex-1 space-y-8 p-2">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h2 className="text-3xl font-bold tracking-tight">Financial Center</h2>
-          <p className="text-muted-foreground mt-1">Manage your liquidity and track investment settlements.</p>
+          <p className="text-muted-foreground mt-1">Manage your funds and track disbursement history.</p>
         </div>
         <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald-500/10 text-emerald-600 rounded-full text-[10px] font-bold uppercase tracking-widest border border-emerald-500/20">
           <ShieldCheck className="h-3.5 w-3.5" />
-          Secured by Institutional Escrow
+          Verified Business Account
         </div>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-3">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="bg-primary text-primary-foreground border-none shadow-2xl shadow-primary/20 overflow-hidden relative group">
+          <Card className="bg-slate-900 text-white border-none shadow-2xl overflow-hidden relative group">
             <div className="absolute top-0 right-0 p-8 opacity-10 group-hover:opacity-20 transition-opacity">
-              <CreditCard className="h-32 w-32 rotate-12" />
+              <Wallet className="h-32 w-32 rotate-12" />
             </div>
             <CardHeader>
               <div className="flex items-center gap-2 opacity-80">
                 <Building className="h-4 w-4" />
-                <CardTitle className="text-sm font-bold uppercase tracking-widest">Available Liquidity</CardTitle>
+                <CardTitle className="text-sm font-bold uppercase tracking-widest text-slate-400">Available Balance</CardTitle>
               </div>
             </CardHeader>
             <CardContent className="pb-8">
@@ -77,11 +65,8 @@ export default async function InvestorWalletPage() {
                 {formatCurrency(userRecord?.walletBalance || 0)}
               </div>
               <div className="mt-6 flex flex-wrap gap-3">
-                <Badge className="bg-white/20 hover:bg-white/30 border-none text-white backdrop-blur-md">
-                  Active Capital: {formatCurrency(deployedCapital)}
-                </Badge>
-                <Badge className="bg-white/20 hover:bg-white/30 border-none text-white backdrop-blur-md">
-                  Est. Monthly Return: {formatCurrency(estMonthlyReturn)}
+                <Badge className="bg-white/10 hover:bg-white/20 border-none text-white backdrop-blur-md font-bold">
+                  Funded Invoices: ₹{userRecord?.walletBalance}
                 </Badge>
               </div>
             </CardContent>
@@ -92,9 +77,9 @@ export default async function InvestorWalletPage() {
               <div>
                 <CardTitle className="text-xl flex items-center gap-2">
                   <History className="h-5 w-5 text-primary" />
-                  Transaction Ledger
+                  Disbursement Ledger
                 </CardTitle>
-                <CardDescription>Comprehensive history of capital movements.</CardDescription>
+                <CardDescription>History of invoice funding and withdrawals.</CardDescription>
               </div>
               <Badge variant="outline" className="text-[10px] font-bold">LATEST 20 ENTRIES</Badge>
             </CardHeader>
@@ -103,7 +88,7 @@ export default async function InvestorWalletPage() {
                 {ledger.length === 0 ? (
                   <div className="text-center py-20 text-muted-foreground border-2 border-dashed rounded-2xl bg-muted/20">
                     <History className="h-8 w-8 mx-auto mb-3 opacity-20" />
-                    <p className="text-sm font-medium">No transaction history recorded yet.</p>
+                    <p className="text-sm font-medium">No financial history yet.</p>
                   </div>
                 ) : (
                   ledger.map((tx) => (
@@ -111,8 +96,8 @@ export default async function InvestorWalletPage() {
                       <div className="flex items-center gap-4">
                         <div className={`p-2.5 rounded-full shadow-sm transition-transform group-hover:scale-110 ${
                           tx.type === 'deposit' ? 'bg-emerald-500/10 text-emerald-600' : 
-                          tx.type === 'investment' ? 'bg-blue-500/10 text-blue-600' :
-                          tx.type === 'withdrawal' ? 'bg-rose-500/10 text-rose-600' :
+                          tx.type === 'repayment' ? 'bg-rose-500/10 text-rose-600' :
+                          tx.type === 'withdrawal' ? 'bg-blue-500/10 text-blue-600' :
                           'bg-slate-500/10 text-slate-600'
                         }`}>
                           {tx.type === 'deposit' ? <ArrowUpRight className="h-4 w-4" /> : <ArrowDownRight className="h-4 w-4" />}
@@ -126,7 +111,7 @@ export default async function InvestorWalletPage() {
                         <p className={`text-sm font-black ${tx.type === 'deposit' ? 'text-emerald-600' : 'text-foreground'}`}>
                           {tx.type === 'deposit' ? '+' : '-'} {formatCurrency(tx.amount)}
                         </p>
-                        <p className="text-[10px] text-muted-foreground font-bold tabular-nums" suppressHydrationWarning={true}>
+                        <p className="text-[10px] text-muted-foreground font-bold tabular-nums">
                           {new Date(tx.createdAt).toLocaleDateString("en-IN", { day: 'numeric', month: 'short', year: 'numeric' })}
                         </p>
                       </div>
@@ -141,55 +126,33 @@ export default async function InvestorWalletPage() {
         <div className="space-y-8">
           <Card className="border-none shadow-xl shadow-primary/5 bg-muted/30 border border-muted-foreground/5">
             <CardHeader>
-              <CardTitle className="text-lg">Transfer Funds</CardTitle>
-              <CardDescription>Move capital between your bank and wallet.</CardDescription>
+              <CardTitle className="text-lg">Withdraw Funds</CardTitle>
+              <CardDescription>Transfer your earnings to your linked bank account.</CardDescription>
             </CardHeader>
             <CardContent>
               <WalletOperations />
             </CardContent>
           </Card>
 
-          <Card className="border-none shadow-md overflow-hidden bg-emerald-500/5 border border-emerald-500/10">
+          <Card className="border-none shadow-md overflow-hidden bg-primary/5 border border-primary/10">
             <div className="p-5 space-y-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-emerald-500/20 rounded-lg">
-                   <ShieldCheck className="h-5 w-5 text-emerald-600" />
+                <div className="p-2 bg-primary/20 rounded-lg">
+                  <ShieldCheck className="h-5 w-5 text-primary" />
                 </div>
-                <h3 className="font-bold text-emerald-800">Bank Verification</h3>
+                <h3 className="font-bold text-primary">Settlement Details</h3>
               </div>
-              <div className="p-4 rounded-xl bg-white/50 dark:bg-black/20 border border-emerald-500/10 space-y-3">
+              <div className="p-4 rounded-xl bg-white/50 dark:bg-black/20 border border-primary/10 space-y-3">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Linked Primary Account</p>
-                  <p className="text-sm font-black tabular-nums">
-                    {userRecord?.bankName || "NO BANK LINKED"} •••• {userRecord?.accountNumber?.slice(-4) || "0000"}
-                  </p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Primary Bank Account</p>
+                  <p className="text-sm font-black tabular-nums">ICICI BANK •••• 9902</p>
                 </div>
                 <div className="flex items-center justify-between text-[10px] font-bold uppercase text-emerald-600">
-                  <span>{userRecord?.kycStatus === 'approved' ? 'ACTIVE ESCROW' : 'PENDING VERIFICATION'}</span>
-                  <div className={`h-2 w-2 rounded-full ${userRecord?.kycStatus === 'approved' ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
+                  <span>KYC VERIFIED</span>
+                  <div className="h-2 w-2 rounded-full bg-emerald-500" />
                 </div>
               </div>
-              <p className="text-[10px] text-emerald-700/70 italic leading-relaxed">
-                Withdrawals are processed via IMPS/NEFT and typically settle within 2-4 business hours to your linked bank account.
-              </p>
             </div>
-          </Card>
-
-          <Card className="border-none shadow-sm">
-            <CardHeader className="pb-3">
-              <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
-                <Info className="h-3 w-3" />
-                Financial Disclosures
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-[10px] text-muted-foreground leading-relaxed">
-                Capital in the virtual wallet is held in a non-interest bearing escrow account. Investments are subject to market risks. Always review the detailed invoice audit before deploying capital.
-              </p>
-              <div className="mt-4 pt-4 border-t border-muted flex items-center justify-center gap-2 text-[10px] font-bold text-primary">
-                <Lock className="h-3 w-3" /> SECURE BANK-GRADE ENCRYPTION
-              </div>
-            </CardContent>
           </Card>
         </div>
       </div>

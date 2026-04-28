@@ -28,8 +28,13 @@ export default async function InvestorPortfolioPage() {
 
   if (!user) return null;
 
-  // Active Investments
-  const activePositions = await db
+  // 1. Fetch User and Role
+  const userRecord = await db.query.users.findFirst({
+    where: eq(users.id, user.id)
+  });
+
+  // Active Investments with calculations
+  const rawActivePositions = await db
     .select({
       id: investments.id,
       amount: investments.amount,
@@ -37,7 +42,6 @@ export default async function InvestorPortfolioPage() {
       createdAt: investments.createdAt,
       yieldRate: fundingRequests.yieldRate,
       invoiceNumber: invoices.invoiceNumber,
-      companyName: invoices.msmeId, // This should be company name, will fix join
       dueDate: invoices.dueDate,
     })
     .from(investments)
@@ -46,7 +50,31 @@ export default async function InvestorPortfolioPage() {
     .where(and(eq(investments.investorId, user.id), eq(investments.status, 'active')))
     .orderBy(desc(investments.createdAt));
 
-  // Completed Investments
+  const activePositions = rawActivePositions.map(pos => {
+    const principal = parseFloat(pos.amount);
+    const rate = parseFloat(pos.yieldRate) / 100;
+    const now = new Date();
+    const created = new Date(pos.createdAt);
+    const due = new Date(pos.dueDate);
+    
+    // Days since investment
+    const daysHeld = Math.max(0, Math.floor((now.getTime() - created.getTime()) / (1000 * 60 * 60 * 24)));
+    // Accrued Interest = P * R * (Days Held / 365)
+    const accruedInterest = principal * rate * (daysHeld / 365);
+    // Days remaining
+    const daysRemaining = Math.max(0, Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+    
+    return { ...pos, accruedInterest, daysRemaining };
+  });
+
+  // Completed Investments (Realized)
+  const settledRepayments = await db
+    .select({
+      amount: transactions.amount,
+    })
+    .from(transactions)
+    .where(and(eq(transactions.userId, user.id), eq(transactions.type, 'repayment')));
+
   const completedPositions = await db
     .select({
       id: investments.id,
@@ -62,6 +90,18 @@ export default async function InvestorPortfolioPage() {
     .where(and(eq(investments.investorId, user.id), eq(investments.status, 'completed')))
     .orderBy(desc(investments.createdAt));
 
+  const portfolioValue = activePositions.reduce((sum, pos) => sum + parseFloat(pos.amount), 0);
+  
+  // Realized gains = Sum of all repayment transaction amounts - Sum of their principals
+  // For simplicity here, we sum all repayment amounts
+  const totalRepaidAmount = settledRepayments.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+  const totalCompletedPrincipal = completedPositions.reduce((sum, pos) => sum + parseFloat(pos.amount), 0);
+  const realizedGains = totalRepaidAmount - totalCompletedPrincipal;
+  
+  const avgYield = activePositions.length > 0 
+    ? activePositions.reduce((sum, pos) => sum + parseFloat(pos.yieldRate), 0) / activePositions.length
+    : 12.5;
+
   return (
     <div className="flex-1 space-y-8 p-2">
       <div>
@@ -75,7 +115,7 @@ export default async function InvestorPortfolioPage() {
             <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Portfolio Value</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-primary">₹0.00</div>
+            <div className="text-3xl font-black text-primary">{formatCurrency(portfolioValue)}</div>
             <p className="text-[10px] text-muted-foreground mt-1 font-bold">CURRENT MARKET VALUE</p>
           </CardContent>
         </Card>
@@ -84,7 +124,7 @@ export default async function InvestorPortfolioPage() {
             <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Realized Gains</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-emerald-600">₹0.00</div>
+            <div className="text-3xl font-black text-emerald-600">{formatCurrency(realizedGains)}</div>
             <p className="text-[10px] text-muted-foreground mt-1 font-bold">TOTAL PROFIT RETURNED</p>
           </CardContent>
         </Card>
@@ -93,7 +133,7 @@ export default async function InvestorPortfolioPage() {
             <CardTitle className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Avg. Yield</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-black text-blue-600">12.4%</div>
+            <div className="text-3xl font-black text-blue-600">{avgYield.toFixed(1)}%</div>
             <p className="text-[10px] text-muted-foreground mt-1 font-bold">WEIGHTED AVERAGE RATE</p>
           </CardContent>
         </Card>
@@ -155,11 +195,11 @@ export default async function InvestorPortfolioPage() {
                           </div>
                           <div className="space-y-1">
                             <p className="text-[10px] font-bold text-muted-foreground uppercase">Accrued Interest</p>
-                            <p className="text-sm font-bold text-emerald-600">₹452.12</p>
+                            <p className="text-sm font-bold text-emerald-600">₹{pos.accruedInterest.toFixed(2)}</p>
                           </div>
                           <div className="space-y-1">
                             <p className="text-[10px] font-bold text-muted-foreground uppercase">Days Remaining</p>
-                            <p className="text-sm font-bold">64 Days</p>
+                            <p className="text-sm font-bold">{pos.daysRemaining} Days</p>
                           </div>
                         </div>
                       </div>

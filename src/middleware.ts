@@ -68,12 +68,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
-  // 2. If user exists, handle role-based redirection and protection
+  // 2. If user exists, handle verification and role-based redirection
   if (user) {
+    const isEmailVerified = !!user.email_confirmed_at
     const role = user.app_metadata?.role || user.user_metadata?.role
     
-    // Redirect logged-in users away from auth pages
-    if (isLoginPage || isRegisterPage) {
+    // Redirect unverified users to verification page if trying to access dashboard
+    if (isDashboard && !isEmailVerified && !isVerifyPage) {
+      return NextResponse.redirect(new URL('/verify', request.url))
+    }
+
+    // Redirect logged-in and verified users away from auth/verify pages
+    if (isLoginPage || isRegisterPage || (isVerifyPage && isEmailVerified)) {
       if (role === 'admin') return NextResponse.redirect(new URL('/dashboard/admin', request.url))
       if (role === 'investor') return NextResponse.redirect(new URL('/dashboard/investor', request.url))
       if (role === 'msme') return NextResponse.redirect(new URL('/dashboard/msme', request.url))

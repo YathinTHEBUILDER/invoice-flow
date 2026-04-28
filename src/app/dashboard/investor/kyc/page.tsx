@@ -18,6 +18,7 @@ import {
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { KYCUploadForm } from "@/components/dashboard/kyc-upload-form";
+import { InvestorProfileForm } from "@/components/dashboard/investor-profile-form";
 
 export default async function InvestorKYCPage() {
   const supabase = await createClient();
@@ -105,30 +106,13 @@ export default async function InvestorKYCPage() {
               <CardDescription>Upload clear copies of the following documents.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {[
-                  { name: "PAN Card", type: "Identity Proof", icon: User },
-                  { name: "Aadhar / Passport", type: "Address Proof", icon: FileText },
-                  { name: "Bank Statement", type: "Financial Proof", icon: Building2 },
-                  { name: "Cancelled Cheque", type: "Account Verification", icon: CheckCircle2 },
-                ].map((doc) => (
-                  <div key={doc.name} className="p-4 rounded-xl border border-muted-foreground/10 bg-muted/5 flex items-center gap-4">
-                    <div className="p-2 bg-white dark:bg-black/20 rounded-lg shadow-sm">
-                      <doc.icon className="h-4 w-4 text-primary" />
-                    </div>
-                    <div>
-                      <p className="text-sm font-bold">{doc.name}</p>
-                      <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{doc.type}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="pt-6 border-t border-muted">
+              <div className="pt-6">
                 <KYCUploadForm userId={user.id} />
               </div>
             </CardContent>
           </Card>
+
+          <InvestorProfileForm initialData={userRecord} />
         </div>
 
         <div className="space-y-8">

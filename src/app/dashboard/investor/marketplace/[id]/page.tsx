@@ -20,6 +20,7 @@ import {
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/utils";
+import { createClient } from "@/lib/server";
 
 export default async function InvestmentDetailPage({ params }: { params: { id: string } }) {
   const { id } = await params;
@@ -46,6 +47,14 @@ export default async function InvestmentDetailPage({ params }: { params: { id: s
   const requestedAmt = parseFloat(request.requestedAmount);
   const remaining = requestedAmt - currentSum;
   const progress = (currentSum / requestedAmt) * 100;
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  const userRecord = await db.query.users.findFirst({ where: eq(users.id, user!.id) });
+  
+  const now = new Date();
+  const dueDate = new Date(request.invoice.dueDate);
+  const tenureDays = Math.max(0, Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
 
   return (
     <div className="flex-1 space-y-8 p-2">
@@ -85,7 +94,7 @@ export default async function InvestmentDetailPage({ params }: { params: { id: s
           </div>
           <div className="space-y-1 pl-0 sm:pl-8 last:border-0">
             <p className="text-[10px] uppercase font-bold text-muted-foreground tracking-widest">Tenure</p>
-            <p className="text-3xl font-black">90 <span className="text-xs font-medium">Days</span></p>
+            <p className="text-3xl font-black">{tenureDays} <span className="text-xs font-medium">Days</span></p>
           </div>
         </div>
       </div>
@@ -202,13 +211,16 @@ export default async function InvestmentDetailPage({ params }: { params: { id: s
                 </div>
                 <div className="pt-2 border-t border-muted/50 flex items-center justify-between text-sm font-bold">
                   <span>Your Balance</span>
-                  <span>₹0.00</span>
+                  <span>{formatCurrency(userRecord?.walletBalance || "0")}</span>
                 </div>
               </div>
 
               <InvestmentForm 
                 fundingRequestId={id} 
                 remainingLimit={remaining} 
+                yieldRate={parseFloat(request.yieldRate)}
+                tenureDays={tenureDays}
+                kycStatus={userRecord?.kycStatus || "pending"}
               />
               
               <p className="text-[10px] text-center text-muted-foreground flex items-center justify-center gap-1">

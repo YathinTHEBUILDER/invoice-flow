@@ -4,241 +4,277 @@ import { createSafeActionClient } from "next-safe-action";
 import { z } from "zod";
 import { createClient } from "@/lib/server";
 import { db } from "@/db";
-import { 
-  users, 
-  invoices, 
-  fundingRequests, 
-  investments, 
-  transactions, 
-  activityLogs, 
-  kycDocuments,
-  notifications
-} from "@/db/schema";
-import { eq, and, desc, sum, count, sql } from "drizzle-orm";
+import { users, auditLogs, investments, fundingRequests, transactions } from "@/db/schema";
+import { eq, sum, sql, and } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 
 const actionClient = createSafeActionClient();
 
-// ----------------------------------------------------------------------
-// SCHEMAS
-// ----------------------------------------------------------------------
-
-const walletOperationSchema = z.object({
-  amount: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-    message: "Amount must be a positive number",
-  }),
-  type: z.enum(["deposit", "withdrawal"]),
+const updateProfileSchema = z.object({
+  fullName: z.string().min(2),
+  panNumber: z.string(),
+  aadhaarNumber: z.string(),
+  phoneNumber: z.string(),
+  address: z.string(),
+  city: z.string(),
+  state: z.string(),
+  pincode: z.string(),
+  bankName: z.string(),
+  accountNumber: z.string(),
+  ifscCode: z.string(),
+  accountHolderName: z.string(),
+  nomineeName: z.string().optional(),
+  nomineeRelation: z.string().optional(),
 });
 
-const investmentSchema = z.object({
+const investSchema = z.object({
   fundingRequestId: z.string().uuid(),
-  amount: z.string().refine((val) => !isNaN(parseFloat(val)) && parseFloat(val) > 0, {
-    message: "Investment amount must be a positive number",
-  }),
+  amount: z.string(),
 });
 
-// ----------------------------------------------------------------------
-// ACTIONS
-// ----------------------------------------------------------------------
-
-export const handleWalletOperationAction = actionClient
-  .schema(walletOperationSchema)
-  .action(async ({ parsedInput: { amount, type } }) => {
+export const updateInvestorProfileAction = actionClient
+  .schema(updateProfileSchema)
+  .action(async ({ parsedInput }) => {
     try {
       const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
+
       if (!user) throw new Error("Unauthorized");
 
-      const numericAmount = parseFloat(amount);
+      await db.update(users)
+        .set({
+          fullName: parsedInput.fullName,
+          panNumber: parsedInput.panNumber,
+          aadhaarNumber: parsedInput.aadhaarNumber,
+          phoneNumber: parsedInput.phoneNumber,
+          address: parsedInput.address,
+          city: parsedInput.city,
+          state: parsedInput.state,
+          pincode: parsedInput.pincode,
+          bankName: parsedInput.bankName,
+          accountNumber: parsedInput.accountNumber,
+          ifscCode: parsedInput.ifscCode,
+          accountHolderName: parsedInput.accountHolderName,
+          nomineeName: parsedInput.nomineeName || null,
+          nomineeRelation: parsedInput.nomineeRelation || null,
+          updatedAt: new Date(),
+        })
+        .where(eq(users.id, user.id));
 
-      await db.transaction(async (tx) => {
-        const userRecord = await tx.query.users.findFirst({
-          where: eq(users.id, user.id),
-        });
-
-        if (!userRecord) throw new Error("User record not found");
-
-        if (type === "withdrawal") {
-          const currentBalance = parseFloat(userRecord.walletBalance);
-          if (currentBalance < numericAmount) {
-            throw new Error("Insufficient funds for withdrawal");
-          }
-          
-          await tx.update(users)
-            .set({ walletBalance: sql`${users.walletBalance} - ${amount}` })
-            .where(eq(users.id, user.id));
-        } else {
-          await tx.update(users)
-            .set({ walletBalance: sql`${users.walletBalance} + ${amount}` })
-            .where(eq(users.id, user.id));
-        }
-
-        // Record Transaction
-        await tx.insert(transactions).values({
-          userId: user.id,
-          type: type as any,
-          amount: amount,
-          description: `${type.charAt(0).toUpperCase() + type.slice(1)} to wallet`,
-        });
-
-        // Activity Log
-        await tx.insert(activityLogs).values({
-          userId: user.id,
-          action: `wallet_${type}`,
-          details: `${type} of ₹${amount} processed.`,
-        });
-      });
-
-      revalidatePath("/dashboard/investor/wallet");
-      revalidatePath("/dashboard/investor");
-      return { success: true, error: null };
+      revalidatePath("/dashboard/investor/kyc");
+      return { success: true, message: "Profile updated successfully" };
     } catch (error: any) {
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || "An unexpected error occurred" };
     }
   });
 
 export const investInInvoiceAction = actionClient
-  .schema(investmentSchema)
+  .schema(investSchema)
   .action(async ({ parsedInput: { fundingRequestId, amount } }) => {
     try {
       const supabase = await createClient();
       const { data: { user } } = await supabase.auth.getUser();
+
       if (!user) throw new Error("Unauthorized");
 
-      const numericAmount = parseFloat(amount);
+      const investmentAmount = parseFloat(amount);
+      if (isNaN(investmentAmount) || investmentAmount < 1000) {
+        throw new Error("Minimum investment amount is ₹1,000");
+      }
 
-      const result = await db.transaction(async (tx) => {
-        // 1. Fetch User and verify role/balance
-        const userRecord = await tx.query.users.findFirst({
-          where: eq(users.id, user.id),
-        });
+      // 1. Get user record and check KYC status
+      const userRecord = await db.query.users.findFirst({
+        where: eq(users.id, user.id)
+      });
 
-        if (!userRecord || userRecord.role !== "investor") throw new Error("Only investors can participate.");
-        if (parseFloat(userRecord.walletBalance) < numericAmount) throw new Error("Insufficient wallet balance.");
+      if (!userRecord || userRecord.kycStatus !== "approved") {
+        throw new Error("Your KYC must be approved before you can invest.");
+      }
 
-        // 2. Fetch Funding Request and verify status/limit
-        const request = await tx.query.fundingRequests.findFirst({
-          where: eq(fundingRequests.id, fundingRequestId),
-          with: {
-            invoice: true,
-          }
-        });
+      // 2. Check wallet balance
+      if (parseFloat(userRecord.walletBalance) < investmentAmount) {
+        throw new Error("Insufficient wallet balance. Please add funds.");
+      }
 
-        if (!request || request.status !== "open") throw new Error("Funding request is no longer open.");
+      // 3. Get funding request and check remaining limit
+      const request = await db.query.fundingRequests.findFirst({
+        where: eq(fundingRequests.id, fundingRequestId)
+      });
 
-        const totalInvested = await tx
-          .select({ sum: sum(investments.amount) })
-          .from(investments)
-          .where(eq(investments.fundingRequestId, fundingRequestId));
-        
-        const currentTotal = parseFloat(totalInvested[0]?.sum || "0");
-        const remainingLimit = parseFloat(request.requestedAmount) - currentTotal;
+      if (!request || request.status !== "open") {
+        throw new Error("This funding request is no longer open for investment.");
+      }
 
-        if (numericAmount > remainingLimit) {
-          throw new Error(`Exceeds remaining limit. Max allowed: ₹${remainingLimit.toFixed(2)}`);
-        }
+      const totalInvested = await db
+        .select({ sum: sum(investments.amount) })
+        .from(investments)
+        .where(eq(investments.fundingRequestId, fundingRequestId));
+      
+      const currentSum = parseFloat(totalInvested[0]?.sum || "0");
+      const requestedAmt = parseFloat(request.requestedAmount);
+      const remainingLimit = requestedAmt - currentSum;
 
-        // 3. Process Investment
-        const [inv] = await tx.insert(investments).values({
-          fundingRequestId,
-          investorId: user.id,
-          amount,
-          status: "active",
-        }).returning();
+      if (investmentAmount > remainingLimit) {
+        throw new Error(`Investment exceeds remaining limit of ${remainingLimit.toLocaleString()}`);
+      }
 
-        // 4. Update Wallet Balance
+      // 4. Atomic Transaction: Update Wallet, Record Investment, Record Transaction, Update Request Status if filled
+      await db.transaction(async (tx) => {
+        // Deduct from wallet
         await tx.update(users)
-          .set({ walletBalance: sql`${users.walletBalance} - ${amount}` })
+          .set({ 
+            walletBalance: sql`${users.walletBalance} - ${amount}` 
+          })
           .where(eq(users.id, user.id));
 
-        // 5. Record Transaction
+        // Create investment record
+        await tx.insert(investments).values({
+          investorId: user.id,
+          fundingRequestId: fundingRequestId,
+          amount: amount,
+          status: "active",
+        });
+
+        // Record in ledger
         await tx.insert(transactions).values({
           userId: user.id,
           type: "investment",
-          amount,
-          description: `Investment in Invoice #${request.invoice.invoiceNumber}`,
-          referenceId: inv.id,
+          amount: amount,
+          description: `Investment in Funding Request ${fundingRequestId}`,
+          referenceId: fundingRequestId,
         });
 
-        // 6. Check if fully funded and update status
-        if (currentTotal + numericAmount >= parseFloat(request.requestedAmount)) {
+        // Check if now fully funded
+        const newTotal = currentSum + investmentAmount;
+        if (newTotal >= requestedAmt) {
           await tx.update(fundingRequests)
             .set({ status: "filled" })
             .where(eq(fundingRequests.id, fundingRequestId));
-          
-          await tx.update(invoices)
-            .set({ status: "funded" })
-            .where(eq(invoices.id, request.invoiceId));
-          
-          // Notify MSME
-          await tx.insert(notifications).values({
-            userId: request.invoice.msmeId,
-            title: "Invoice Fully Funded!",
-            message: `Your invoice #${request.invoice.invoiceNumber} has been fully funded and is moving to disbursement.`,
-            type: "funding",
-            link: `/dashboard/msme/invoices/${request.invoiceId}`,
-          });
         }
-
-        // 7. Activity Log
-        await tx.insert(activityLogs).values({
-          userId: user.id,
-          action: "invest",
-          details: `Invested ₹${amount} in Invoice #${request.invoice.invoiceNumber}`,
-        });
-
-        return { success: true, error: null };
       });
 
       revalidatePath("/dashboard/investor/marketplace");
-      revalidatePath("/dashboard/investor");
-      return result;
+      revalidatePath(`/dashboard/investor/marketplace/${fundingRequestId}`);
+      revalidatePath("/dashboard/investor/portfolio");
+      revalidatePath("/dashboard/investor/wallet");
+
+      return { success: true, message: "Investment successful!" };
     } catch (error: any) {
-      return { success: false, error: error.message };
+      return { success: false, error: error.message || "An unexpected error occurred" };
     }
   });
 
-export async function getInvestorAnalytics(userId: string) {
+export const getInvestorAnalytics = async (userId: string) => {
   try {
-    const totalInvested = await db.select({ value: sum(investments.amount) })
-      .from(investments)
-      .where(eq(investments.investorId, userId));
-    
-    const activeInvestmentsCount = await db.select({ value: count() })
-      .from(investments)
-      .where(and(eq(investments.investorId, userId), eq(investments.status, "active")));
-    
     const userRecord = await db.query.users.findFirst({
-      where: eq(users.id, userId),
+      where: eq(users.id, userId)
     });
 
-    // Calculate expected returns based on yield rates
-    // This is a simplified calculation for the dashboard
-    const yieldStats = await db
-      .select({ 
-        amount: investments.amount, 
-        rate: fundingRequests.yieldRate 
-      })
-      .from(investments)
-      .innerJoin(fundingRequests, eq(investments.fundingRequestId, fundingRequests.id))
-      .where(and(eq(investments.investorId, userId), eq(investments.status, "active")));
+    if (!userRecord) return null;
 
-    const expectedReturns = yieldStats.reduce((sum, item) => {
-      const amt = parseFloat(item.amount);
-      const rate = parseFloat(item.rate) / 100;
-      // Simplified: Assume 90 days tenure for display purposes if not explicit
-      return sum + (amt * rate * (90/365));
+    const activeInvestments = await db.query.investments.findMany({
+      where: and(eq(investments.investorId, userId), eq(investments.status, 'active')),
+      with: {
+        fundingRequest: {
+          with: {
+            invoice: true
+          }
+        }
+      }
+    });
+
+    const totalInvested = activeInvestments.reduce((sum, inv) => sum + parseFloat(inv.amount), 0);
+    
+    // Expected returns calculation
+    const expectedReturns = activeInvestments.reduce((sum, inv) => {
+      const principal = parseFloat(inv.amount);
+      const rate = parseFloat(inv.fundingRequest.yieldRate) / 100;
+      const now = new Date();
+      const due = new Date(inv.fundingRequest.invoice.dueDate);
+      const tenureDays = Math.max(0, Math.ceil((due.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)));
+      return sum + (principal * rate * (tenureDays / 365));
     }, 0);
 
+    const totalReceivedTx = await db.query.transactions.findMany({
+      where: and(eq(transactions.userId, userId), eq(transactions.type, 'repayment'))
+    });
+    const totalReceived = totalReceivedTx.reduce((sum, tx) => sum + parseFloat(tx.amount), 0);
+
+    // Overdue check (default exposure)
+    const overdueInvestments = activeInvestments.filter(inv => {
+      const due = new Date(inv.fundingRequest.invoice.dueDate);
+      return due < new Date();
+    });
+    const defaultExposure = activeInvestments.length > 0 
+      ? (overdueInvestments.length / activeInvestments.length) * 100 
+      : 0;
+
     return {
-      totalInvested: parseFloat(totalInvested[0]?.value || "0"),
-      activeInvestments: activeInvestmentsCount[0]?.value || 0,
-      walletBalance: parseFloat(userRecord?.walletBalance || "0"),
-      expectedReturns: expectedReturns,
-      kycStatus: userRecord?.kycStatus || "pending",
+      totalInvested,
+      activeInvestments: activeInvestments.length,
+      walletBalance: parseFloat(userRecord.walletBalance),
+      expectedReturns,
+      totalReceived,
+      defaultExposure,
+      kycStatus: userRecord.kycStatus,
     };
   } catch (error) {
     console.error("Error fetching investor analytics:", error);
     return null;
   }
-}
+};
+
+export const handleWalletOperationAction = actionClient
+  .schema(z.object({
+    amount: z.string(),
+    type: z.enum(["deposit", "withdrawal"]),
+  }))
+  .action(async ({ parsedInput: { amount, type } }) => {
+    try {
+      const supabase = await createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+
+      if (!user) throw new Error("Unauthorized");
+
+      const operationAmount = parseFloat(amount);
+      if (isNaN(operationAmount) || operationAmount <= 0) {
+        throw new Error("Invalid amount");
+      }
+
+      await db.transaction(async (tx) => {
+        const userRecord = await tx.query.users.findFirst({
+          where: eq(users.id, user.id)
+        });
+
+        if (type === "withdrawal") {
+          if (!userRecord || parseFloat(userRecord.walletBalance) < operationAmount) {
+            throw new Error("Insufficient balance for withdrawal.");
+          }
+          
+          await tx.update(users)
+            .set({ 
+              walletBalance: sql`${users.walletBalance} - ${amount}` 
+            })
+            .where(eq(users.id, user.id));
+        } else {
+          await tx.update(users)
+            .set({ 
+              walletBalance: sql`${users.walletBalance} + ${amount}` 
+            })
+            .where(eq(users.id, user.id));
+        }
+
+        await tx.insert(transactions).values({
+          userId: user.id,
+          type: type,
+          amount: amount,
+          description: `${type.charAt(0).toUpperCase() + type.slice(1)} of funds`,
+        });
+      });
+
+      revalidatePath("/dashboard/investor/wallet");
+      return { success: true, message: "Transaction successful" };
+    } catch (error: any) {
+      return { success: false, error: error.message || "An unexpected error occurred" };
+    }
+  });

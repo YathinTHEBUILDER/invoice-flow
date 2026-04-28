@@ -16,9 +16,10 @@ import {
 import { toast } from "sonner";
 
 const REQUIRED_DOCS = [
-  { id: "pan", label: "PAN Card", description: "Permanent Account Number." },
-  { id: "gstin", label: "GST Certificate", description: "GST registration certificate." },
+  { id: "pan", label: "PAN Card", description: "Upload a clear photo of your PAN card." },
+  { id: "aadhaar", label: "Aadhaar Card", description: "Identity and Address proof." },
   { id: "bank_statement", label: "Bank Statement", description: "Last 6 months statements." },
+  { id: "cancelled_cheque", label: "Cancelled Cheque", description: "Account verification proof." },
 ];
 
 export function KYCUploadForm({ userId }: { userId: string }) {

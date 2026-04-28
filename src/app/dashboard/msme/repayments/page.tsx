@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { RepayButton } from "./repay-button";
 
 export default async function MSMERepaymentsPage() {
   const supabase = await createClient();
@@ -96,7 +97,10 @@ export default async function MSMERepaymentsPage() {
                           <p className="font-bold text-base">{formatCurrency(repayment.amount)}</p>
                           <p className="text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">Total Amount</p>
                         </div>
-                        <Button size="sm" className="shadow-md shadow-primary/10">Pay Now</Button>
+                        <RepayButton 
+                          repaymentId={repayment.id} 
+                          amount={parseFloat(repayment.amount)} 
+                        />
                       </div>
                     </div>
                   ))}

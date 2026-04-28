@@ -26,6 +26,26 @@ export const users = pgTable("users", {
   role: roleEnum("role").notNull(),
   fullName: text("full_name").notNull(),
   companyName: text("company_name"),
+  
+  // Investor / MSME Profile Details
+  panNumber: text("pan_number"),
+  aadhaarNumber: text("aadhaar_number"),
+  phoneNumber: text("phone_number"),
+  address: text("address"),
+  city: text("city"),
+  state: text("state"),
+  pincode: text("pincode"),
+  
+  // Bank Details
+  bankName: text("bank_name"),
+  accountNumber: text("account_number"),
+  ifscCode: text("ifsc_code"),
+  accountHolderName: text("account_holder_name"),
+  
+  // Nominee Details (Optional for now)
+  nomineeName: text("nominee_name"),
+  nomineeRelation: text("nominee_relation"),
+  
   kycStatus: kycStatusEnum("kyc_status").notNull().default("pending"),
   walletBalance: numeric("wallet_balance", { precision: 12, scale: 2 }).notNull().default("0.00"),
   isSuspended: boolean("is_suspended").notNull().default(false),

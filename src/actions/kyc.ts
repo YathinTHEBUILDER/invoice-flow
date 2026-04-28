@@ -14,7 +14,7 @@ const actionClient = createSafeActionClient();
 // ----------------------------------------------------------------------
 
 const submitKycSchema = z.object({
-  documentType: z.enum(["pan", "gstin", "udyam", "bank_statement"]),
+  documentType: z.enum(["pan", "gstin", "udyam", "bank_statement", "aadhaar", "cancelled_cheque"]),
   filePath: z.string().min(1, { message: "File path is required" }),
 });
 

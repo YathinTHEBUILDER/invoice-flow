@@ -28,7 +28,7 @@ export default async function MSMEFinancingPage() {
   // Since Drizzle's join query might return a different structure depending on setup,
   // let's do a more robust fetch if the above doesn't work as expected.
   // Using a manual join for clarity.
-  const requests = await db
+  const rawRequests = await db
     .select({
       id: fundingRequests.id,
       requestedAmount: fundingRequests.requestedAmount,
@@ -43,6 +43,21 @@ export default async function MSMEFinancingPage() {
     .innerJoin(invoices, eq(fundingRequests.invoiceId, invoices.id))
     .where(eq(invoices.msmeId, user.id))
     .orderBy(desc(fundingRequests.createdAt));
+
+  const requests = await Promise.all(
+    rawRequests.map(async (req) => {
+      const totalInvested = await db
+        .select({ sum: sql<string>`sum(${investments.amount})` })
+        .from(investments)
+        .where(eq(investments.fundingRequestId, req.id));
+      
+      const currentSum = parseFloat(totalInvested[0]?.sum || "0");
+      const requestedAmt = parseFloat(req.requestedAmount);
+      const progress = Math.min(100, (currentSum / requestedAmt) * 100);
+      
+      return { ...req, progress, currentSum };
+    })
+  );
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -117,9 +132,9 @@ export default async function MSMEFinancingPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-muted-foreground font-medium">Funding Progress</span>
-                        <span className="font-bold text-primary">65% Funded</span>
+                        <span className="font-bold text-primary">{request.progress.toFixed(1)}% Funded</span>
                       </div>
-                      <Progress value={65} className="h-2" />
+                      <Progress value={request.progress} className="h-2" />
                     </div>
                   )}
                 </div>

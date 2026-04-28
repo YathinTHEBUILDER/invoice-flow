@@ -164,30 +164,76 @@ export const repayInvoiceAction = actionClient
 
       // Transactional update
       await db.transaction(async (tx) => {
-        // Deduct from wallet
+        // 1. Deduct from MSME wallet
         await tx.update(users)
           .set({ walletBalance: (balance - amountToPay).toString() })
           .where(eq(users.id, user.id));
 
-        // Mark repayment as completed
+        // 2. Mark repayment as completed
         await tx.update(repayments)
           .set({ status: "completed", paidAt: new Date() })
           .where(eq(repayments.id, repaymentId));
 
-        // Create transaction record
+        // 3. Update Invoice status to repaid
+        await tx.update(invoices)
+          .set({ status: "repaid" })
+          .where(eq(invoices.id, repayment.fundingRequest.invoiceId));
+
+        // 4. Distribute funds to Investors
+        const participatingInvestments = await tx.query.investments.findMany({
+          where: eq(investments.fundingRequestId, repayment.fundingRequestId),
+        });
+
+        const totalRequested = parseFloat(repayment.fundingRequest.requestedAmount);
+        const totalRepaidAmount = parseFloat(repayment.amount);
+        
+        for (const inv of participatingInvestments) {
+          const invAmount = parseFloat(inv.amount);
+          // Investor's share = (Investor Principal / Total Principal) * Total Repaid (Principal + Interest)
+          const share = (invAmount / totalRequested) * totalRepaidAmount;
+
+          // Credit investor wallet
+          await tx.update(users)
+            .set({ walletBalance: sql`${users.walletBalance} + ${share.toFixed(2)}` })
+            .where(eq(users.id, inv.investorId));
+
+          // Mark investment as completed
+          await tx.update(investments)
+            .set({ status: "completed" })
+            .where(eq(investments.id, inv.id));
+
+          // Record Transaction for Investor
+          await tx.insert(transactions).values({
+            userId: inv.investorId,
+            type: "repayment",
+            amount: share.toFixed(2),
+            description: `Returns from Invoice #${repayment.fundingRequest.invoice.invoiceNumber}`,
+            referenceId: inv.id,
+          });
+
+          // Notify Investor
+          await tx.insert(notifications).values({
+            userId: inv.investorId,
+            title: "Investment Settled",
+            message: `Your investment in Invoice #${repayment.fundingRequest.invoice.invoiceNumber} has been settled. ₹${share.toFixed(2)} credited to your wallet.`,
+            type: "payment",
+          });
+        }
+
+        // 5. Create transaction record for MSME
         await tx.insert(transactions).values({
           userId: user.id,
           type: "repayment",
           amount: repayment.amount,
-          description: `Repayment for Funding Request ${repayment.fundingRequestId}`,
+          description: `Repayment for Invoice #${repayment.fundingRequest.invoice.invoiceNumber}`,
           referenceId: repayment.id,
         });
 
-        // Add activity log
+        // 6. Add activity log
         await tx.insert(activityLogs).values({
           userId: user.id,
           action: "repay_invoice",
-          details: `Repaid ₹${repayment.amount} for funding request ${repayment.fundingRequestId}`,
+          details: `Repaid ₹${repayment.amount} for invoice ${repayment.fundingRequest.invoice.invoiceNumber}`,
         });
       });
 
