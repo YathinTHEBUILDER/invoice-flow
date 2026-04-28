@@ -308,6 +308,8 @@ export const approveKYCAction = actionClient
     await logAdminAction('approve_kyc', 'profile', userId, { requestId });
     
     revalidatePath("/admin");
+    revalidatePath("/msme");
+    revalidatePath("/msme/kyc");
 
     // Notify User
     await createNotification(
@@ -350,6 +352,8 @@ export const rejectKYCAction = actionClient
     await logAdminAction('reject_kyc', 'profile', userId, { requestId, notes });
     
     revalidatePath("/admin");
+    revalidatePath("/msme");
+    revalidatePath("/msme/kyc");
 
     // Notify User
     await createNotification(
