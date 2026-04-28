@@ -24,12 +24,37 @@ export default async function MsmeDashboard() {
           <h2 className="text-5xl font-black tracking-tighter text-white">Dashboard</h2>
           <p className="text-muted-foreground font-medium text-lg italic">Operational overview of your invoice financing activity.</p>
         </div>
-        <Link href="/msme/invoices">
-          <Button className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20">
-            <Plus className="mr-2 h-5 w-5" /> Raise New Funding
+        <Link href={stats.kycStatus === 'verified' ? "/msme/invoices" : "/msme/kyc"}>
+          <Button 
+            disabled={stats.kycStatus !== 'verified'}
+            className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 disabled:opacity-50"
+          >
+            <Plus className="mr-2 h-5 w-5" /> 
+            {stats.kycStatus === 'verified' ? "Raise New Funding" : "Verify KYC to Start"}
           </Button>
         </Link>
       </div>
+
+      {stats.kycStatus !== 'verified' && (
+        <div className="p-8 rounded-3xl bg-orange-500/5 border border-orange-500/20 flex flex-col md:flex-row items-center justify-between gap-6 animate-in fade-in slide-in-from-top-4 duration-700">
+          <div className="flex items-center gap-5">
+            <div className="p-4 rounded-2xl bg-orange-500/20 text-orange-500">
+              <ShieldCheck className="w-8 h-8" />
+            </div>
+            <div>
+              <p className="text-lg font-black text-white italic">Compliance Clearance Required</p>
+              <p className="text-sm text-muted-foreground font-medium max-w-xl">
+                Your account is currently restricted. Complete the manual identity verification process to unlock invoice discounting and funding features.
+              </p>
+            </div>
+          </div>
+          <Link href="/msme/kyc">
+            <Button className="h-12 px-10 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-[10px]">
+              Access Compliance Module
+            </Button>
+          </Link>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         {[

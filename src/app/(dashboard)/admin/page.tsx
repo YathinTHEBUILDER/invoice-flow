@@ -21,19 +21,22 @@ import {
   Loader2,
   RefreshCcw,
   ShieldCheck,
-  Briefcase
+  Briefcase,
+  FileText
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import { 
   getAdminStats, 
   getKYCQueue, 
   getInvoices, 
-  updateKYCAction,
+  approveKYCAction,
+  rejectKYCAction,
   getPlatformSettings,
   updateSettingAction,
   getDisputes,
   getAuditLogs
 } from "@/app/actions/admin";
+import { createClient } from "@/lib/client";
 import { toast } from "sonner";
 
 export default function AdminDashboard() {
@@ -50,6 +53,8 @@ export default function AdminDashboard() {
   const [settings, setSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [rejectionNotes, setRejectionNotes] = useState("");
 
   useEffect(() => {
     setActiveTab(tabParam);
@@ -58,6 +63,15 @@ export default function AdminDashboard() {
   const loadData = async () => {
     setLoading(true);
     try {
+      const supabase = createClient();
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user || user.app_metadata?.role !== 'admin') {
+        toast.error("Access Denied: Administrative authority required.");
+        router.push("/");
+        return;
+      }
+
       const [statsData, kycData, invoiceData, settingsData, disputeData, logsData] = await Promise.all([
         getAdminStats(),
         getKYCQueue(),
@@ -72,9 +86,13 @@ export default function AdminDashboard() {
       setSettings(settingsData);
       setDisputes(disputeData);
       setAuditLogs(logsData);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Failed to load dashboard data:", error);
-      toast.error("Failed to sync with real-time platform data.");
+      if (error.message?.includes("Unauthorized") || error.message?.includes("Admin access required")) {
+        router.push("/");
+      } else {
+        toast.error("Failed to sync with real-time platform data.");
+      }
     } finally {
       setLoading(false);
     }
@@ -84,15 +102,32 @@ export default function AdminDashboard() {
     loadData();
   }, []);
 
-  const handleKYCUpdate = async (requestId: string, status: "approved" | "rejected") => {
+  const handleKYCUpdate = async (requestId: string, status: "approved" | "rejected", userId: string) => {
     setActionLoading(requestId);
     try {
-      const result = await updateKYCAction({ requestId, status });
-      if (result?.data?.success) {
-        toast.success(`Identity ${status} successfully.`);
-        await loadData();
+      if (status === "approved") {
+        const result = await approveKYCAction({ requestId, userId });
+        if (result?.data?.success) {
+          toast.success("Identity approved successfully.");
+          setSelectedRequest(null);
+          await loadData();
+        } else {
+          toast.error(result?.serverError || "Failed to approve KYC.");
+        }
       } else {
-        toast.error(result?.serverError || "Failed to update KYC status.");
+        if (!rejectionNotes || rejectionNotes.length < 5) {
+          toast.error("Please provide a detailed rejection reason.");
+          return;
+        }
+        const result = await rejectKYCAction({ requestId, userId, notes: rejectionNotes });
+        if (result?.data?.success) {
+          toast.success("Identity rejected successfully.");
+          setSelectedRequest(null);
+          setRejectionNotes("");
+          await loadData();
+        } else {
+          toast.error(result?.serverError || "Failed to reject KYC.");
+        }
       }
     } catch (error) {
       toast.error("An unexpected system error occurred.");
@@ -265,107 +300,218 @@ export default function AdminDashboard() {
 
         {/* --- KYC TAB --- */}
         <TabsContent value="kyc" className="focus-visible:outline-none">
-          <Card className="glass-dark border-white/5 overflow-hidden">
-            <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div className="space-y-1">
-                <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Compliance Verification</CardTitle>
-                <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">ID & Business Entity Approval Queue</CardDescription>
+          {selectedRequest ? (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between">
+                <Button 
+                  variant="ghost" 
+                  onClick={() => setSelectedRequest(null)}
+                  className="font-black uppercase tracking-widest text-[10px] hover:bg-white/5"
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" /> Back to Queue
+                </Button>
+                <div className="flex items-center gap-4">
+                  <Badge variant="outline" className="border-white/10 px-4 py-1 text-[10px] font-black uppercase tracking-widest">
+                    Request #{selectedRequest.id.split('-')[0]}
+                  </Badge>
+                </div>
               </div>
-              <div className="relative w-full md:w-80 group">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                <Input className="pl-12 bg-white/5 border-white/10 h-12 font-bold focus:bg-white/10 transition-all" placeholder="Search stakeholders..." />
-              </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/5 text-left bg-white/[0.01]">
-                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Entity Identity</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Node Role</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Submission Epoch</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
-                      <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {kycQueue.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-8 py-20 text-center">
-                          <div className="space-y-4">
-                            <ShieldCheck className="w-12 h-12 text-muted-foreground/10 mx-auto" />
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">Queue Purged: All Entities Verified</p>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      kycQueue.map((req) => (
-                        <tr key={req.id} className="group hover:bg-white/[0.02] transition-colors">
-                          <td className="px-8 py-8">
-                            <div className="flex items-center gap-4">
-                              <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/5 flex items-center justify-center font-black text-white text-lg group-hover:border-primary/20 transition-all shadow-inner">
-                                {req.profiles?.company_name?.[0] || req.profiles?.full_name?.[0] || "?"}
-                              </div>
-                              <div className="flex flex-col">
-                                <span className="font-black text-white text-base tracking-tight">{req.profiles?.company_name || req.profiles?.full_name}</span>
-                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{req.profiles?.email}</span>
-                              </div>
-                            </div>
-                          </td>
-                          <td className="px-8 py-8">
-                            <Badge variant="outline" className="border-white/10 text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-white/[0.02]">{req.profiles?.role}</Badge>
-                          </td>
-                          <td className="px-8 py-8">
-                            <div className="flex flex-col">
-                              <span className="text-sm font-black text-white/80">{new Date(req.created_at).toLocaleDateString()}</span>
-                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{new Date(req.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                            </div>
-                          </td>
-                          <td className="px-8 py-8">
-                            <Badge className={
-                              req.status === "approved" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
-                              req.status === "pending" ? "bg-primary/10 text-primary border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
-                              "bg-orange-500/10 text-orange-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
-                            }>
-                              {req.status}
-                            </Badge>
-                          </td>
-                          <td className="px-8 py-8 text-right">
-                            <div className="flex justify-end gap-3 opacity-40 group-hover:opacity-100 transition-all">
-                              {req.status === "pending" && (
-                                <>
-                                  <Button 
-                                    size="sm" 
-                                    className="h-10 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[9px] shadow-lg shadow-emerald-500/20"
-                                    onClick={() => handleKYCUpdate(req.id, "approved")}
-                                    disabled={actionLoading === req.id}
-                                  >
-                                    {actionLoading === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <CheckCircle2 className="w-3.5 h-3.5 mr-2" />}
-                                    Approve
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="destructive"
-                                    className="h-10 px-4 font-black uppercase tracking-widest text-[9px] shadow-lg shadow-red-500/20"
-                                    onClick={() => handleKYCUpdate(req.id, "rejected")}
-                                    disabled={actionLoading === req.id}
-                                  >
-                                    {actionLoading === req.id ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <XCircle className="w-3.5 h-3.5 mr-2" />}
-                                    Reject
-                                  </Button>
-                                </>
-                              )}
 
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div className="lg:col-span-2 space-y-10">
+                  <Card className="glass-dark border-white/5 overflow-hidden">
+                    <CardHeader className="p-8 border-b border-white/5 bg-white/[0.01]">
+                      <CardTitle className="text-2xl font-black italic">Submitted Repositories</CardTitle>
+                      <CardDescription>Inspect high-resolution business registrations and tax identifiers.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                      {Object.entries(selectedRequest.documents || {}).filter(([key]) => key !== 'selfie').map(([key, url]: [string, any]) => (
+                        <div key={key} className="space-y-4">
+                          <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">{key.replace('_', ' ')}</label>
+                          <a 
+                            href={url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="group relative block aspect-video rounded-2xl border border-white/10 bg-white/5 overflow-hidden hover:border-primary/30 transition-all shadow-2xl"
+                          >
+                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                              <Search className="w-8 h-8 text-white" />
+                            </div>
+                            {url.endsWith('.pdf') ? (
+                                <div className="w-full h-full flex flex-col items-center justify-center space-y-3">
+                                  <FileText className="w-12 h-12 text-primary/40" />
+                                  <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">PDF Document</span>
+                                </div>
+                            ) : (
+                                <img src={url} alt={key} className="w-full h-full object-cover" />
+                            )}
+                          </a>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+
+                  <Card className="glass-dark border-white/5 bg-primary/[0.01]">
+                    <CardHeader className="p-8 border-b border-white/5">
+                      <CardTitle className="text-xl font-black italic">Administrative Decision</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8 space-y-8">
+                      <div className="space-y-4">
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Rejection Remarks (Required if rejecting)</label>
+                        <Input 
+                          placeholder="Provide detailed feedback for the MSME..." 
+                          value={rejectionNotes}
+                          onChange={(e) => setRejectionNotes(e.target.value)}
+                          className="bg-white/5 border-white/10 h-16 font-bold focus:bg-white/10 transition-all"
+                        />
+                      </div>
+                      <div className="flex gap-6">
+                        <Button 
+                          className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-emerald-500/20"
+                          onClick={() => handleKYCUpdate(selectedRequest.id, "approved", selectedRequest.user_id)}
+                          disabled={actionLoading === selectedRequest.id}
+                        >
+                          {actionLoading === selectedRequest.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
+                          Confirm Clearance
+                        </Button>
+                        <Button 
+                          variant="destructive"
+                          className="flex-1 h-14 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-red-500/20"
+                          onClick={() => handleKYCUpdate(selectedRequest.id, "rejected", selectedRequest.user_id)}
+                          disabled={actionLoading === selectedRequest.id}
+                        >
+                          {actionLoading === selectedRequest.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-5 w-5" />}
+                          Issue Rejection
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-10">
+                  <Card className="glass-dark border-white/5 overflow-hidden">
+                    <CardHeader className="p-8 border-b border-white/5 bg-white/[0.01]">
+                      <CardTitle className="text-xl font-black italic">Biometric Selfie</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8">
+                      <div className="aspect-[3/4] w-full rounded-[60px/80px] border-4 border-dashed border-white/10 overflow-hidden bg-white/[0.02]">
+                        {selectedRequest.documents?.selfie ? (
+                          <img src={selectedRequest.documents.selfie} alt="Identity Selfie" className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-muted-foreground italic text-xs">No selfie submitted</div>
+                        )}
+                      </div>
+                      <p className="mt-6 text-[10px] text-muted-foreground font-medium text-center leading-relaxed italic">
+                        Verify if the person in the selfie matches the identity proof and business records.
+                      </p>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="glass-dark border-white/5">
+                    <CardHeader className="p-8 border-b border-white/5">
+                      <CardTitle className="text-sm font-black uppercase tracking-widest">Entity Metadata</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8 space-y-6">
+                      {[
+                        { label: "Entity Name", value: selectedRequest.profiles?.company_name || selectedRequest.profiles?.full_name },
+                        { label: "Role", value: selectedRequest.profiles?.role },
+                        { label: "Email", value: selectedRequest.profiles?.email },
+                        { label: "Submission", value: new Date(selectedRequest.created_at).toLocaleString() },
+                      ].map((item, i) => (
+                        <div key={i} className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{item.label}</span>
+                          <span className="text-xs font-black text-white italic">{item.value}</span>
+                        </div>
+                      ))}
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Card className="glass-dark border-white/5 overflow-hidden animate-in fade-in duration-500">
+              <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-1">
+                  <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Compliance Verification</CardTitle>
+                  <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">ID & Business Entity Approval Queue</CardDescription>
+                </div>
+                <div className="relative w-full md:w-80 group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input className="pl-12 bg-white/5 border-white/10 h-12 font-bold focus:bg-white/10 transition-all" placeholder="Search stakeholders..." />
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/5 text-left bg-white/[0.01]">
+                        <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Entity Identity</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Node Role</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Submission Epoch</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
+                        <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {kycQueue.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-8 py-20 text-center">
+                            <div className="space-y-4">
+                              <ShieldCheck className="w-12 h-12 text-muted-foreground/10 mx-auto" />
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">Queue Purged: All Entities Verified</p>
                             </div>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                      ) : (
+                        kycQueue.map((req) => (
+                          <tr key={req.id} className="group hover:bg-white/[0.02] transition-colors">
+                            <td className="px-8 py-8">
+                              <div className="flex items-center gap-4">
+                                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-white/5 to-white/[0.01] border border-white/5 flex items-center justify-center font-black text-white text-lg group-hover:border-primary/20 transition-all shadow-inner">
+                                  {req.profiles?.company_name?.[0] || req.profiles?.full_name?.[0] || "?"}
+                                </div>
+                                <div className="flex flex-col">
+                                  <span className="font-black text-white text-base tracking-tight">{req.profiles?.company_name || req.profiles?.full_name}</span>
+                                  <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{req.profiles?.email}</span>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-8 py-8">
+                              <Badge variant="outline" className="border-white/10 text-[10px] font-black uppercase tracking-widest px-3 py-1 bg-white/[0.02]">{req.profiles?.role}</Badge>
+                            </td>
+                            <td className="px-8 py-8">
+                              <div className="flex flex-col">
+                                <span className="text-sm font-black text-white/80">{new Date(req.created_at).toLocaleDateString()}</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{new Date(req.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                              </div>
+                            </td>
+                            <td className="px-8 py-8">
+                              <Badge className={
+                                req.status === "approved" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
+                                req.status === "pending" ? "bg-primary/10 text-primary border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
+                                "bg-orange-500/10 text-orange-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
+                              }>
+                                {req.status}
+                              </Badge>
+                            </td>
+                            <td className="px-8 py-8 text-right">
+                              <Button 
+                                size="sm" 
+                                className="h-10 px-6 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[9px] border border-white/10 opacity-0 group-hover:opacity-100 transition-all shadow-xl"
+                                onClick={() => setSelectedRequest(req)}
+                              >
+                                Review Dossier
+                              </Button>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* --- INVOICES TAB --- */}

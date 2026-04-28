@@ -216,7 +216,7 @@ export default function SupportPage() {
                       name="subject" 
                       required 
                       className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                      placeholder="Briefly describe the issue"
+                      placeholder=""
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-6">
@@ -255,7 +255,7 @@ export default function SupportPage() {
                       required 
                       rows={5}
                       className="w-full bg-white/5 border border-white/10 rounded-md p-4 font-bold text-white focus:bg-white/10 transition-all outline-none resize-none"
-                      placeholder="Please provide all relevant details, including invoice numbers or transaction IDs..."
+                      placeholder=""
                     />
                   </div>
                 </div>

@@ -33,17 +33,26 @@ export default function InvoicesPage() {
     fetchInvoices();
   }, []);
 
+  const [profile, setProfile] = useState<any>(null);
+
   async function fetchInvoices() {
     const supabase = createClient();
     const { data: userData } = await supabase.auth.getUser();
-  const user = userData?.user;
+    const user = userData?.user;
     if (user) {
-      const { data } = await supabase
+      const { data: invoicesData } = await supabase
         .from("invoices")
         .select("*")
         .eq("msme_id", user.id)
         .order("created_at", { ascending: false });
-      setInvoices(data || []);
+      setInvoices(invoicesData || []);
+
+      const { data: profileData } = await supabase
+        .from("profiles")
+        .select("kyc_status")
+        .eq("id", user.id)
+        .single();
+      setProfile(profileData);
     }
     setLoading(false);
   }
@@ -94,10 +103,11 @@ export default function InvoicesPage() {
           <p className="text-muted-foreground font-medium text-lg italic">Submit and track your receivables for financing.</p>
         </div>
         <Button 
-          onClick={() => setShowUploadModal(true)}
-          className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20"
+          onClick={() => profile?.kyc_status === 'verified' ? setShowUploadModal(true) : toast.error("KYC Verification Required")}
+          disabled={profile?.kyc_status !== 'verified'}
+          className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 disabled:opacity-50"
         >
-          <Plus className="mr-2 h-5 w-5" /> Submit New Invoice
+          <Plus className="mr-2 h-5 w-5" /> {profile?.kyc_status === 'verified' ? "Submit New Invoice" : "Verification Required"}
         </Button>
       </div>
 
@@ -229,7 +239,7 @@ export default function InvoicesPage() {
                       name="invoice_number" 
                       required 
                       className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                      placeholder="INV-2024-001"
+                      placeholder=""
                     />
                   </div>
                   <div className="space-y-3">
@@ -239,7 +249,7 @@ export default function InvoicesPage() {
                       type="number" 
                       required 
                       className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                      placeholder="500000"
+                      placeholder=""
                     />
                   </div>
                   <div className="space-y-3">
@@ -248,7 +258,7 @@ export default function InvoicesPage() {
                       name="buyer_name" 
                       required 
                       className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                      placeholder="Corporate Client Name"
+                      placeholder=""
                     />
                   </div>
                   <div className="space-y-3">
@@ -257,7 +267,7 @@ export default function InvoicesPage() {
                       name="buyer_gstin" 
                       required 
                       className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase"
-                      placeholder="29AAAAA0000A1Z5"
+                      placeholder=""
                     />
                   </div>
                   <div className="space-y-3">
@@ -276,7 +286,7 @@ export default function InvoicesPage() {
                       type="number" 
                       required 
                       className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                      placeholder="90"
+                      placeholder=""
                     />
                   </div>
                 </div>

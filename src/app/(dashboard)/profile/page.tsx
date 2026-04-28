@@ -139,7 +139,7 @@ export default function ProfilePage() {
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
                     className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                    placeholder="Enter full name"
+                    placeholder=""
                   />
                 </div>
               </div>
@@ -151,7 +151,7 @@ export default function ProfilePage() {
                     value={companyName}
                     onChange={(e) => setCompanyName(e.target.value)}
                     className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                    placeholder="Enter company name"
+                    placeholder=""
                     readOnly={user?.user_metadata.role === 'admin'}
                   />
                 </div>

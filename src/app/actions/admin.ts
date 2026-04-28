@@ -23,7 +23,29 @@ const updateProfileSchema = z.object({
   companyName: z.string().optional(),
 });
 
-// --- HELPERS ---
+async function ensureAdmin() {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("Not authenticated");
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+
+  if (profile?.role !== 'admin') {
+    // Second check: check app_metadata just in case
+    const { data: userDetails } = await supabase.auth.getUser();
+    if (userDetails.user?.app_metadata?.role !== 'admin') {
+      throw new Error("Unauthorized: Admin access required");
+    }
+  }
+  
+  return user;
+}
 
 async function logAdminAction(action: string, entityType: string, entityId: string | null, details: any = {}) {
   const supabase = await createClient();
@@ -38,7 +60,7 @@ async function logAdminAction(action: string, entityType: string, entityId: stri
     entity_type: entityType,
     entity_id: entityId,
     details,
-    ip_address: "internal" // In a real app, get from headers
+    ip_address: "internal"
   });
 }
 
@@ -48,6 +70,7 @@ async function logAdminAction(action: string, entityType: string, entityId: stri
  * Fetch all stats for the admin dashboard.
  */
 export async function getAdminStats() {
+  await ensureAdmin();
   const supabase = await createClient();
 
   // 1. Calculate GMV (Sum of all active/funded invoices)
@@ -113,6 +136,7 @@ export async function getAdminStats() {
  * Fetch KYC verification queue
  */
 export async function getKYCQueue() {
+  await ensureAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('kyc_requests')
@@ -128,12 +152,37 @@ export async function getKYCQueue() {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data;
+
+  // Generate signed URLs for private documents
+  const enrichedData = await Promise.all((data || []).map(async (req) => {
+    const enrichedDocs: Record<string, string> = {};
+    if (req.documents) {
+      for (const [key, path] of Object.entries(req.documents as Record<string, string>)) {
+        // If it's already a full URL, use it (backward compatibility)
+        if (path.startsWith('http')) {
+          enrichedDocs[key] = path;
+          continue;
+        }
+        
+        const { data: signedData, error: signedError } = await supabase.storage
+          .from('kyc-documents')
+          .createSignedUrl(path, 3600); // 1 hour access
+          
+        if (!signedError && signedData) {
+          enrichedDocs[key] = signedData.signedUrl;
+        }
+      }
+    }
+    return { ...req, documents: enrichedDocs };
+  }));
+
+  return enrichedData;
 }
 
 export const updateKYCAction = actionClient
   .schema(updateKYCSchema)
   .action(async ({ parsedInput: { requestId, status, notes } }) => {
+    await ensureAdmin();
     const supabase = await createClient();
     const { error } = await supabase
       .from('kyc_requests')
@@ -156,6 +205,7 @@ export const updateKYCAction = actionClient
  * Fetch Invoices for monitoring
  */
 export async function getInvoices() {
+  await ensureAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('invoices')
@@ -175,6 +225,7 @@ export async function getInvoices() {
  * Fetch Platform Settings
  */
 export async function getPlatformSettings() {
+  await ensureAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('platform_settings')
@@ -193,6 +244,7 @@ export async function getPlatformSettings() {
 export const updateSettingAction = actionClient
   .schema(updateSettingSchema)
   .action(async ({ parsedInput: { key, value } }) => {
+    await ensureAdmin();
     const supabase = await createClient();
     const { error } = await supabase
       .from('platform_settings')
@@ -211,6 +263,7 @@ export const updateSettingAction = actionClient
  * Fetch Disputes
  */
 export async function getDisputes() {
+  await ensureAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('disputes')
@@ -229,6 +282,7 @@ export async function getDisputes() {
  * Fetch Audit Logs
  */
 export async function getAuditLogs() {
+  await ensureAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
     .from('audit_logs')
@@ -242,6 +296,69 @@ export async function getAuditLogs() {
   if (error) throw new Error(error.message);
   return data;
 }
+
+export const approveKYCAction = actionClient
+  .schema(z.object({ 
+    userId: z.string().uuid(),
+    requestId: z.string().uuid()
+  }))
+  .action(async ({ parsedInput: { userId, requestId } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    // 1. Update Profile status
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ kyc_status: 'verified', kyc_notes: 'KYC verified successfully.' })
+      .eq('id', userId);
+
+    if (profileError) throw new Error(profileError.message);
+
+    // 2. Update KYC Request status
+    const { error: kycError } = await supabase
+      .from('kyc_requests')
+      .update({ status: 'approved', updated_at: new Date().toISOString() })
+      .eq('id', requestId);
+
+    if (kycError) throw new Error(kycError.message);
+
+    await logAdminAction('approve_kyc', 'profile', userId, { requestId });
+    
+    revalidatePath("/admin");
+    return { success: true };
+  });
+
+export const rejectKYCAction = actionClient
+  .schema(z.object({ 
+    userId: z.string().uuid(),
+    requestId: z.string().uuid(),
+    notes: z.string().min(5, "Please provide a detailed rejection reason")
+  }))
+  .action(async ({ parsedInput: { userId, requestId, notes } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    // 1. Update Profile status
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({ kyc_status: 'rejected', kyc_notes: notes })
+      .eq('id', userId);
+
+    if (profileError) throw new Error(profileError.message);
+
+    // 2. Update KYC Request status
+    const { error: kycError } = await supabase
+      .from('kyc_requests')
+      .update({ status: 'rejected', notes, updated_at: new Date().toISOString() })
+      .eq('id', requestId);
+
+    if (kycError) throw new Error(kycError.message);
+
+    await logAdminAction('reject_kyc', 'profile', userId, { requestId, notes });
+    
+    revalidatePath("/admin");
+    return { success: true };
+  });
 
 /**
  * Update Profile Action

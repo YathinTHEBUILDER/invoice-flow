@@ -10,6 +10,17 @@ export async function uploadInvoiceAction(formData: FormData) {
 
   if (!user) return { error: "Unauthorized" };
 
+  // Strict KYC Check
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("kyc_status")
+    .eq("id", user.id)
+    .single();
+
+  if (profile?.kyc_status !== 'verified') {
+    return { error: "KYC approval required before uploading invoices." };
+  }
+
   const invoiceNumber = formData.get("invoice_number") as string;
   const amount = parseFloat(formData.get("amount") as string);
   const buyerName = formData.get("buyer_name") as string;
@@ -24,7 +35,7 @@ export async function uploadInvoiceAction(formData: FormData) {
         msme_id: user.id,
         invoice_number: invoiceNumber,
         amount: amount,
-        discount_rate: 0.12, // Default rate for MSMEs, can be updated by admin
+        discount_rate: 0.12,
         tenure_days: tenureDays,
         buyer_name: buyerName,
         buyer_gstin: buyerGstin,
@@ -43,7 +54,7 @@ export async function uploadInvoiceAction(formData: FormData) {
   return { success: true, data };
 }
 
-export async function updateKYCAction(formData: FormData) {
+export async function submitKYCAction(formData: FormData, documentUrls: Record<string, string>) {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
   const user = userData?.user;
@@ -65,22 +76,23 @@ export async function updateKYCAction(formData: FormData) {
       bank_account_no: bankAccountNo,
       ifsc_code: ifscCode,
       company_address: companyAddress,
-      kyc_status: "pending"
+      kyc_status: "pending",
+      kyc_notes: null // Clear previous rejection notes on resubmission
     })
     .eq("id", user.id);
 
   if (profileError) return { error: profileError.message };
 
-  // 2. Create KYC Request for Admin review
+  // 2. Create/Update KYC Request
   const { error: kycError } = await supabase
     .from("kyc_requests")
-    .insert([
-      {
-        user_id: user.id,
-        status: "pending",
-        notes: "Business verification documents submitted."
-      }
-    ]);
+    .upsert({
+      user_id: user.id,
+      status: "pending",
+      documents: documentUrls,
+      notes: "Identity and business documents submitted for review.",
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' }); // Assuming unique constraint on user_id for kyc_requests
 
   if (kycError) return { error: kycError.message };
 
@@ -152,12 +164,20 @@ export async function getMSMEStats() {
   const pendingRepayments = safeRepayments.filter(r => r.status === "scheduled").length;
   const totalOutstanding = safeRepayments.filter(r => r.status === "scheduled").reduce((sum, r) => sum + Number(r.amount_due), 0);
 
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("kyc_status, kyc_notes")
+    .eq("id", user.id)
+    .single();
+
   return {
     totalSubmitted,
     underReview,
     funded,
     totalFundedAmount,
     pendingRepayments,
-    totalOutstanding
+    totalOutstanding,
+    kycStatus: profile?.kyc_status || 'not_started',
+    kycNotes: profile?.kyc_notes
   };
 }
