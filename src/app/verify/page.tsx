@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { verifyOtpAction, resendOtpAction } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,7 @@ import { toast } from "sonner";
 import { ShieldCheck, ArrowRight, Mail, Loader2 } from "lucide-react";
 import Link from "next/link";
 
-export default function VerifyPage() {
+function VerifyForm() {
   const [otp, setOtp] = useState("");
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
@@ -141,6 +141,14 @@ export default function VerifyPage() {
         </p>
       </div>
     </div>
+  );
+}
+
+export default function VerifyPage() {
+  return (
+    <Suspense fallback={<div className="flex min-h-screen items-center justify-center"><Loader2 className="h-8 w-8 animate-spin text-primary" /></div>}>
+      <VerifyForm />
+    </Suspense>
   );
 }
 
