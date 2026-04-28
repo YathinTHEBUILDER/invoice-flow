@@ -29,8 +29,8 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const role = user.user_metadata.role || "investor";
-  const initials = user.email?.[0].toUpperCase() || "U";
+  const role = user.user_metadata?.role || "investor";
+  const initials = (user.email?.[0] || user.user_metadata?.full_name?.[0] || "U").toUpperCase();
 
   const navItems = {
     admin: [
@@ -150,7 +150,7 @@ export default async function DashboardLayout({
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-black text-white truncate">{user.email?.split('@')[0]}</p>
+              <p className="text-sm font-black text-white truncate">{user.email?.split('@')[0] || user.user_metadata?.full_name || "User"}</p>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{role}</p>
             </div>
           </Link>

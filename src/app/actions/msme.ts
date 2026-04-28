@@ -139,10 +139,14 @@ export async function getMSMEStats() {
   const totalFundedAmount = invoices.filter(i => i.status === "funded").reduce((sum, i) => sum + Number(i.amount), 0);
   
   // Repayments
-  const { data: repayments } = await supabase
+  const { data: repayments, error: repaymentsError } = await supabase
     .from("repayments")
     .select("*, invoices!inner(*)")
     .eq("invoices.msme_id", user.id);
+
+  if (repaymentsError) {
+    console.error("Repayments fetch error:", repaymentsError);
+  }
 
   const safeRepayments = repayments || [];
   const pendingRepayments = safeRepayments.filter(r => r.status === "scheduled").length;
