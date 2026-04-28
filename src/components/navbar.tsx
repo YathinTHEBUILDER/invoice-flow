@@ -14,8 +14,6 @@ export async function Navbar() {
           <Logo />
         </Link>
         <nav className="flex items-center gap-6 md:gap-10">
-          <Link href="#" className="hidden lg:inline-flex text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">Platform</Link>
-          <div className="h-4 w-px bg-white/10 hidden lg:block" />
           <NavAuth initialUser={user} />
         </nav>
       </div>

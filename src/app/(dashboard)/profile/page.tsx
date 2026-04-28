@@ -12,18 +12,14 @@ import {
   Shield,
   Save,
   Loader2,
-  Lock,
-  Activity,
   LogOut,
-  KeyRound,
-  History,
-  ShieldAlert,
-  AlertCircle
+  ArrowRight
 } from "lucide-react";
 import { createClient } from "@/lib/client";
 import { updateProfileAction } from "@/app/actions/admin";
 import { signOutAction } from "@/app/actions/auth";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
@@ -40,7 +36,13 @@ export default function ProfilePage() {
       if (user) {
         setUser(user);
         setFullName(user.user_metadata.full_name || "");
-        setCompanyName(user.user_metadata.company_name || "");
+        const role = user.user_metadata.role;
+        const company = user.user_metadata.company_name;
+        if (role === 'admin' && !company) {
+          setCompanyName("InvoiceFlow");
+        } else {
+          setCompanyName(company || "");
+        }
       }
       setLoading(false);
     }
@@ -52,9 +54,9 @@ export default function ProfilePage() {
     try {
       const result = await updateProfileAction({ fullName, companyName });
       if (result?.data?.success) {
-        toast.success("Identity updated across system layers.");
+        toast.success("Profile updated successfully.");
       } else {
-        toast.error(result?.serverError || "Protocol failure: Profile update failed.");
+        toast.error(result?.serverError || "Failed to update profile.");
       }
     } catch (error) {
       toast.error("An unexpected system exception occurred.");
@@ -67,7 +69,7 @@ export default function ProfilePage() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-muted-foreground font-black animate-pulse uppercase tracking-widest text-xs">Accessing Secure Profile Node...</p>
+        <p className="text-muted-foreground font-medium animate-pulse text-xs">Loading profile data...</p>
       </div>
     );
   }
@@ -102,192 +104,102 @@ export default function ProfilePage() {
           </div>
           
           <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              className="glass border-white/5 font-black uppercase tracking-widest text-[10px] h-12 px-6 hover:bg-white/5"
-              onClick={() => toast.info("Security audit requested. Checking logs...")}
-            >
-              <ShieldAlert className="mr-2 h-4 w-4 text-orange-500" /> Security Audit
-            </Button>
             <form action={signOutAction}>
               <Button 
                 variant="destructive" 
                 className="h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-red-500/20"
               >
-                <LogOut className="mr-2 h-4 w-4" /> Terminate Session
+                <LogOut className="mr-2 h-4 w-4" /> Sign Out
               </Button>
             </form>
           </div>
         </div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-12">
-        {/* Left Column: Forms */}
-        <div className="lg:col-span-2 space-y-12">
-          {/* Identity Management */}
-          <Card className="glass-dark border-white/5 overflow-hidden">
-            <CardHeader className="bg-white/[0.02] border-b border-white/5 p-8">
-              <div className="flex items-center gap-3 mb-1">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                  <UserIcon className="w-5 h-5" />
-                </div>
-                <CardTitle className="text-2xl font-black italic">Identity Management</CardTitle>
+      <div className="max-w-4xl mx-auto space-y-12">
+        {/* Identity Management */}
+        <Card className="glass-dark border-white/5 overflow-hidden">
+          <CardHeader className="bg-white/[0.02] border-b border-white/5 p-8">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 rounded-lg bg-primary/10 text-primary">
+                <UserIcon className="w-5 h-5" />
               </div>
-              <CardDescription>Configure your administrative profile and platform affiliation.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Administrative Name</label>
-                  <div className="relative group">
-                    <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <Input 
-                      value={fullName}
-                      onChange={(e) => setFullName(e.target.value)}
-                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                      placeholder="Enter full name"
-                    />
-                  </div>
-                </div>
-                <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Affiliated Entity</label>
-                  <div className="relative group">
-                    <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
-                    <Input 
-                      value={companyName}
-                      onChange={(e) => setCompanyName(e.target.value)}
-                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                      placeholder="Enter company name"
-                    />
-                  </div>
+              <CardTitle className="text-2xl font-black italic">Identity Management</CardTitle>
+            </div>
+            <CardDescription>Configure your administrative profile and platform affiliation.</CardDescription>
+          </CardHeader>
+          <CardContent className="p-8 space-y-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Administrative Name</label>
+                <div className="relative group">
+                  <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input 
+                    value={fullName}
+                    onChange={(e) => setFullName(e.target.value)}
+                    className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
+                    placeholder="Enter full name"
+                  />
                 </div>
               </div>
+              <div className="space-y-3">
+                <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Affiliated Entity</label>
+                <div className="relative group">
+                  <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input 
+                    value={companyName}
+                    onChange={(e) => setCompanyName(e.target.value)}
+                    className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
+                    placeholder="Enter company name"
+                    readOnly={user?.user_metadata.role === 'admin'}
+                  />
+                </div>
+              </div>
+            </div>
 
-              <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 flex flex-col md:flex-row items-center justify-between gap-6">
-                <div className="flex items-start gap-4">
-                  <div className="mt-1 p-2 rounded-full bg-blue-500/10 text-blue-400">
-                    <AlertCircle className="w-5 h-5" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-black text-white">Verification Status</p>
-                    <p className="text-xs text-muted-foreground leading-relaxed max-w-md">
-                      Your identity is verified on the blockchain and internal audit layers. Any changes will require 24 hours to propagate across all system nodes.
-                    </p>
-                  </div>
+            {user?.user_metadata.role === 'admin' && (
+              <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4">
+                <div className="p-2 rounded-full bg-primary/20 text-primary">
+                  <Shield className="w-5 h-5" />
                 </div>
-                <Button 
-                  onClick={handleUpdateProfile}
-                  disabled={saving}
-                  className="w-full md:w-auto h-12 px-10 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20"
-                >
-                  {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
-                  Commit Changes
-                </Button>
+                <div>
+                  <p className="text-sm font-bold text-white">System Authority Verified</p>
+                  <p className="text-xs text-muted-foreground">As a platform administrator, your verification is managed at the system level. No further action required.</p>
+                </div>
               </div>
-            </CardContent>
-          </Card>
+            )}
 
-          {/* Security & Access */}
-          <Card className="glass-dark border-white/5 overflow-hidden">
-            <CardHeader className="bg-white/[0.02] border-b border-white/5 p-8">
-              <div className="flex items-center gap-3 mb-1">
-                <div className="p-2 rounded-lg bg-orange-500/10 text-orange-400">
-                  <Lock className="w-5 h-5" />
-                </div>
-                <CardTitle className="text-2xl font-black italic">Security & Access</CardTitle>
-              </div>
-              <CardDescription>Rotate credentials and manage two-factor authentication.</CardDescription>
-            </CardHeader>
-            <CardContent className="p-8 space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-4 hover:border-orange-500/20 transition-all">
-                  <div className="flex items-center gap-3">
-                    <KeyRound className="w-5 h-5 text-orange-400" />
-                    <h4 className="font-black text-white text-sm">Credential Rotation</h4>
+            {user?.user_metadata.role === 'msme' && (
+              <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex items-center gap-4">
+                  <div className="p-2 rounded-full bg-primary/20 text-primary">
+                    <Shield className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Update your access password regularly to maintain platform integrity.
-                  </p>
-                  <Button variant="outline" className="w-full h-10 border-white/10 font-black uppercase tracking-widest text-[10px]">
-                    Reset Password
+                  <div>
+                    <p className="text-sm font-bold text-white">Business Verification Status</p>
+                    <p className="text-xs text-muted-foreground">Manage your GST, PAN, and Bank details for platform clearance.</p>
+                  </div>
+                </div>
+                <Link href="/msme/kyc">
+                  <Button variant="outline" className="h-10 px-6 border-primary/20 text-primary hover:bg-primary/5 font-black uppercase tracking-widest text-[9px]">
+                    Manage Verification <ArrowRight className="ml-2 w-3 h-3" />
                   </Button>
-                </div>
-                <div className="p-6 rounded-2xl bg-white/5 border border-white/5 space-y-4 hover:border-emerald-500/20 transition-all">
-                  <div className="flex items-center gap-3">
-                    <Shield className="w-5 h-5 text-emerald-400" />
-                    <h4 className="font-black text-white text-sm">Two-Factor Auth</h4>
-                  </div>
-                  <p className="text-xs text-muted-foreground leading-relaxed">
-                    Add an extra layer of security to your administrative workspace.
-                  </p>
-                  <Badge className="w-full justify-center h-10 bg-emerald-500/10 text-emerald-400 border-none font-black uppercase tracking-widest text-[10px]">
-                    ACTIVE: TOTP SECURE
-                  </Badge>
-                </div>
+                </Link>
               </div>
-            </CardContent>
-          </Card>
-        </div>
+            )}
 
-        {/* Right Column: Activity & Stats */}
-        <div className="space-y-12">
-          {/* Node Health */}
-          <Card className="glass-dark border-white/5">
-            <CardHeader>
-              <CardTitle className="text-lg font-black italic flex items-center gap-2 uppercase tracking-tight">
-                <Activity className="w-4 h-4 text-primary" /> Session Intelligence
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-2">
-                <div className="flex justify-between text-[10px] font-black uppercase text-muted-foreground">
-                  <span>Connection Reliability</span>
-                  <span>99.9%</span>
-                </div>
-                <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
-                  <div className="h-full w-[99.9%] bg-primary" />
-                </div>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Latency</p>
-                  <p className="text-xl font-black text-white">24ms</p>
-                </div>
-                <div className="p-4 rounded-xl bg-white/5 border border-white/5">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase mb-1">Enclave</p>
-                  <p className="text-xl font-black text-emerald-400 uppercase">Secure</p>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Activity Feed */}
-          <Card className="glass-dark border-white/5">
-            <CardHeader>
-              <CardTitle className="text-lg font-black italic flex items-center gap-2 uppercase tracking-tight">
-                <History className="w-4 h-4 text-blue-400" /> Operational Log
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="space-y-6 relative before:absolute before:left-[7px] before:top-2 before:bottom-2 before:w-px before:bg-white/5">
-                {[
-                  { action: "Identity Sync", time: "Just now", type: "system" },
-                ].map((log, i) => (
-                  <div key={i} className="flex gap-4 relative">
-                    <div className="mt-1.5 w-4 h-4 rounded-full border-2 border-background bg-primary shrink-0 z-10 shadow-lg shadow-primary/40" />
-                    <div className="space-y-0.5">
-                      <p className="text-xs font-black text-white">{log.action}</p>
-                      <p className="text-[10px] text-muted-foreground font-bold uppercase">{log.time} • {log.type}</p>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <Button variant="ghost" className="w-full text-[10px] font-black uppercase tracking-widest h-10 hover:bg-white/5">
-                View Full Forensic Trail
+            <div className="flex justify-end pt-4">
+              <Button 
+                onClick={handleUpdateProfile}
+                disabled={saving}
+                className="w-full md:w-auto h-12 px-10 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20"
+              >
+                {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Save className="mr-2 h-4 w-4" />}
+                Commit Changes
               </Button>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );

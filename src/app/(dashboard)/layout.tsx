@@ -7,14 +7,12 @@ import {
   LayoutDashboard, 
   Settings, 
   User as UserIcon,
-  Bell,
-  Search,
   ShieldCheck,
   Briefcase,
   PieChart,
-  ArrowRightLeft,
   Gavel,
   History,
+  Mail,
   ChevronRight
 } from "lucide-react";
 
@@ -39,7 +37,6 @@ export default async function DashboardLayout({
         group: "Control Center",
         items: [
           { label: "Overview", href: "/admin", icon: LayoutDashboard },
-          { label: "Analytics", href: "/admin?tab=overview", icon: PieChart },
         ]
       },
       {
@@ -52,7 +49,6 @@ export default async function DashboardLayout({
       {
         group: "Financials",
         items: [
-          { label: "Repayments", href: "/admin?tab=repayments", icon: ArrowRightLeft },
           { label: "Disputes", href: "/admin?tab=disputes", icon: Gavel },
         ]
       },
@@ -69,14 +65,23 @@ export default async function DashboardLayout({
         group: "Operations",
         items: [
           { label: "Dashboard", href: "/msme", icon: LayoutDashboard },
-          { label: "My Invoices", href: "/msme/invoices", icon: Briefcase },
+          { label: "Invoice Management", href: "/msme/invoices", icon: Briefcase },
+          { label: "Funding Requests", href: "/msme/funding", icon: PieChart },
+          { label: "Repayments", href: "/msme/repayments", icon: History },
+        ]
+      },
+      {
+        group: "Compliance & Support",
+        items: [
+          { label: "KYC Verification", href: "/msme/kyc", icon: ShieldCheck },
+          { label: "Notifications", href: "/msme/notifications", icon: Mail },
+          { label: "Support Desk", href: "/msme/support", icon: Gavel },
         ]
       },
       {
         group: "Account",
         items: [
-          { label: "Profile", href: "/profile", icon: UserIcon },
-          { label: "Settings", href: "/settings", icon: Settings },
+          { label: "My Profile", href: "/profile", icon: UserIcon },
         ]
       }
     ],
@@ -159,27 +164,13 @@ export default async function DashboardLayout({
               <Logo />
             </div>
             <div className="hidden md:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-              <span className="text-primary/50">Terminal</span>
+              <span className="text-primary/50">InvoiceFlow</span>
               <ChevronRight className="w-3 h-3" />
-              <span className="text-white">{role}</span>
-              <ChevronRight className="w-3 h-3" />
-              <span>Workspace</span>
+              <span className="text-white capitalize">{role}</span>
             </div>
           </div>
 
           <div className="flex items-center gap-4">
-            <div className="relative hidden lg:block">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input 
-                type="text" 
-                placeholder="Search resources..." 
-                className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm font-medium w-64 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
-              />
-            </div>
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative">
-              <Bell className="w-5 h-5" />
-              <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background" />
-            </Button>
             <Link href="/profile">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-white font-black text-xs hover:scale-110 transition-transform">
                 {initials}

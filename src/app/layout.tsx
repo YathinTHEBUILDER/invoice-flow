@@ -4,7 +4,6 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import Link from "next/link";
 import { Shield } from "lucide-react";
-import { Navbar } from "@/components/navbar";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -21,7 +20,6 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased flex flex-col`}>
-        <Navbar />
         <main className="flex-1 flex flex-col">
           {children}
         </main>
