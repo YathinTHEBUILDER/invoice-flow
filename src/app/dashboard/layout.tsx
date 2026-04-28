@@ -22,11 +22,18 @@ export default async function DashboardLayout({
   const role = user.user_metadata?.role;
   const fullName = user.user_metadata?.full_name || user.email;
 
-  const userNotifications = await db.query.notifications.findMany({
-    where: eq(notifications.userId, user.id),
-    orderBy: [desc(notifications.createdAt)],
-    limit: 10,
-  });
+  // 1. Safely fetch notifications to prevent layout-wide crashes
+  let userNotifications: any[] = [];
+  try {
+    userNotifications = await db.query.notifications.findMany({
+      where: eq(notifications.userId, user.id),
+      orderBy: [desc(notifications.createdAt)],
+      limit: 10,
+    });
+  } catch (error) {
+    console.error("Dashboard layout notification fetch error:", error);
+    // Continue with empty notifications
+  }
 
   return (
     <div className="min-h-screen bg-muted/30">
