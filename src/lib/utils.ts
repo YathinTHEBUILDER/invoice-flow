@@ -15,3 +15,11 @@ export function formatCurrency(amount: number | string | null | undefined) {
     maximumFractionDigits: 0,
   }).format(val);
 }
+
+export function formatPercent(value: number) {
+  return new Intl.NumberFormat("en-IN", {
+    style: "percent",
+    minimumFractionDigits: 1,
+    maximumFractionDigits: 2,
+  }).format(value);
+}

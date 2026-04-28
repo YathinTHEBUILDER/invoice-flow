@@ -34,22 +34,22 @@ export function NavAuth({ initialUser }: { initialUser: User | null }) {
 
   if (user) {
     return (
-      <Button variant="ghost" onClick={handleSignOut} className="text-sm font-medium text-muted-foreground hover:text-foreground">
+      <Button variant="ghost" onClick={handleSignOut} className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-all">
         Logout
       </Button>
     );
   }
 
   return (
-    <>
-      <Link href="/login" className="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">
+    <div className="flex items-center gap-6">
+      <Link href="/login" className="text-sm font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors">
         Login
       </Link>
-      <Button asChild className="hidden md:inline-flex bg-blue-600 hover:bg-blue-700 text-white shadow-md hover:shadow-lg transition-all">
+      <Button asChild className="hidden md:inline-flex h-12 px-6 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-xs shadow-[0_0_20px_rgba(59,130,246,0.3)] transition-all hover:scale-105 active:scale-95">
         <Link href="/register">
-          Create Account
+          Get Started
         </Link>
       </Button>
-    </>
+    </div>
   );
 }

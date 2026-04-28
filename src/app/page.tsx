@@ -1,185 +1,231 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ArrowRight, ShieldCheck, CheckCircle2, Building2, LineChart, Lock, ChevronRight, Activity, Zap } from "lucide-react";
+import { 
+  ArrowRight, 
+  ShieldCheck, 
+  CheckCircle2, 
+  Building2, 
+  LineChart, 
+  Lock, 
+  Activity, 
+  Zap, 
+  Shield, 
+  BarChart3, 
+  Globe, 
+  Users,
+  Briefcase
+} from "lucide-react";
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
 
 export default function LandingPage() {
   return (
-    <div className="flex flex-col w-full items-center bg-background selection:bg-blue-500/30 overflow-hidden">
+    <div className="flex flex-col w-full items-center bg-background selection:bg-blue-500/30 overflow-hidden font-sans">
       
       {/* Background ambient gradients */}
-      <div className="absolute top-0 left-0 right-0 h-[800px] w-full bg-gradient-to-b from-blue-950/20 via-background to-background pointer-events-none -z-10" />
-      <div className="absolute top-0 right-1/4 w-[600px] h-[600px] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none -z-10" />
-      <div className="absolute top-40 left-1/4 w-[500px] h-[500px] bg-indigo-600/5 blur-[120px] rounded-full pointer-events-none -z-10" />
+      <div className="absolute top-0 left-0 right-0 h-[1000px] w-full hero-gradient pointer-events-none -z-10 opacity-40" />
+      <div className="absolute top-0 right-[10%] w-[600px] h-[600px] bg-primary/10 blur-[150px] rounded-full pointer-events-none -z-10 animate-pulse-slow" />
+      <div className="absolute top-[20%] left-[5%] w-[500px] h-[500px] bg-blue-600/10 blur-[150px] rounded-full pointer-events-none -z-10" />
       
       {/* Hero Section */}
-      <section className="relative w-full max-w-7xl mx-auto px-4 md:px-8 pt-32 pb-24 md:pt-48 md:pb-32">
-        <div className="flex flex-col items-center text-center space-y-10 animate-in fade-in slide-in-from-bottom-8 duration-1000">
+      <section className="relative w-full max-w-7xl mx-auto px-4 md:px-8 pt-32 pb-20 md:pt-52 md:pb-32">
+        <div className="flex flex-col items-center text-center space-y-12 animate-in fade-in slide-in-from-bottom-12 duration-1000">
           
-          <div className="inline-flex items-center rounded-full border border-blue-500/20 bg-blue-500/5 px-4 py-1.5 text-sm font-medium text-blue-400 backdrop-blur-md shadow-sm transition-colors hover:bg-blue-500/10">
+          <div className="inline-flex items-center rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs md:text-sm font-semibold text-primary backdrop-blur-xl shadow-2xl transition-all hover:bg-primary/10 hover:border-primary/30">
             <span className="relative flex h-2.5 w-2.5 mr-3">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-blue-500"></span>
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
+              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
             </span>
-            Institutional-Grade Invoice Factoring Infrastructure
+            <span className="tracking-wide uppercase">Institutional-Grade Invoice Factoring</span>
           </div>
           
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold tracking-tight max-w-5xl text-balance leading-[1.1]">
-            Unlock Working Capital <br className="hidden md:block" />
-            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-indigo-400 to-blue-500">Without Compromise.</span>
+          <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter max-w-6xl text-balance leading-[0.9] text-gradient">
+            Liquidity <br className="hidden md:block" />
+            Redefined.
           </h1>
           
-          <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto text-balance leading-relaxed">
-            InvoiceFlow is the transparent marketplace where verified MSMEs access reliable liquidity, and institutional investors discover secure, asset-backed yields.
+          <p className="text-xl md:text-2xl text-muted-foreground/80 max-w-3xl mx-auto text-balance leading-relaxed font-medium">
+            The high-performance marketplace where verified MSMEs access reliable capital, and institutional investors discover secure, asset-backed yields.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-4 w-full sm:w-auto">
-            <Button size="lg" asChild className="h-14 px-8 text-base font-semibold w-full sm:w-auto bg-blue-600 hover:bg-blue-700 text-white shadow-[0_0_40px_-10px_rgba(37,99,235,0.5)] transition-all hover:scale-[1.02] active:scale-[0.98]">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 w-full sm:w-auto">
+            <Button size="lg" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
               <Link href="#">
-                Get Funded Today
+                Get Funded Now
               </Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="h-14 px-8 text-base font-semibold w-full sm:w-auto border-border/60 hover:bg-muted/50 transition-all hover:scale-[1.02] active:scale-[0.98]">
+            <Button size="lg" variant="outline" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto border-white/10 glass-dark hover:bg-white/10 transition-all hover:scale-[1.05] active:scale-[0.95]">
               <Link href="#">
-                Investor Portal <ArrowRight className="ml-2 h-4 w-4" />
+                Investor Access <ArrowRight className="ml-2 h-5 w-5" />
               </Link>
             </Button>
+          </div>
+
+          {/* Stats Bar */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 pt-20 w-full max-w-5xl">
+            {[
+              { label: "Total GMV", value: "Rs. 1,200 Cr+", icon: Globe },
+              { label: "Active MSMEs", value: "5,000+", icon: Users },
+              { label: "Avg. Yield", value: "12-14%", icon: Activity },
+              { label: "Success Rate", value: "99.9%", icon: ShieldCheck },
+            ].map((stat, i) => (
+              <div key={i} className="flex flex-col items-center space-y-2 group">
+                <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
+                  <stat.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div className="text-2xl md:text-3xl font-black text-foreground">{stat.value}</div>
+                <div className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-widest">{stat.label}</div>
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* Trust & Architecture Section */}
-      <section className="w-full relative py-24 border-y border-border/40 bg-muted/10 backdrop-blur-sm">
+      {/* Value Pillars */}
+      <section className="w-full relative py-32 overflow-hidden">
+        <div className="absolute inset-0 bg-primary/5 -z-10" />
         <div className="max-w-7xl mx-auto px-4 md:px-8">
-          <div className="text-center mb-16 space-y-4">
-            <h2 className="text-3xl md:text-4xl font-bold tracking-tight">Enterprise Infrastructure</h2>
-            <p className="text-muted-foreground max-w-2xl mx-auto text-lg">Built from the ground up to support the security and compliance requirements of modern financial institutions.</p>
+          <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
+            <div className="space-y-4 max-w-2xl text-left">
+              <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-none">Built for <br />Enterprises.</h2>
+              <p className="text-lg md:text-xl text-muted-foreground font-medium">Professional infrastructure designed to handle high-volume invoice factoring with complete transparency.</p>
+            </div>
+            <div className="flex gap-4">
+              <div className="glass-dark p-4 rounded-2xl border-white/5">
+                <Briefcase className="w-8 h-8 text-primary" />
+              </div>
+              <div className="glass-dark p-4 rounded-2xl border-white/5">
+                <BarChart3 className="w-8 h-8 text-primary" />
+              </div>
+            </div>
           </div>
-          <div className="grid md:grid-cols-3 gap-6">
-            <Card className="bg-background/50 border-border/50 backdrop-blur-md shadow-lg shadow-blue-900/5 hover:border-blue-500/30 transition-colors group">
-              <CardContent className="p-8 flex flex-col items-start space-y-4">
-                <div className="p-3 bg-blue-500/10 rounded-xl text-blue-500 group-hover:bg-blue-500/20 transition-colors">
-                  <Lock className="h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-bold">Bank-Grade Security</h3>
-                <p className="text-muted-foreground leading-relaxed">Comprehensive KYC/AML infrastructure with end-to-end encryption securing every transaction and data point.</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-background/50 border-border/50 backdrop-blur-md shadow-lg shadow-blue-900/5 hover:border-indigo-500/30 transition-colors group">
-              <CardContent className="p-8 flex flex-col items-start space-y-4">
-                <div className="p-3 bg-indigo-500/10 rounded-xl text-indigo-500 group-hover:bg-indigo-500/20 transition-colors">
-                  <Building2 className="h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-bold">Verified Identity</h3>
-                <p className="text-muted-foreground leading-relaxed">Strict verification frameworks for both MSMEs and Investors, ensuring complete marketplace integrity.</p>
-              </CardContent>
-            </Card>
-            <Card className="bg-background/50 border-border/50 backdrop-blur-md shadow-lg shadow-blue-900/5 hover:border-emerald-500/30 transition-colors group">
-              <CardContent className="p-8 flex flex-col items-start space-y-4">
-                <div className="p-3 bg-emerald-500/10 rounded-xl text-emerald-500 group-hover:bg-emerald-500/20 transition-colors">
-                  <LineChart className="h-6 w-6" />
-                </div>
-                <h3 className="text-xl font-bold">Clear Settlements</h3>
-                <p className="text-muted-foreground leading-relaxed">Direct investment routing into verified invoice assets with clearly defined and automated settlement processes.</p>
-              </CardContent>
-            </Card>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            {[
+              {
+                title: "Bank-Grade Security",
+                desc: "End-to-end encryption and multi-sig wallet infrastructure for institutional peace of mind.",
+                icon: Lock,
+                color: "text-blue-500",
+                bg: "bg-blue-500/10"
+              },
+              {
+                title: "Verified Ecosystem",
+                desc: "Rigorous KYC/AML framework ensuring every participant on the marketplace is fully vetted.",
+                icon: Shield,
+                color: "text-indigo-500",
+                bg: "bg-indigo-500/10"
+              },
+              {
+                title: "Real-Time Settlements",
+                desc: "Automated routing and instant capital deployment driven by our proprietary risk engine.",
+                icon: Zap,
+                color: "text-emerald-500",
+                bg: "bg-emerald-500/10"
+              }
+            ].map((pillar, i) => (
+              <Card key={i} className="glass-dark border-white/5 hover:border-primary/50 transition-all duration-500 group relative overflow-hidden">
+                <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+                <CardContent className="p-10 flex flex-col items-start space-y-6 relative z-10">
+                  <div className={`p-4 rounded-2xl ${pillar.bg} ${pillar.color} group-hover:scale-110 transition-transform duration-500`}>
+                    <pillar.icon className="h-8 w-8" />
+                  </div>
+                  <div className="space-y-3">
+                    <h3 className="text-2xl font-black tracking-tight">{pillar.title}</h3>
+                    <p className="text-muted-foreground leading-relaxed font-medium">{pillar.desc}</p>
+                  </div>
+                  <div className="pt-4 flex items-center text-sm font-bold text-primary group-hover:gap-2 transition-all">
+                    Learn more <ArrowRight className="ml-1 w-4 h-4" />
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section className="w-full max-w-7xl mx-auto px-4 md:px-8 py-32">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
-          <div className="space-y-10">
-            <div className="space-y-4">
-              <h2 className="text-4xl md:text-5xl font-bold tracking-tight">Streamlined Capital Flow</h2>
-              <p className="text-lg text-muted-foreground">
-                A highly optimized workflow designed to remove friction from supply chain financing.
+      {/* Live Marketplace Preview */}
+      <section className="w-full max-w-7xl mx-auto px-4 md:px-8 py-40">
+        <div className="grid lg:grid-cols-2 gap-24 items-center">
+          <div className="space-y-12">
+            <div className="space-y-6">
+              <div className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">The Engine</div>
+              <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.95]">Precision <br />Capital Flow.</h2>
+              <p className="text-xl text-muted-foreground font-medium max-w-lg">
+                Our platform automates the entire invoice lifecycle, from risk assessment to institutional settlement.
               </p>
             </div>
 
-            <div className="space-y-8 relative before:absolute before:inset-0 before:ml-[1.4rem] before:-translate-x-px md:before:mx-auto md:before:translate-x-0 before:h-full before:w-0.5 before:bg-gradient-to-b before:from-blue-500/50 before:via-indigo-500/50 before:to-transparent">
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full border-[3px] border-background bg-blue-500 text-white font-bold shadow-lg shadow-blue-500/30 z-10 group-hover:scale-110 transition-transform">1</div>
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-muted/30 border border-border/50 backdrop-blur-sm group-hover:border-blue-500/30 transition-colors">
-                  <h3 className="text-xl font-bold mb-2">Invoice Upload</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">MSMEs upload outstanding invoices securely to the platform for instant processing.</p>
+            <div className="space-y-10 relative">
+              {[
+                { step: "01", title: "Smart Ingestion", desc: "MSMEs upload invoices; our AI verifies integrity instantly." },
+                { step: "02", title: "Risk Stratification", desc: "Corporate buyer credit profiles are analyzed in real-time." },
+                { step: "03", title: "Fractional Funding", desc: "Institutional investors deploy capital into verified assets." }
+              ].map((item, i) => (
+                <div key={i} className="flex gap-6 group">
+                  <div className="text-4xl font-black text-primary/20 group-hover:text-primary transition-colors duration-500 leading-none">{item.step}</div>
+                  <div className="space-y-2">
+                    <h3 className="text-2xl font-bold tracking-tight">{item.title}</h3>
+                    <p className="text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
+                  </div>
                 </div>
-              </div>
-              
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full border-[3px] border-background bg-indigo-500 text-white font-bold shadow-lg shadow-indigo-500/30 z-10 group-hover:scale-110 transition-transform">2</div>
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-muted/30 border border-border/50 backdrop-blur-sm group-hover:border-indigo-500/30 transition-colors">
-                  <h3 className="text-xl font-bold mb-2">Risk Assessment</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">Platform validates the invoice integrity and assesses the corporate buyer&apos;s credit profile.</p>
-                </div>
-              </div>
-
-              <div className="relative flex items-center justify-between md:justify-normal md:odd:flex-row-reverse group">
-                <div className="flex items-center justify-center w-12 h-12 rounded-full border-[3px] border-background bg-emerald-500 text-white font-bold shadow-lg shadow-emerald-500/30 z-10 group-hover:scale-110 transition-transform">3</div>
-                <div className="w-[calc(100%-4rem)] md:w-[calc(50%-2.5rem)] p-6 rounded-2xl bg-muted/30 border border-border/50 backdrop-blur-sm group-hover:border-emerald-500/30 transition-colors">
-                  <h3 className="text-xl font-bold mb-2">Marketplace Funding</h3>
-                  <p className="text-muted-foreground text-sm leading-relaxed">Approved invoices are securely listed on the marketplace for fractional or full funding.</p>
-                </div>
-              </div>
+              ))}
             </div>
           </div>
 
-          <div className="relative lg:ml-10 perspective-1000">
-            <div className="absolute -inset-10 bg-gradient-to-tr from-blue-600/20 to-indigo-600/20 blur-3xl rounded-[3rem] -z-10 opacity-70" />
-            <Card className="border-border/60 bg-card/80 backdrop-blur-xl shadow-2xl shadow-blue-950/50 overflow-hidden transform-gpu rotate-y-[-5deg] rotate-x-[2deg] hover:rotate-y-0 hover:rotate-x-0 transition-transform duration-700 ease-out">
-              <div className="p-3 border-b border-border/50 bg-muted/40 flex items-center gap-3">
-                <div className="flex gap-1.5 ml-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500/80"></div>
-                  <div className="w-3 h-3 rounded-full bg-yellow-500/80"></div>
-                  <div className="w-3 h-3 rounded-full bg-green-500/80"></div>
+          <div className="relative group">
+            <div className="absolute -inset-4 bg-gradient-to-tr from-primary/30 to-blue-600/30 blur-3xl rounded-[3rem] -z-10 opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
+            <Card className="glass border-white/10 shadow-2xl overflow-hidden rounded-[2.5rem]">
+              <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
+                <div className="flex gap-2">
+                  <div className="w-3 h-3 rounded-full bg-red-500/40"></div>
+                  <div className="w-3 h-3 rounded-full bg-yellow-500/40"></div>
+                  <div className="w-3 h-3 rounded-full bg-green-500/40"></div>
                 </div>
-                <div className="flex-1 text-center mr-12">
-                  <span className="inline-flex items-center justify-center gap-1.5 bg-background/60 text-muted-foreground text-xs font-medium px-4 py-1.5 rounded-md shadow-sm border border-border/50">
-                    <Lock className="w-3 h-3" /> app.invoiceflowindia.tech
-                  </span>
-                </div>
+                <div className="text-[10px] font-black text-white/40 uppercase tracking-widest">Secure Marketplace Terminal</div>
+                <div className="w-3 h-3" />
               </div>
-              <CardContent className="p-8 space-y-8">
+              <CardContent className="p-10 space-y-10">
                 <div className="flex justify-between items-center">
-                  <div>
-                    <h4 className="font-bold text-xl text-foreground">Marketplace Overview</h4>
-                    <p className="text-sm text-muted-foreground">Live asset allocation</p>
+                  <div className="space-y-1">
+                    <h4 className="font-black text-2xl">Active Assets</h4>
+                    <p className="text-sm font-bold text-muted-foreground">Marketplace Liquidity</p>
                   </div>
-                  <div className="h-10 w-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500">
-                    <Activity className="w-5 h-5" />
+                  <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
+                    <Activity className="w-7 h-7" />
                   </div>
                 </div>
                 
-                <div className="space-y-3">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground font-medium">Platform Liquidity Flow</span>
-                    <span className="text-emerald-500 font-medium flex items-center gap-1"><Zap className="w-3 h-3"/> Active</span>
+                <div className="space-y-4">
+                  <div className="flex justify-between text-xs font-black uppercase tracking-widest text-muted-foreground">
+                    <span>Platform Utilization</span>
+                    <span className="text-emerald-500">84.2%</span>
                   </div>
-                  <div className="h-3 w-full bg-muted/50 rounded-full overflow-hidden shadow-inner">
-                    <div className="h-full bg-gradient-to-r from-blue-500 to-indigo-500 w-[70%] rounded-full relative">
-                      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:1rem_1rem] animate-[shimmer_1s_infinite_linear]"></div>
+                  <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden p-1 border border-white/5">
+                    <div className="h-full bg-gradient-to-r from-primary to-blue-400 w-[84%] rounded-full relative shadow-[0_0_20px_rgba(59,130,246,0.5)]">
+                      <div className="absolute inset-0 bg-[linear-gradient(45deg,transparent_25%,rgba(255,255,255,0.2)_50%,transparent_75%)] bg-[length:1.5rem_1.5rem] animate-shimmer"></div>
                     </div>
                   </div>
                 </div>
 
-                <div className="space-y-4 pt-2">
-                  <div className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Example Invoices</div>
-                  {[1, 2].map((i) => (
-                    <div key={i} className="flex flex-col sm:flex-row sm:items-center justify-between p-4 rounded-xl border border-border/40 bg-background/50 hover:bg-background/80 transition-colors gap-4">
+                <div className="grid gap-4">
+                  {[
+                    { id: "INV-2025-092", buyer: "Global Logistics Ltd.", amount: "Rs. 24.5 L", tenure: "45 Days", yield: "12.5%" },
+                    { id: "INV-2025-104", buyer: "Tech Solutions Corp.", amount: "Rs. 8.2 L", tenure: "60 Days", yield: "13.2%" }
+                  ].map((inv, i) => (
+                    <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-white/5 glass-dark hover:border-primary/30 transition-all gap-4">
                       <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-full bg-blue-500/10 flex items-center justify-center text-blue-500 shrink-0">
-                          <CheckCircle2 className="w-5 h-5" />
+                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                          <CheckCircle2 className="w-6 h-6" />
                         </div>
                         <div>
-                          <div className="text-sm font-bold text-foreground">INV-DEMO-00{i}</div>
-                          <div className="text-xs text-muted-foreground mt-0.5">Corporate Buyer • 60 Days</div>
+                          <div className="text-sm font-black uppercase tracking-tight">{inv.id}</div>
+                          <div className="text-xs text-muted-foreground font-bold">{inv.buyer}</div>
                         </div>
                       </div>
-                      <div className="flex flex-col sm:items-end text-left sm:text-right">
-                        <div className="text-xs text-muted-foreground uppercase">Status</div>
-                        <div className="text-sm font-bold text-emerald-500">Available</div>
+                      <div className="text-right space-y-1">
+                        <div className="text-sm font-black text-emerald-500">{inv.amount}</div>
+                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{inv.tenure} • {inv.yield}</div>
                       </div>
                     </div>
                   ))}
@@ -190,64 +236,90 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* Call to Action */}
-      <section className="w-full relative overflow-hidden mt-10">
-        <div className="absolute inset-0 bg-blue-600/5 -z-10" />
-        <div className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-blue-500/50 to-transparent" />
-        <div className="max-w-4xl mx-auto px-4 py-32 text-center space-y-10 relative">
-          <div className="mx-auto w-20 h-20 mb-8 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-lg shadow-blue-500/10">
-            <ShieldCheck className="w-10 h-10 text-blue-500" />
+      {/* CTA Section */}
+      <section className="w-full relative px-4 py-40 overflow-hidden">
+        <div className="absolute inset-0 bg-primary/5 -z-20" />
+        <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-primary/50 to-transparent" />
+        
+        <div className="max-w-5xl mx-auto glass-dark rounded-[3rem] border border-white/5 p-12 md:p-24 text-center space-y-12 relative overflow-hidden group">
+          <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/20 blur-[100px] rounded-full group-hover:bg-primary/30 transition-all duration-1000" />
+          <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-blue-600/10 blur-[100px] rounded-full" />
+          
+          <div className="mx-auto w-24 h-24 mb-4 rounded-3xl bg-primary/10 flex items-center justify-center border border-primary/20 shadow-2xl shadow-primary/20 group-hover:rotate-12 transition-transform duration-500">
+            <ShieldCheck className="w-12 h-12 text-primary" />
           </div>
-          <h2 className="text-4xl md:text-6xl font-bold tracking-tight">Ready to access institutional capital?</h2>
-          <p className="text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
-            Join the transparent marketplace building the future of secure B2B supply chain financing.
-          </p>
-          <div className="flex justify-center gap-4 pt-4">
-            <Button size="lg" asChild className="h-14 px-10 bg-foreground text-background hover:bg-foreground/90 transition-transform hover:scale-[1.02] active:scale-[0.98] shadow-xl text-base font-semibold">
+          
+          <div className="space-y-6">
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">Ready for institutional <br />liquidity?</h2>
+            <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
+              Join the elite marketplace building the future of transparent, asset-backed supply chain financing.
+            </p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row justify-center gap-6 pt-4">
+            <Button size="lg" asChild className="h-16 px-12 bg-foreground text-background hover:bg-foreground/90 transition-all hover:scale-105 active:scale-95 shadow-2xl text-lg font-black tracking-tight">
               <Link href="#">
-                Create Your Account
+                Create Account
+              </Link>
+            </Button>
+            <Button size="lg" variant="outline" asChild className="h-16 px-12 glass border-white/10 hover:bg-white/10 transition-all hover:scale-105 active:scale-95 text-lg font-black tracking-tight">
+              <Link href="#">
+                Schedule Demo
               </Link>
             </Button>
           </div>
         </div>
-        <div className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-border/50 to-transparent" />
       </section>
 
       {/* Footer */}
-      <footer className="w-full bg-background border-t border-border/40 relative z-10">
-        <div className="max-w-7xl mx-auto px-4 md:px-8 py-16">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-12">
-            <div className="col-span-2 md:col-span-1 space-y-6">
-              <Logo className="mb-4" />
-              <p className="text-sm text-muted-foreground pr-4 leading-relaxed">
-                The modern, transparent marketplace for institutional-grade invoice factoring.
+      <footer className="w-full bg-background border-t border-white/5 relative z-10">
+        <div className="max-w-7xl mx-auto px-4 md:px-8 py-24">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-20">
+            <div className="col-span-2 md:col-span-1 space-y-8">
+              <Logo className="scale-110 origin-left" />
+              <p className="text-base text-muted-foreground font-medium pr-8 leading-relaxed">
+                The modern infrastructure for institutional-grade invoice factoring and supply chain finance.
               </p>
+              <div className="flex gap-4">
+                {[Globe, Users, Shield].map((Icon, i) => (
+                  <div key={i} className="p-2 rounded-lg bg-white/5 border border-white/5 hover:border-primary/50 transition-colors cursor-pointer">
+                    <Icon className="w-5 h-5 text-muted-foreground" />
+                  </div>
+                ))}
+              </div>
             </div>
             <div>
-              <h4 className="font-semibold mb-6 text-foreground">Platform</h4>
-              <ul className="space-y-4 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-blue-500 transition-colors">For MSMEs</Link></li>
-                <li><Link href="#" className="hover:text-blue-500 transition-colors">For Investors</Link></li>
-                <li><Link href="#" className="hover:text-blue-500 transition-colors">Login to Portal</Link></li>
+              <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Solutions</h4>
+              <ul className="space-y-5 text-base font-bold text-muted-foreground">
+                <li><Link href="#" className="hover:text-primary transition-colors">For MSMEs</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">For Investors</Link></li>
+                <li><Link href="#" className="hover:text-primary transition-colors">Enterprise API</Link></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-6 text-foreground">Legal & Security</h4>
-              <ul className="space-y-4 text-sm text-muted-foreground">
-                <li><Link href="#" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+              <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Company</h4>
+              <ul className="space-y-5 text-base font-bold text-muted-foreground">
+                <li><Link href="#" className="hover:text-foreground transition-colors">About Us</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Transparency</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Contact</Link></li>
+              </ul>
+            </div>
+            <div>
+              <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Legal</h4>
+              <ul className="space-y-5 text-base font-bold text-muted-foreground">
                 <li><Link href="#" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-                <li><Link href="#" className="hover:text-foreground transition-colors">AML & KYC Policy</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
+                <li><Link href="#" className="hover:text-foreground transition-colors">Compliance</Link></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-border/40 mt-16 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-muted-foreground">
-            <p>© {new Date().getFullYear()} InvoiceFlow Platform. All rights reserved.</p>
-            <p className="flex items-center gap-1.5">
-              Deployed securely on 
-              <a href="https://vercel.com" target="_blank" rel="noopener noreferrer" className="font-medium text-foreground hover:text-blue-500 transition-colors flex items-center gap-1">
-                <svg width="12" height="10" viewBox="0 0 116 100" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fillRule="evenodd" clipRule="evenodd" d="M57.5 0L115 100H0L57.5 0Z"/></svg>
-                Vercel
-              </a>
+          <div className="border-t border-white/5 mt-24 pt-12 flex flex-col md:flex-row items-center justify-between gap-6 text-sm font-bold text-muted-foreground uppercase tracking-widest">
+            <p>© {new Date().getFullYear()} InvoiceFlow India. All rights reserved.</p>
+            <p className="flex items-center gap-2">
+              Secured by
+              <span className="text-foreground flex items-center gap-1">
+                <Lock className="w-3 h-3" /> Vercel Cloud
+              </span>
             </p>
           </div>
         </div>
