@@ -17,9 +17,9 @@ export default function MsmeDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: "Active Requests", value: "Rs. 45.2 L", sub: "3 Invoices", icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10" },
-          { label: "Total Funded", value: "Rs. 1.2 Cr", sub: "12 Invoices", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-          { label: "Platform Fee Paid", value: "Rs. 1.2 L", sub: "Fixed 1%", icon: ArrowUpRight, color: "text-purple-500", bg: "bg-purple-500/10" },
+          { label: "Active Requests", value: "₹0", sub: "0 Invoices", icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10" },
+          { label: "Total Funded", value: "₹0", sub: "0 Invoices", icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+          { label: "Platform Fee Paid", value: "₹0", sub: "Fixed 1% Fee", icon: ArrowUpRight, color: "text-purple-500", bg: "bg-purple-500/10" },
         ].map((stat, i) => (
           <Card key={i} className="glass-dark border-white/5 overflow-hidden group">
             <CardContent className="p-8">

@@ -52,7 +52,7 @@ export function AuthForm({ type, role, action, onSuccess }: AuthFormProps) {
           <Input 
             id="fullName" 
             name="fullName" 
-            placeholder="John Doe" 
+            placeholder="Enter full name" 
             required 
             className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium"
           />
@@ -68,7 +68,7 @@ export function AuthForm({ type, role, action, onSuccess }: AuthFormProps) {
           <Input 
             id="companyName" 
             name="companyName" 
-            placeholder="Acme Corp" 
+            placeholder="Enter business entity name" 
             required 
             className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium"
           />
@@ -84,7 +84,7 @@ export function AuthForm({ type, role, action, onSuccess }: AuthFormProps) {
           id="email" 
           name="email" 
           type="email" 
-          placeholder="name@example.com" 
+          placeholder="Email address" 
           required 
           className="h-12 bg-white/5 border-white/10 focus:border-primary/50 rounded-xl font-medium"
         />

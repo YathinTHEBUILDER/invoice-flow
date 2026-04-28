@@ -25,8 +25,8 @@ export default function TransparencyPage() {
             icon: BarChart3
           },
           {
-            title: "Risk Engine",
-            desc: "Complete disclosure of our risk assessment methodology and buyer credit scoring.",
+            title: "Expert Credit Review",
+            desc: "Full disclosure of our manual credit assessment methodology and risk management protocols.",
             icon: Shield
           }
         ].map((item, i) => (
@@ -46,14 +46,14 @@ export default function TransparencyPage() {
         <div className="space-y-8">
           <h2 className="text-4xl font-black tracking-tight leading-none">Risk Management <br />Framework</h2>
           <p className="text-muted-foreground leading-relaxed">
-            Our proprietary risk engine analyzes over 200 data points to score invoices and corporate buyers. This ensures that only high-quality, asset-backed opportunities reach our individual investors.
+            Our manual credit assessment process involves a deep-dive analysis of corporate buyers and MSME assets. This ensures that only high-quality, verified opportunities reach our individual investors.
           </p>
           <ul className="space-y-4">
             {[
-              "Automated bank statement analysis",
-              "Corporate buyer credit history verification",
-              "GST verification and reconciliation",
-              "Historical payment performance tracking"
+              "Manual bank statement verification",
+              "Corporate buyer credit history audit",
+              "GST verification and manual reconciliation",
+              "Verified historical payment performance"
             ].map((check, i) => (
               <li key={i} className="flex items-center gap-3 font-bold text-sm text-foreground">
                 <div className="w-2 h-2 rounded-full bg-primary" />

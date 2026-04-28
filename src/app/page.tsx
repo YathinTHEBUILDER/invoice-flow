@@ -166,14 +166,14 @@ export default async function LandingPage() {
               <div className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">The Engine</div>
               <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.95]">Precision <br />Capital Flow.</h2>
               <p className="text-xl text-muted-foreground font-medium max-w-lg">
-                Our platform automates the entire invoice lifecycle, from risk assessment to secure settlement.
+                Our platform manages the entire invoice lifecycle, from rigorous credit review to secure settlement.
               </p>
             </div>
 
             <div className="space-y-10 relative">
               {[
-                { step: "01", title: "Smart Ingestion", desc: "MSMEs upload invoices; our system verifies document integrity." },
-                { step: "02", title: "Risk Assessment", desc: "Corporate buyer credit profiles are evaluated for marketplace stability." },
+                { step: "01", title: "Document Ingestion", desc: "MSMEs upload invoices; our team verifies document integrity and authenticity." },
+                { step: "02", title: "Credit Review", desc: "Corporate buyer profiles are manually evaluated for marketplace stability." },
                 { step: "03", title: "Funding", desc: "Individual investors deploy capital into verified, asset-backed invoices." }
               ].map((item, i) => (
                 <div key={i} className="flex gap-6 group">
@@ -224,8 +224,8 @@ export default async function LandingPage() {
 
                 <div className="grid gap-4">
                   {[
-                    { id: "SAMPLE-092", buyer: "Logistics Partner A", amount: "Rs. 24.5 L", tenure: "45 Days", yield: "12.5%" },
-                    { id: "SAMPLE-104", buyer: "Tech Vendor B", amount: "Rs. 8.2 L", tenure: "60 Days", yield: "13.2%" }
+                    { id: "INV-602", buyer: "Automotive Parts Corp", amount: "₹24.5 L", tenure: "45 Days", yield: "12.5%" },
+                    { id: "INV-841", buyer: "Infrastructure Group", amount: "₹8.2 L", tenure: "60 Days", yield: "13.2%" }
                   ].map((inv, i) => (
                     <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-white/5 glass-dark hover:border-primary/30 transition-all gap-4">
                       <div className="flex items-center gap-4">

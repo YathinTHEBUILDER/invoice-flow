@@ -23,10 +23,10 @@ Every number scales by the investor's share percentage:
 ## Platform Revenue (GMV Scale)
 | Monthly GMV | Platform Revenue (1%) | Annual Revenue |
 | :--- | :--- | :--- |
-| Rs. 1 Cr | Rs. 1,00,000 | Rs. 12,00,000 |
-| Rs. 10 Cr | Rs. 10,00,000 | Rs. 1.2 Cr |
-| Rs. 50 Cr | Rs. 50,00,000 | Rs. 6 Cr |
-| Rs. 100 Cr | Rs. 1,00,00,000 | Rs. 12 Cr |
+| ₹1 Cr | ₹1,00,000 | ₹12,00,000 |
+| ₹10 Cr | ₹10,00,000 | ₹1.2 Cr |
+| ₹50 Cr | ₹50,00,000 | ₹6 Cr |
+| ₹100 Cr | ₹1,00,00,000 | ₹12 Cr |
 
 ## Implementation Reference
 The core logic is implemented in `src/lib/finance.ts`. All dashboard and marketplace components must use these shared utilities to ensure consistency.

@@ -17,9 +17,9 @@ export default function InvestorDashboard() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: "Portfolio Value", value: "Rs. 12.8 L", sub: "+12.4% ARR", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-          { label: "Wallet Balance", value: "Rs. 2.5 L", sub: "Available for deployment", icon: Wallet, color: "text-blue-500", bg: "bg-blue-500/10" },
-          { label: "Active Investments", value: "8 Assets", sub: "100% Asset-Backed", icon: ShieldCheck, color: "text-purple-500", bg: "bg-purple-500/10" },
+          { label: "Portfolio Value", value: "₹0", sub: "Target 12-15% ARR", icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10" },
+          { label: "Wallet Balance", value: "₹0", sub: "Available for deployment", icon: Wallet, color: "text-blue-500", bg: "bg-blue-500/10" },
+          { label: "Active Investments", value: "0 Assets", sub: "100% Asset-Backed", icon: ShieldCheck, color: "text-purple-500", bg: "bg-purple-500/10" },
         ].map((stat, i) => (
           <Card key={i} className="glass-dark border-white/5 overflow-hidden group">
             <CardContent className="p-8">

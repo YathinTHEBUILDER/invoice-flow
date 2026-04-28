@@ -1,15 +1,21 @@
 import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
 import { Button } from "@/components/ui/button";
-import { signOutAction } from "@/app/actions/auth";
 import { Logo } from "@/components/ui/logo";
 import Link from "next/link";
 import { 
   LayoutDashboard, 
   Settings, 
-  LogOut, 
   User as UserIcon,
-  Bell
+  Bell,
+  Search,
+  ShieldCheck,
+  Briefcase,
+  PieChart,
+  ArrowRightLeft,
+  Gavel,
+  History,
+  ChevronRight
 } from "lucide-react";
 
 export default async function DashboardLayout({
@@ -25,70 +31,165 @@ export default async function DashboardLayout({
   }
 
   const role = user.user_metadata.role || "investor";
+  const initials = user.email?.[0].toUpperCase() || "U";
+
+  const navItems = {
+    admin: [
+      {
+        group: "Control Center",
+        items: [
+          { label: "Overview", href: "/admin", icon: LayoutDashboard },
+          { label: "Analytics", href: "/admin?tab=overview", icon: PieChart },
+        ]
+      },
+      {
+        group: "Market Operations",
+        items: [
+          { label: "KYC Approvals", href: "/admin?tab=kyc", icon: ShieldCheck },
+          { label: "Invoice Review", href: "/admin?tab=invoices", icon: Briefcase },
+        ]
+      },
+      {
+        group: "Financials",
+        items: [
+          { label: "Repayments", href: "/admin?tab=repayments", icon: ArrowRightLeft },
+          { label: "Disputes", href: "/admin?tab=disputes", icon: Gavel },
+        ]
+      },
+      {
+        group: "System",
+        items: [
+          { label: "Audit Logs", href: "/admin?tab=logs", icon: History },
+          { label: "Settings", href: "/settings", icon: Settings },
+        ]
+      }
+    ],
+    msme: [
+      {
+        group: "Operations",
+        items: [
+          { label: "Dashboard", href: "/msme", icon: LayoutDashboard },
+          { label: "My Invoices", href: "/msme/invoices", icon: Briefcase },
+        ]
+      },
+      {
+        group: "Account",
+        items: [
+          { label: "Profile", href: "/profile", icon: UserIcon },
+          { label: "Settings", href: "/settings", icon: Settings },
+        ]
+      }
+    ],
+    investor: [
+      {
+        group: "Investments",
+        items: [
+          { label: "Marketplace", href: "/investor", icon: LayoutDashboard },
+          { label: "Portfolio", href: "/investor/portfolio", icon: PieChart },
+        ]
+      },
+      {
+        group: "Account",
+        items: [
+          { label: "Profile", href: "/profile", icon: UserIcon },
+          { label: "Settings", href: "/settings", icon: Settings },
+        ]
+      }
+    ]
+  };
+
+  const currentNav = navItems[role as keyof typeof navItems] || navItems.investor;
 
   return (
-    <div className="flex min-h-screen bg-background">
-      {/* Simple Sidebar for now */}
-      <aside className="w-64 border-r border-white/5 bg-background/50 backdrop-blur-xl hidden md:flex flex-col">
+    <div className="flex min-h-screen bg-background text-foreground selection:bg-primary/20">
+      {/* Premium Sidebar */}
+      <aside className="w-72 border-r border-white/5 bg-black/40 backdrop-blur-2xl hidden md:flex flex-col sticky top-0 h-screen">
         <div className="h-24 flex items-center px-8 border-b border-white/5">
-          <Link href="/">
+          <Link href="/" className="hover:opacity-80 transition-opacity">
             <Logo />
           </Link>
         </div>
         
-        <nav className="flex-1 p-6 space-y-2">
-          <Link 
-            href={`/dashboard/${role}`}
-            className="flex items-center gap-3 px-4 py-3 rounded-xl bg-primary/10 text-primary font-bold transition-all"
-          >
-            <LayoutDashboard className="w-5 h-5" />
-            Dashboard
-          </Link>
-          <Link 
-            href="/settings"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all"
-          >
-            <Settings className="w-5 h-5" />
-            Settings
-          </Link>
+        <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
+          {currentNav.map((group, idx) => (
+            <div key={idx} className="space-y-3">
+              <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+                {group.group}
+              </h3>
+              <div className="space-y-1">
+                {group.items.map((item, itemIdx) => (
+                  <Link 
+                    key={itemIdx}
+                    href={item.href}
+                    className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-white hover:bg-white/5 transition-all group"
+                  >
+                    <div className="flex items-center gap-3">
+                      <item.icon className="w-4 h-4 group-hover:text-primary transition-colors" />
+                      {item.label}
+                    </div>
+                    <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
+                  </Link>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        <div className="p-6 border-t border-white/5 bg-white/[0.02]">
           <Link 
             href="/profile"
-            className="flex items-center gap-3 px-4 py-3 rounded-xl text-muted-foreground hover:bg-white/5 hover:text-foreground transition-all"
+            className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all group"
           >
-            <UserIcon className="w-5 h-5" />
-            Profile
+            <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black">
+              {initials}
+            </div>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm font-black text-white truncate">{user.email?.split('@')[0]}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{role}</p>
+            </div>
           </Link>
-        </nav>
-
-        <div className="p-6 border-t border-white/5">
-          <form action={signOutAction}>
-            <Button variant="ghost" className="w-full justify-start gap-3 text-muted-foreground hover:text-red-400 hover:bg-red-400/5 px-4 py-3 h-auto font-bold">
-              <LogOut className="w-5 h-5" />
-              Logout
-            </Button>
-          </form>
         </div>
       </aside>
 
-      <div className="flex-1 flex flex-col">
-        <header className="h-24 border-b border-white/5 bg-background/50 backdrop-blur-xl flex items-center justify-between px-8">
-          <div>
-            <h1 className="text-sm font-black uppercase tracking-widest text-muted-foreground">
-              {role} Workspace
-            </h1>
-          </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Modern Header */}
+        <header className="h-24 border-b border-white/5 bg-background/50 backdrop-blur-xl flex items-center justify-between px-8 sticky top-0 z-50">
           <div className="flex items-center gap-4">
-            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary">
-              <Bell className="w-5 h-5" />
-            </Button>
-            <div className="h-10 w-10 rounded-full bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black">
-              {user.email?.[0].toUpperCase()}
+            <div className="md:hidden">
+              <Logo />
             </div>
+            <div className="hidden md:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
+              <span className="text-primary/50">Terminal</span>
+              <ChevronRight className="w-3 h-3" />
+              <span className="text-white">{role}</span>
+              <ChevronRight className="w-3 h-3" />
+              <span>Workspace</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <div className="relative hidden lg:block">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <input 
+                type="text" 
+                placeholder="Search resources..." 
+                className="bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2 text-sm font-medium w-64 focus:outline-none focus:ring-2 focus:ring-primary/20 transition-all"
+              />
+            </div>
+            <Button variant="ghost" size="icon" className="text-muted-foreground hover:text-primary relative">
+              <Bell className="w-5 h-5" />
+              <span className="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full border-2 border-background" />
+            </Button>
+            <Link href="/profile">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-white font-black text-xs hover:scale-110 transition-transform">
+                {initials}
+              </div>
+            </Link>
           </div>
         </header>
 
-        <main className="flex-1 p-8 overflow-auto">
-          <div className="max-w-6xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <main className="flex-1 p-8 overflow-x-hidden">
+          <div className="max-w-7xl mx-auto animate-in fade-in slide-in-from-bottom-4 duration-700">
             {children}
           </div>
         </main>
