@@ -34,7 +34,12 @@ import {
   getPlatformSettings,
   updateSettingAction,
   getDisputes,
-  getAuditLogs
+  getAuditLogs,
+  getSettlements,
+  verifySettlementAction,
+  approveInvoiceAction,
+  rejectInvoiceAction,
+  resolveDisputeAction
 } from "@/app/actions/admin";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
@@ -49,12 +54,14 @@ export default function AdminDashboard() {
   const [kycQueue, setKycQueue] = useState<any[]>([]);
   const [invoices, setInvoices] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
+  const [settlements, setSettlements] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [rejectionNotes, setRejectionNotes] = useState("");
+  const [resolutionNotes, setResolutionNotes] = useState("");
 
   useEffect(() => {
     setActiveTab(tabParam);
@@ -74,12 +81,13 @@ export default function AdminDashboard() {
         return;
       }
 
-      const [statsData, kycData, invoiceData, settingsData, disputeData, logsData] = await Promise.all([
+      const [statsData, kycData, invoiceData, settingsData, disputeData, settlementData, logsData] = await Promise.all([
         getAdminStats(),
         getKYCQueue(),
         getInvoices(),
         getPlatformSettings(),
         getDisputes(),
+        getSettlements(),
         getAuditLogs()
       ]);
       setStats(statsData);
@@ -87,6 +95,7 @@ export default function AdminDashboard() {
       setInvoices(invoiceData);
       setSettings(settingsData);
       setDisputes(disputeData);
+      setSettlements(settlementData);
       setAuditLogs(logsData);
     } catch (error: any) {
       console.error("Failed to load dashboard data:", error);
@@ -131,8 +140,6 @@ export default function AdminDashboard() {
           toast.error(result?.serverError || "Failed to reject KYC.");
         }
       }
-    } catch (error) {
-      toast.error("An unexpected system error occurred.");
     } finally {
       setActionLoading(null);
     }
@@ -147,6 +154,69 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       toast.error("Failed to update platform settings.");
+    }
+  };
+
+  const handleVerifySettlement = async (repaymentId: string, status: 'repaid' | 'overdue') => {
+    setActionLoading(repaymentId);
+    try {
+      const result = await verifySettlementAction({ repaymentId, status });
+      if (result?.data?.success) {
+        toast.success("Settlement verified successfully.");
+        await loadData();
+      } else {
+        toast.error(result?.serverError || "Verification failed.");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleInvoiceUpdate = async (invoiceId: string, status: "approved" | "rejected") => {
+    setActionLoading(invoiceId);
+    try {
+      if (status === "approved") {
+        const result = await approveInvoiceAction({ invoiceId });
+        if (result?.data?.success) {
+          toast.success("Asset verified and live.");
+          await loadData();
+        } else {
+          toast.error(result?.serverError || "Approval failed.");
+        }
+      } else {
+        const result = await rejectInvoiceAction({ invoiceId, notes: rejectionNotes });
+        if (result?.data?.success) {
+          toast.success("Asset rejected.");
+          setRejectionNotes("");
+          await loadData();
+        } else {
+          toast.error(result?.serverError || "Rejection failed.");
+        }
+      }
+    } catch (error) {
+      toast.error("System error during asset verification.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleResolveDispute = async (disputeId: string) => {
+    setActionLoading(disputeId);
+    try {
+      const result = await resolveDisputeAction({ disputeId, resolution: resolutionNotes });
+      if (result?.data?.success) {
+        toast.success("Dispute resolved successfully.");
+        setResolutionNotes("");
+        await loadData();
+      } else {
+        toast.error(result?.serverError || "Resolution failed.");
+      }
+    } catch (error) {
+      toast.error("System error during mediation.");
+    } finally {
+      setActionLoading(null);
     }
   };
 
@@ -192,14 +262,20 @@ export default function AdminDashboard() {
                 )}
               </TabsTrigger>
               <TabsTrigger value="invoices" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Assets</TabsTrigger>
-              <TabsTrigger value="disputes" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
-                Conflicts
-                {stats.disputes > 0 && (
-                  <Badge className="ml-2 bg-red-500 text-white border-none px-2 h-4 text-[10px] font-black">{stats.disputes}</Badge>
-                )}
-              </TabsTrigger>
+               <TabsTrigger value="disputes" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                 Conflicts
+                 {stats.disputes > 0 && (
+                   <Badge className="ml-2 bg-red-500 text-white border-none px-2 h-4 text-[10px] font-black">{stats.disputes}</Badge>
+                 )}
+               </TabsTrigger>
+               <TabsTrigger value="settlements" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                 Settlements
+                 {settlements.length > 0 && (
+                   <Badge className="ml-2 bg-emerald-500 text-white border-none px-2 h-4 text-[10px] font-black">{settlements.length}</Badge>
+                 )}
+               </TabsTrigger>
 
-              <TabsTrigger value="logs" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Audit Logs</TabsTrigger>
+               <TabsTrigger value="logs" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Audit Logs</TabsTrigger>
               <TabsTrigger value="settings" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Settings</TabsTrigger>
             </TabsList>
           </ScrollArea>
@@ -667,6 +743,79 @@ export default function AdminDashboard() {
                                 Mediate
                               </Button>
                             )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* --- SETTLEMENTS TAB --- */}
+        <TabsContent value="settlements" className="focus-visible:outline-none">
+          <Card className="glass-dark border-white/5">
+            <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02]">
+              <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Settlement Verification</CardTitle>
+              <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Verify Incoming NEFT/RTGS Repayments against UTR Proofs</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/5 text-left bg-white/[0.01]">
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Asset Ref</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">MSME Issuer</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Amount (INR)</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">UTR / Reference</th>
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {settlements.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-8 py-20 text-center">
+                          <div className="space-y-4">
+                            <IndianRupee className="w-12 h-12 text-muted-foreground/10 mx-auto" />
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No pending settlements for verification</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      settlements.map((set) => (
+                        <tr key={set.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="px-8 py-8 font-black text-white tracking-tight">#{set.invoices?.invoice_number}</td>
+                          <td className="px-8 py-8">
+                            <span className="font-bold text-white/80">{set.invoices?.profiles?.company_name}</span>
+                          </td>
+                          <td className="px-8 py-8 font-black text-emerald-500 text-lg">{formatCurrency(set.amount_paid)}</td>
+                          <td className="px-8 py-8">
+                            <Badge variant="outline" className="border-white/10 text-white font-black uppercase tracking-widest text-[9px]">
+                              {set.payment_reference}
+                            </Badge>
+                          </td>
+                          <td className="px-8 py-8 text-right">
+                            <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button 
+                                size="sm" 
+                                onClick={() => handleVerifySettlement(set.id, "repaid")}
+                                disabled={actionLoading === set.id}
+                                className="h-8 bg-emerald-500 hover:bg-emerald-600 text-[8px] font-black uppercase"
+                              >
+                                Confirm Receipt
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="destructive"
+                                onClick={() => handleVerifySettlement(set.id, "overdue")}
+                                disabled={actionLoading === set.id}
+                                className="h-8 text-[8px] font-black uppercase"
+                              >
+                                Invalid UTR
+                              </Button>
+                            </div>
                           </td>
                         </tr>
                       ))

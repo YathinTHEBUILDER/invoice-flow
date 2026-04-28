@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/server";
 import { revalidatePath } from "next/cache";
+import { createNotification } from "./notifications";
 
 export async function uploadInvoiceAction(formData: FormData) {
   const supabase = await createClient();
@@ -13,7 +14,7 @@ export async function uploadInvoiceAction(formData: FormData) {
   // Strict Role & KYC Check
   const { data: profile } = await supabase
     .from("profiles")
-    .select("kyc_status, role")
+    .select("kyc_status, role, company_name")
     .eq("id", user.id)
     .single();
 
@@ -44,6 +45,15 @@ export async function uploadInvoiceAction(formData: FormData) {
     return { error: `Invoice number ${invoiceNumber} has already been uploaded.` };
   }
 
+  // Fetch default discount rate from settings
+  const { data: settings } = await supabase
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'default_discount_rate')
+    .single();
+  
+  const discountRate = Number(settings?.value || 0.12);
+
   const { data, error } = await supabase
     .from("invoices")
     .insert([
@@ -51,7 +61,7 @@ export async function uploadInvoiceAction(formData: FormData) {
         msme_id: user.id,
         invoice_number: invoiceNumber,
         amount: amount,
-        discount_rate: 0.12,
+        discount_rate: discountRate,
         tenure_days: tenureDays,
         buyer_name: buyerName,
         buyer_gstin: buyerGstin,
@@ -64,6 +74,20 @@ export async function uploadInvoiceAction(formData: FormData) {
   if (error) {
     console.error("Invoice upload error:", error);
     return { error: error.message };
+  }
+
+  // Notify Admins
+  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+  if (admins) {
+    for (const admin of admins) {
+      await createNotification(
+        admin.id,
+        "New Asset Uploaded 📄",
+        `${profile.company_name} uploaded Invoice #${invoiceNumber} for verification.`,
+        "info",
+        "/admin?tab=invoices"
+      );
+    }
   }
 
   revalidatePath("/msme/invoices");
@@ -143,6 +167,20 @@ export async function createSupportTicketAction(formData: FormData) {
 
   if (error) return { error: error.message };
 
+  // Notify Admins
+  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+  if (admins) {
+    for (const admin of admins) {
+      await createNotification(
+        admin.id,
+        "New Support Ticket 🎫",
+        `Ticket raised: ${subject} (${priority})`,
+        "warning",
+        "/admin?tab=disputes"
+      );
+    }
+  }
+
   revalidatePath("/msme/support");
   return { success: true };
 }
@@ -182,7 +220,7 @@ export async function getMSMEStats() {
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("kyc_status, kyc_notes")
+    .select("kyc_status, kyc_notes, role")
     .eq("id", user.id)
     .single();
 
@@ -219,4 +257,103 @@ export async function getRecentMSMEInvoices(limit = 5) {
   }
 
   return data;
+}
+
+/**
+ * Submit Repayment Proof Action
+ */
+export async function submitRepaymentProofAction(formData: FormData) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return { error: "Unauthorized" };
+
+  const repaymentId = formData.get("repayment_id") as string;
+  const utr = formData.get("utr") as string;
+  const amountPaid = parseFloat(formData.get("amount_paid") as string);
+
+  if (!repaymentId || !utr || isNaN(amountPaid)) {
+    return { error: "Missing required repayment details (UTR/Amount)." };
+  }
+
+  const { error } = await supabase
+    .from("repayments")
+    .update({
+      payment_reference: utr,
+      amount_paid: amountPaid,
+      payment_date: new Date().toISOString(),
+      status: "paid", // Moving to paid status (admin will verify later)
+      updated_at: new Date().toISOString()
+    })
+    .eq("id", repaymentId);
+
+  if (error) return { error: error.message };
+
+  // Notify Admins
+  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+  if (admins) {
+    for (const admin of admins) {
+      await createNotification(
+        admin.id,
+        "Payment Settlement Submitted 💰",
+        `UTR ${utr} submitted for verification. Amount: ${amountPaid}`,
+        "success",
+        "/admin"
+      );
+    }
+  }
+
+  revalidatePath("/msme/repayments");
+  return { success: true };
+}
+
+/**
+ * Raise Dispute Action
+ */
+export async function raiseDisputeAction(formData: FormData) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return { error: "Unauthorized" };
+
+  const invoiceId = formData.get("invoice_id") as string;
+  const subject = formData.get("subject") as string;
+  const message = formData.get("message") as string;
+
+  if (!invoiceId || !subject || !message) {
+    return { error: "Missing required dispute details." };
+  }
+
+  const { error } = await supabase
+    .from("disputes")
+    .insert([
+      {
+        invoice_id: invoiceId,
+        raised_by: user.id,
+        subject,
+        message,
+        status: "open"
+      }
+    ]);
+
+  if (error) return { error: error.message };
+
+  // Notify Admins
+  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+  if (admins) {
+    for (const admin of admins) {
+      await createNotification(
+        admin.id,
+        "New Dispute Raised ⚖️",
+        `Dispute on Invoice #${invoiceId.split('-')[0].toUpperCase()}: ${subject}`,
+        "error",
+        "/admin?tab=disputes"
+      );
+    }
+  }
+
+  revalidatePath("/msme/invoices");
+  return { success: true };
 }

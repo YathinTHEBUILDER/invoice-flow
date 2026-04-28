@@ -18,7 +18,7 @@ import {
   X,
   Loader2
 } from "lucide-react";
-import { uploadInvoiceAction } from "@/app/actions/msme";
+import { uploadInvoiceAction, raiseDisputeAction } from "@/app/actions/msme";
 import { createClient } from "@/lib/client";
 import { formatINR } from "@/lib/format";
 import { toast } from "sonner";
@@ -31,6 +31,8 @@ export default function InvoicesPage() {
   const [uploading, setUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [disputing, setDisputing] = useState(false);
 
   useEffect(() => {
     fetchInvoices();
@@ -96,6 +98,27 @@ export default function InvoicesPage() {
       toast.error("An unexpected error occurred");
     } finally {
       setUploading(false);
+    }
+  };
+
+  const handleRaiseDispute = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setDisputing(true);
+    const formData = new FormData(e.currentTarget);
+    
+    try {
+      const result = await raiseDisputeAction(formData);
+      if (result.success) {
+        toast.success("Dispute raised successfully. Admin will review.");
+        setSelectedInvoice(null);
+        fetchInvoices();
+      } else {
+        toast.error(result.error || "Failed to raise dispute");
+      }
+    } catch (error) {
+      toast.error("An unexpected error occurred");
+    } finally {
+      setDisputing(false);
     }
   };
 
@@ -239,9 +262,19 @@ export default function InvoicesPage() {
                           {getStatusBadge(invoice.status)}
                         </td>
                         <td className="px-8 py-6 text-right">
-                          <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
-                            <ChevronRight className="w-4 h-4" />
-                          </Button>
+                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setSelectedInvoice(invoice)}
+                              className="h-8 text-[8px] font-black uppercase text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                            >
+                              Raise Dispute
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-8">
+                              <ChevronRight className="w-4 h-4" />
+                            </Button>
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -364,6 +397,70 @@ export default function InvoicesPage() {
                 </div>
               </form>
             </CardContent>
+          </Card>
+        </div>
+      )}
+      {/* Dispute Modal */}
+      {selectedInvoice && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !disputing && setSelectedInvoice(null)} />
+          <Card className="relative w-full max-w-lg glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+            <CardHeader className="p-8 border-b border-white/5">
+              <CardTitle className="text-2xl font-black italic">Raise Dispute</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Contest Invoice #{selectedInvoice.invoice_number}</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleRaiseDispute}>
+              <CardContent className="p-8 space-y-6">
+                <input type="hidden" name="invoice_id" value={selectedInvoice.id} />
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Dispute Subject</label>
+                  <Input 
+                    name="subject"
+                    required
+                    placeholder="e.g., Buyer payment already received"
+                    className="bg-white/5 border-white/10 h-12 font-bold text-white focus:bg-white/10 transition-all"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Detailed Message</label>
+                  <textarea 
+                    name="message"
+                    required
+                    rows={4}
+                    placeholder="Explain the conflict in detail for admin mediation..."
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 font-bold text-white text-sm focus:bg-white/10 transition-all resize-none focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+
+                <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
+                  <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
+                    Formal disputes will suspend all liquidity operations on this asset until resolved by an administrator.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button 
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setSelectedInvoice(null)}
+                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] hover:bg-white/5"
+                    disabled={disputing}
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={disputing}
+                    className="flex-1 h-12 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-[10px]"
+                  >
+                    {disputing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Initiate Mediation"}
+                  </Button>
+                </div>
+              </CardContent>
+            </form>
           </Card>
         </div>
       )}

@@ -1,5 +1,7 @@
 "use server";
 
+import { createNotification } from "./notifications";
+
 import { createClient } from "@/lib/server";
 import { revalidatePath } from "next/cache";
 import { actionClient } from "@/lib/safe-action";
@@ -179,27 +181,6 @@ export async function getKYCQueue() {
   return enrichedData;
 }
 
-export const updateKYCAction = actionClient
-  .schema(updateKYCSchema)
-  .action(async ({ parsedInput: { requestId, status, notes } }) => {
-    await ensureAdmin();
-    const supabase = await createClient();
-    const { error } = await supabase
-      .from('kyc_requests')
-      .update({ 
-        status, 
-        notes, 
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', requestId);
-
-    if (error) throw new Error(error.message);
-    
-    await logAdminAction('update_kyc', 'kyc', requestId, { status, notes });
-    
-    revalidatePath("/admin");
-    return { success: true };
-  });
 
 /**
  * Fetch Invoices for monitoring
@@ -325,6 +306,16 @@ export const approveKYCAction = actionClient
     await logAdminAction('approve_kyc', 'profile', userId, { requestId });
     
     revalidatePath("/admin");
+
+    // Notify User
+    await createNotification(
+      userId,
+      "KYC Approved! ✅",
+      "Your business profile has been verified. You can now upload invoices and seek funding.",
+      "success",
+      "/msme"
+    );
+
     return { success: true };
   });
 
@@ -357,6 +348,16 @@ export const rejectKYCAction = actionClient
     await logAdminAction('reject_kyc', 'profile', userId, { requestId, notes });
     
     revalidatePath("/admin");
+
+    // Notify User
+    await createNotification(
+      userId,
+      "KYC Rejected ❌",
+      `Your KYC was rejected. Reason: ${notes}`,
+      "error",
+      "/msme"
+    );
+
     return { success: true };
   });
 
@@ -414,6 +415,19 @@ export const approveInvoiceAction = actionClient
     await logAdminAction('approve_invoice', 'invoice', invoiceId, { status: 'approved' });
     
     revalidatePath("/admin");
+
+    // Fetch MSME ID to notify
+    const { data: inv } = await supabase.from('invoices').select('msme_id, invoice_number').eq('id', invoiceId).single();
+    if (inv) {
+      await createNotification(
+        inv.msme_id,
+        "Invoice Verified 📄",
+        `Invoice #${inv.invoice_number} has been verified and is now live for funding.`,
+        "success",
+        "/msme/invoices"
+      );
+    }
+
     return { success: true };
   });
 
@@ -443,6 +457,19 @@ export const rejectInvoiceAction = actionClient
     await logAdminAction('reject_invoice', 'invoice', invoiceId, { status: 'rejected', notes });
     
     revalidatePath("/admin");
+
+    // Fetch MSME ID to notify
+    const { data: inv } = await supabase.from('invoices').select('msme_id, invoice_number').eq('id', invoiceId).single();
+    if (inv) {
+      await createNotification(
+        inv.msme_id,
+        "Invoice Rejected ⚠️",
+        `Invoice #${inv.invoice_number} was rejected. Reason: ${notes}`,
+        "warning",
+        "/msme/invoices"
+      );
+    }
+
     return { success: true };
   });
 
@@ -470,6 +497,81 @@ export const resolveDisputeAction = actionClient
     if (error) throw new Error(error.message);
     
     await logAdminAction('resolve_dispute', 'dispute', disputeId, { resolution });
+    
+    revalidatePath("/admin");
+    return { success: true };
+  });
+
+/**
+ * Fetch Settlements (Repayments pending verification)
+ */
+export async function getSettlements() {
+  await ensureAdmin();
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('repayments')
+    .select(`
+      *,
+      invoices!inner(
+        invoice_number,
+        msme_id,
+        profiles:msme_id(company_name)
+      )
+    `)
+    .eq('status', 'paid') 
+    .order('updated_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/**
+ * Verify Settlement Action
+ */
+export const verifySettlementAction = actionClient
+  .schema(z.object({ 
+    repaymentId: z.string().uuid(),
+    status: z.enum(['repaid', 'overdue'])
+  }))
+  .action(async ({ parsedInput: { repaymentId, status } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    const { data: repayment } = await supabase
+      .from('repayments')
+      .select('*, invoices!inner(msme_id, invoice_number)')
+      .eq('id', repaymentId)
+      .single();
+
+    if (!repayment) throw new Error("Repayment record not found.");
+
+    const { error } = await supabase
+      .from('repayments')
+      .update({ 
+        status: status === 'repaid' ? 'paid' : 'overdue',
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', repaymentId);
+
+    if (error) throw new Error(error.message);
+
+    if (status === 'repaid') {
+      await supabase
+        .from('invoices')
+        .update({ status: 'repaid' })
+        .eq('id', repayment.invoice_id);
+      
+      await createNotification(
+        repayment.invoices.msme_id,
+        "Settlement Confirmed! 🏦",
+        `Your payment for Invoice #${repayment.invoices.invoice_number} has been verified. Asset is now fully repaid.`,
+        "success",
+        "/msme/repayments"
+      );
+    }
+
+    await logAdminAction('verify_settlement', 'repayment', repaymentId, { status });
     
     revalidatePath("/admin");
     return { success: true };

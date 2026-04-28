@@ -17,11 +17,15 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/client";
 import { formatINR } from "@/lib/format";
+import { submitRepaymentProofAction } from "@/app/actions/msme";
+import { toast } from "sonner";
 
 export default function RepaymentsPage() {
   const [repayments, setRepayments] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showBankDetails, setShowBankDetails] = useState(false);
+  const [selectedRepayment, setSelectedRepayment] = useState<any>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     fetchRepayments();
@@ -41,6 +45,27 @@ export default function RepaymentsPage() {
     }
     setLoading(false);
   }
+
+  const handleSubmitProof = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const formData = new FormData(e.currentTarget);
+    
+    try {
+      const result = await submitRepaymentProofAction(formData);
+      if (result.success) {
+        toast.success("Payment proof submitted for verification.");
+        setSelectedRepayment(null);
+        await fetchRepayments();
+      } else {
+        toast.error(result.error || "Submission failed.");
+      }
+    } catch (error) {
+      toast.error("System error during submission.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
@@ -112,9 +137,19 @@ export default function RepaymentsPage() {
                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Due on {new Date(item.due_date).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <div className="flex flex-col items-end gap-2">
-                        <p className="text-lg font-black text-white">{formatINR(item.amount_due)}</p>
-                        {getStatusBadge(item.status)}
+                      <div className="flex flex-col md:flex-row items-end md:items-center gap-6">
+                        <div className="text-right">
+                          <p className="text-lg font-black text-white">{formatINR(item.amount_due)}</p>
+                          {getStatusBadge(item.status)}
+                        </div>
+                        {item.status !== 'paid' && (
+                          <Button 
+                            onClick={() => setSelectedRepayment(item)}
+                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[9px] h-10 px-6"
+                          >
+                            Mark as Paid
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}
@@ -212,6 +247,71 @@ export default function RepaymentsPage() {
           </Card>
         </div>
       </div>
+
+      {/* Submit Proof Modal */}
+      {selectedRepayment && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+          <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedRepayment(null)} />
+          <Card className="relative w-full max-w-md glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+            <CardHeader className="p-8 border-b border-white/5">
+              <CardTitle className="text-2xl font-black italic">Submit Payment Proof</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Verify settlement for Invoice #{selectedRepayment.invoices.invoice_number}</CardDescription>
+            </CardHeader>
+            <form onSubmit={handleSubmitProof}>
+              <CardContent className="p-8 space-y-6">
+                <input type="hidden" name="repayment_id" value={selectedRepayment.id} />
+                
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Transaction UTR / Reference ID</label>
+                  <input 
+                    name="utr"
+                    required
+                    placeholder="Enter NEFT/RTGS UTR Number"
+                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white font-bold placeholder:text-white/20 focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Amount Paid (INR)</label>
+                  <input 
+                    name="amount_paid"
+                    type="number"
+                    step="0.01"
+                    required
+                    defaultValue={selectedRepayment.amount_due}
+                    className="w-full h-12 bg-white/5 border border-white/10 rounded-xl px-4 text-white font-bold placeholder:text-white/20 focus:outline-none focus:border-primary/50"
+                  />
+                </div>
+
+                <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10 flex gap-3">
+                  <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
+                  <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
+                    False submissions or incorrect UTRs may lead to account suspension and additional penalties.
+                  </p>
+                </div>
+
+                <div className="flex gap-4">
+                  <Button 
+                    type="button"
+                    variant="ghost"
+                    onClick={() => setSelectedRepayment(null)}
+                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] hover:bg-white/5"
+                  >
+                    Cancel
+                  </Button>
+                  <Button 
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex-1 h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px]"
+                  >
+                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify Settlement"}
+                  </Button>
+                </div>
+              </CardContent>
+            </form>
+          </Card>
+        </div>
+      )}
 
       {/* Bank Details Modal */}
       {showBankDetails && (
