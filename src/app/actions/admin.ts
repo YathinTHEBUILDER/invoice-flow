@@ -129,7 +129,7 @@ export async function getAdminStats() {
     activeInvoices: activeInvoices || 0,
     pendingKYC: pendingKYC || 0,
     disputes: disputes || 0,
-    commissionPercent: commission * 100
+    commissionPercent: 1.0
   };
 }
 
@@ -655,12 +655,6 @@ export const verifySettlementAction = actionClient
     revalidatePath("/investor/portfolio");
     revalidatePath("/msme/repayments");
     
-    return { success: true };
-  });
-
-    await logAdminAction('verify_settlement', 'repayment', repaymentId, { status });
-    
-    revalidatePath("/admin");
     return { success: true };
   });
 
