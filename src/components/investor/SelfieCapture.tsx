@@ -43,17 +43,44 @@ export function SelfieCapture({ onCapture, onClose }: SelfieCaptureProps) {
       
       let mediaStream: MediaStream;
       try {
-        console.log("Requesting device camera stream...");
+        console.log("Attempting high-resolution 'user' facing camera...");
         mediaStream = await navigator.mediaDevices.getUserMedia({ 
           video: { 
             facingMode: "user", 
-            width: { ideal: 1280 }, 
-            height: { ideal: 720 } 
+            width: { ideal: 1920, min: 1280 }, 
+            height: { ideal: 1080, min: 720 } 
           } 
         });
-      } catch (e) {
-        console.warn("High-res constraints failed, falling back to default video", e);
-        mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+      } catch (e: any) {
+        console.warn(`High-res attempt failed (${e.name}): ${e.message}`);
+        
+        // Explicitly check for permission denial in any form
+        const isPermissionError = 
+          e.name === 'NotAllowedError' || 
+          e.name === 'PermissionDeniedError' || 
+          e.name === 'SecurityError' ||
+          (e.message && e.message.toLowerCase().includes('permission'));
+
+        if (isPermissionError) {
+          console.error("Camera permission explicitly denied by user or browser security policy.");
+          throw e;
+        }
+        
+        console.log("Falling back to default 'user' facing camera...");
+        try {
+          mediaStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: "user" } 
+          });
+        } catch (fallbackErr: any) {
+          console.warn(`Facing-mode 'user' fallback failed (${fallbackErr.name}): ${fallbackErr.message}`);
+          
+          if (fallbackErr.name === 'NotAllowedError' || fallbackErr.name === 'PermissionDeniedError' || fallbackErr.name === 'SecurityError') {
+            throw fallbackErr;
+          }
+          
+          console.log("Final fallback: Requesting ANY available video source...");
+          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+        }
       }
       console.log("Camera stream acquired successfully.");
       clearTimeout(timeout);
@@ -61,12 +88,21 @@ export function SelfieCapture({ onCapture, onClose }: SelfieCaptureProps) {
     } catch (err: any) {
       clearTimeout(timeout);
       console.error("Critical Camera Access Error:", err);
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        setError("Camera access denied. Please click the camera icon in your browser's address bar to authorize InvoiceFlow.");
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        setError("No camera detected. Please ensure a camera is connected to your device.");
+      
+      // Map common errors to user-friendly messages
+      const errorName = err.name || '';
+      const errorMessage = err.message || '';
+      
+      if (errorName === 'NotAllowedError' || errorName === 'PermissionDeniedError') {
+        setError("Camera access denied. Please click the camera icon in your browser's address bar to allow camera access for identity verification.");
+      } else if (errorName === 'NotFoundError' || errorName === 'DevicesNotFoundError') {
+        setError("No camera detected. Please ensure your camera is connected and not being used by another application.");
+      } else if (errorName === 'NotReadableError' || errorName === 'TrackStartError') {
+        setError("Camera is already in use by another application or tab. Please close other apps and try again.");
+      } else if (errorName === 'OverconstrainedError') {
+        setError("No camera found matching the required specifications. Please try using a different device.");
       } else {
-        setError(`Camera Initialization Error: ${err.message || 'Unknown Error'}. Please refresh the page.`);
+        setError(`Camera Error: ${errorMessage || 'Unknown hardware failure'}. Please refresh the page.`);
       }
     }
   };
@@ -146,25 +182,47 @@ export function SelfieCapture({ onCapture, onClose }: SelfieCaptureProps) {
             <p className="text-muted-foreground text-sm font-medium italic">Position your face within the frame for manual identity verification.</p>
           </div>
 
-          <div className="relative aspect-square max-w-sm mx-auto">
-            {/* The Oval Frame */}
-            <div className="absolute inset-0 z-10 pointer-events-none border-[4px] border-primary/20 rounded-[100%] border-dashed animate-[spin_30s_linear_infinite]" />
-            <div className="absolute inset-4 z-20 pointer-events-none border-[2px] border-white/10 rounded-[100%]" />
+          <div className="relative aspect-[3/4] max-w-sm mx-auto">
+            {/* The Premium Oval Frame */}
+            <div className="absolute inset-0 z-10 pointer-events-none border-[4px] border-primary/40 rounded-[50%/40%] border-dashed animate-[spin_60s_linear_infinite] shadow-[0_0_30px_rgba(var(--primary),0.2)]" />
+            <div className="absolute inset-2 z-20 pointer-events-none border-[1px] border-white/20 rounded-[50%/40%]" />
+            <div className="absolute -inset-4 z-0 bg-primary/5 blur-3xl rounded-full opacity-50" />
             
-            <div className="w-full h-full rounded-[100%] overflow-hidden bg-zinc-900 border border-white/5 shadow-inner relative flex items-center justify-center">
+            <div className="w-full h-full rounded-[50%/40%] overflow-hidden bg-zinc-900 border border-white/10 shadow-inner relative flex items-center justify-center">
               {error ? (
                 <div className="p-8 text-center space-y-4">
                   <div className="mx-auto w-12 h-12 rounded-2xl bg-red-500/10 text-red-500 flex items-center justify-center">
                     <Camera className="w-6 h-6" />
                   </div>
                   <p className="text-[10px] font-black text-white uppercase tracking-widest leading-relaxed max-w-[200px] mx-auto">{error}</p>
-                  <Button 
-                    variant="outline" 
-                    onClick={startCamera}
-                    className="h-10 px-6 border-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-white/5"
-                  >
-                    Retry Camera Sync
-                  </Button>
+                  <div className="flex flex-col gap-2 w-full max-w-[200px] pt-2">
+                    <Button 
+                      variant="outline" 
+                      onClick={startCamera}
+                      className="h-10 px-6 border-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-white/5"
+                    >
+                      Retry Camera Sync
+                    </Button>
+                    <div className="relative group">
+                      <input 
+                        type="file" 
+                        accept="image/*"
+                        className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) {
+                            setCapturedImage(URL.createObjectURL(file));
+                            onCapture(file);
+                          }
+                        }}
+                      />
+                      <Button 
+                        className="w-full h-10 px-6 bg-white/5 border border-white/10 text-white font-black uppercase tracking-widest text-[10px] rounded-xl group-hover:bg-white/10"
+                      >
+                        Manual Photo Upload
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               ) : capturedImage ? (
                 <img src={capturedImage} alt="Captured Alignment" className="w-full h-full object-cover scale-x-[-1]" />
@@ -228,7 +286,7 @@ export function SelfieCapture({ onCapture, onClose }: SelfieCaptureProps) {
 
             {/* Face Guide Overlays */}
             <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
-               <div className="w-[85%] h-[85%] rounded-[100%] border-2 border-primary/40 shadow-[0_0_100px_rgba(var(--primary),0.05)]" />
+               <div className="w-[85%] h-[85%] rounded-[50%/40%] border-2 border-primary/40 shadow-[0_0_100px_rgba(var(--primary),0.05)]" />
             </div>
           </div>
 

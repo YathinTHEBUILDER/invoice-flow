@@ -1,9 +1,10 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Progress } from "@/components/ui/progress";
 import { 
   Search, 
   TrendingUp, 
@@ -14,20 +15,23 @@ import {
   ArrowUpRight,
   Info,
   Loader2,
-  CheckCircle2,
   AlertCircle
 } from "lucide-react";
-import { getMarketplaceInvoices, fundInvoiceAction, getInvestorStats } from "@/app/actions/investor";
-import { formatINR } from "@/lib/utils";
+import { getMarketplaceInvoices, getInvestorStats } from "@/app/actions/investor";
+import { formatINR, formatIndianNumber } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { InvestmentModal } from "@/components/investor/InvestmentModal";
 
 export default function InvestorMarketplace() {
   const router = useRouter();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [fundingId, setFundingId] = useState<string | null>(null);
+  
+  // Modal State
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
     fetchData();
@@ -48,7 +52,7 @@ export default function InvestorMarketplace() {
     }
   }
 
-  async function handleFund(invoiceId: string) {
+  function handleOpenModal(invoice: any) {
     if (profile?.kycStatus !== 'verified') {
       toast.error("Compliance Lock", {
         description: "Your account is not yet verified. Please complete KYC to deploy capital."
@@ -56,25 +60,8 @@ export default function InvestorMarketplace() {
       router.push("/investor/kyc");
       return;
     }
-
-    setFundingId(invoiceId);
-    try {
-      const result = await fundInvoiceAction({ invoiceId });
-      if (result?.data?.success) {
-        toast.success("Capital Deployed", {
-          description: "Investment successfully executed. Assets are now active in your portfolio."
-        });
-        fetchData();
-      } else {
-        throw new Error(result?.serverError || "Deployment failed.");
-      }
-    } catch (error: any) {
-      toast.error("Execution Error", {
-        description: error.message
-      });
-    } finally {
-      setFundingId(null);
-    }
+    setSelectedInvoice(invoice);
+    setIsModalOpen(true);
   }
 
   if (loading) {
@@ -119,7 +106,10 @@ export default function InvestorMarketplace() {
         ) : (
           invoices.map((invoice) => {
             const yieldRate = (invoice.discount_rate || 0.12) * 100;
-            const absoluteReturn = Number(invoice.amount) * (invoice.discount_rate / 365 * (invoice.tenure_days || 45));
+            const targetAmount = Number(invoice.verified_amount || invoice.amount);
+            const fundedAmount = Number(invoice.funded_amount || 0);
+            const progress = (fundedAmount / targetAmount) * 100;
+            const remaining = targetAmount - fundedAmount;
             
             return (
               <Card key={invoice.id} className="glass-dark border-white/5 overflow-hidden group hover:border-white/10 transition-all duration-500">
@@ -142,22 +132,32 @@ export default function InvestorMarketplace() {
                       </div>
                       <div className="text-right">
                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Asset Value</p>
-                        <p className="text-3xl font-black text-white tracking-tighter">{formatINR(invoice.amount)}</p>
+                        <p className="text-3xl font-black text-white tracking-tighter">{formatIndianNumber(targetAmount)}</p>
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-3 gap-6 py-6 border-y border-white/5">
+                    <div className="space-y-4">
+                       <div className="flex justify-between items-end">
+                          <div className="space-y-1">
+                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Funding Progress</p>
+                             <p className="text-sm font-black text-white italic">{progress.toFixed(1)}% Completed</p>
+                          </div>
+                          <div className="text-right space-y-1">
+                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Remaining</p>
+                             <p className="text-sm font-black text-primary italic">{formatINR(remaining)}</p>
+                          </div>
+                       </div>
+                       <Progress value={progress} className="h-2 bg-white/5" />
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-6 py-6 border-y border-white/5">
                       <div className="space-y-1">
                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Net Yield</p>
-                        <p className="text-lg font-black text-emerald-400 uppercase italic">~{yieldRate.toFixed(1)}%</p>
+                        <p className="text-lg font-black text-emerald-400 uppercase italic">~{yieldRate.toFixed(1)}% p.a.</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Tenure</p>
                         <p className="text-lg font-black text-white uppercase italic">{invoice.tenure_days || 45} Days</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Est. Return</p>
-                        <p className="text-lg font-black text-white uppercase italic">{formatINR(absoluteReturn)}</p>
                       </div>
                     </div>
 
@@ -173,15 +173,10 @@ export default function InvestorMarketplace() {
                         </div>
                       </div>
                       <Button 
-                        onClick={() => handleFund(invoice.id)}
-                        disabled={fundingId === invoice.id}
+                        onClick={() => handleOpenModal(invoice)}
                         className="h-14 px-10 bg-white text-black hover:bg-white/90 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-2xl shadow-white/5"
                       >
-                        {fundingId === invoice.id ? (
-                          <Loader2 className="w-5 h-5 animate-spin" />
-                        ) : (
-                          <>Deploy Liquidity <ArrowUpRight className="ml-2 w-4 h-4" /></>
-                        )}
+                        Invest Now <ArrowUpRight className="ml-2 w-4 h-4" />
                       </Button>
                     </div>
                   </div>
@@ -223,6 +218,17 @@ export default function InvestorMarketplace() {
             Finalize KYC Now
           </Button>
         </div>
+      )}
+
+      {/* Investment Modal */}
+      {selectedInvoice && (
+        <InvestmentModal 
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          invoice={selectedInvoice}
+          userBalance={profile?.walletBalance || 0}
+          onSuccess={fetchData}
+        />
       )}
     </div>
   );

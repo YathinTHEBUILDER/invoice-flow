@@ -55,9 +55,30 @@ export default function InvestorDashboard() {
   const isVerified = kycStatus === 'verified';
 
   const statCards = [
-    { label: "Portfolio Value", value: formatINR(stats?.totalInvested || 0), sub: `Target ${stats?.expectedARR || 14.5}% Yield`, icon: TrendingUp, color: "text-emerald-500", bg: "bg-emerald-500/10" },
-    { label: "Total Returns", value: formatINR(stats?.totalReturns || 0), sub: `${formatINR(stats?.pendingReturns || 0)} Accruing`, icon: PieChart, color: "text-blue-500", bg: "bg-blue-500/10" },
-    { label: "Received Payouts", value: formatINR(stats?.receivedPayouts || 0), sub: "Settled in Wallet", icon: History, color: "text-purple-500", bg: "bg-purple-500/10" },
+    { 
+      label: "Portfolio (Face Value)", 
+      value: formatINR(stats?.totalInvested || 0), 
+      sub: `${stats?.activeAssets || 0} Active Positions`, 
+      icon: TrendingUp, 
+      color: "text-emerald-500", 
+      bg: "bg-emerald-500/10" 
+    },
+    { 
+      label: "Capital Deployed", 
+      value: formatINR(stats?.totalDeployed || 0), 
+      sub: "Net Cash Outflow", 
+      icon: Wallet, 
+      color: "text-blue-500", 
+      bg: "bg-blue-500/10" 
+    },
+    { 
+      label: "Realized Profit", 
+      value: formatINR(stats?.realizedProfit || 0), 
+      sub: "Settled Returns", 
+      icon: PieChart, 
+      color: "text-purple-500", 
+      bg: "bg-purple-500/10" 
+    },
   ];
 
   return (

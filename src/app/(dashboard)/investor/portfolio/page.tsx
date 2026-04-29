@@ -1,22 +1,20 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
   Briefcase, 
-  TrendingUp, 
   Clock, 
   Calendar,
   Building2,
-  CheckCircle2,
   Loader2,
-  ChevronRight,
   ShieldCheck,
-  History
+  History,
+  TrendingUp
 } from "lucide-react";
 import { getInvestorPortfolio } from "@/app/actions/investor";
-import { formatINR } from "@/lib/utils";
+import { formatINR, formatIndianNumber } from "@/lib/utils";
 
 export default function InvestorPortfolio() {
   const [investments, setInvestments] = useState<any[]>([]);
@@ -46,6 +44,8 @@ export default function InvestorPortfolio() {
     );
   }
 
+  const activeParticipation = investments.filter(i => i.status === 'active').length;
+
   return (
     <div className="space-y-12 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -55,8 +55,8 @@ export default function InvestorPortfolio() {
         </div>
         <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 px-6">
           <div className="space-y-0.5">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active Assets</p>
-            <p className="text-xl font-black text-white italic">{investments.filter(i => i.status === 'funded').length}</p>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active participations</p>
+            <p className="text-xl font-black text-white italic">{activeParticipation}</p>
           </div>
           <div className="w-px h-8 bg-white/10 mx-2" />
           <div className="p-2 rounded-xl bg-primary/10 text-primary">
@@ -78,8 +78,11 @@ export default function InvestorPortfolio() {
           </div>
         ) : (
           investments.map((inv) => {
-            const repayment = inv.repayments?.[0];
-            const isRepaid = repayment?.status === 'paid';
+            const isRepaid = inv.status === 'repaid';
+            const invoice = inv.invoices;
+            const yieldRate = (invoice.discount_rate || 0.12) * 100;
+            const tenure = invoice.tenure_days || 45;
+            const estimatedReturn = Number(inv.amount) * (yieldRate / 100 / 365 * tenure);
             
             return (
               <Card key={inv.id} className="glass-dark border-white/5 overflow-hidden group hover:border-white/10 transition-all duration-500">
@@ -88,31 +91,31 @@ export default function InvestorPortfolio() {
                     {/* Asset ID & Entity */}
                     <div className="w-full md:w-1/4 space-y-4">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Asset # {inv.invoice_number}</p>
-                        <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">{inv.profiles?.company_name}</h3>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Participation on Asset # {invoice.invoice_number}</p>
+                        <h3 className="text-2xl font-black text-white italic tracking-tighter uppercase leading-none">{invoice.profiles?.company_name}</h3>
                       </div>
                       <Badge variant="outline" className={`h-8 px-4 rounded-xl text-[8px] font-black uppercase tracking-widest ${isRepaid ? 'border-emerald-500/20 text-emerald-400 bg-emerald-500/5' : 'border-blue-500/20 text-blue-400 bg-blue-500/5'}`}>
-                        {isRepaid ? 'Completed' : 'Active Deployment'}
+                        {isRepaid ? 'Settled' : 'Active Deployment'}
                       </Badge>
                     </div>
 
                     {/* Financial Metrics */}
                     <div className="flex-1 grid grid-cols-2 md:grid-cols-4 gap-8 w-full border-x border-white/5 px-10">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Principal</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Committed</p>
                         <p className="text-xl font-black text-white italic">{formatINR(inv.amount)}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Expected Return</p>
-                        <p className="text-xl font-black text-emerald-400 italic">{formatINR(Number(repayment?.amount_due || 0) - Number(inv.amount))}</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Est. Return</p>
+                        <p className="text-xl font-black text-emerald-400 italic">+{formatINR(estimatedReturn)}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Due Date</p>
-                        <p className="text-xl font-black text-white italic">{repayment ? new Date(repayment.due_date).toLocaleDateString() : 'N/A'}</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Maturity Date</p>
+                        <p className="text-xl font-black text-white italic">{new Date(invoice.due_date).toLocaleDateString()}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tenure</p>
-                        <p className="text-xl font-black text-white italic">{inv.tenure_days} Days</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Net Yield</p>
+                        <p className="text-xl font-black text-white italic">{yieldRate.toFixed(1)}%</p>
                       </div>
                     </div>
 
@@ -120,18 +123,18 @@ export default function InvestorPortfolio() {
                     <div className="w-full md:w-1/4 space-y-6 text-center md:text-right">
                        <div className="space-y-2">
                           <div className="flex justify-between items-end mb-1 md:justify-end md:gap-4">
-                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Progress</p>
-                             <p className="text-[10px] font-black text-white uppercase tracking-widest">{isRepaid ? '100%' : 'Deployed'}</p>
+                             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Status</p>
+                             <p className="text-[10px] font-black text-white uppercase tracking-widest">{isRepaid ? 'Repaid' : 'Accruing Interest'}</p>
                           </div>
                           <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
-                             <div className={`h-full transition-all duration-1000 ${isRepaid ? 'bg-emerald-500' : 'bg-primary'}`} style={{ width: isRepaid ? '100%' : '60%' }} />
+                             <div className={`h-full transition-all duration-1000 ${isRepaid ? 'bg-emerald-500' : 'bg-primary animate-pulse'}`} style={{ width: isRepaid ? '100%' : '75%' }} />
                           </div>
                        </div>
                        <div className="flex justify-end gap-3">
-                          <div className="p-3 rounded-xl bg-white/5 text-muted-foreground hover:text-white transition-colors cursor-pointer border border-white/5">
+                          <div className="p-3 rounded-xl bg-white/5 text-muted-foreground hover:text-white transition-colors cursor-pointer border border-white/5" title="Transaction History">
                              <History className="w-4 h-4" />
                           </div>
-                          <div className="p-3 rounded-xl bg-white/5 text-muted-foreground hover:text-white transition-colors cursor-pointer border border-white/5">
+                          <div className="p-3 rounded-xl bg-white/5 text-muted-foreground hover:text-white transition-colors cursor-pointer border border-white/5" title="Investment Certificate">
                              <ShieldCheck className="w-4 h-4" />
                           </div>
                        </div>

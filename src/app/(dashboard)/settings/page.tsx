@@ -11,29 +11,60 @@ import {
   Bell, 
   Settings as SettingsIcon,
   Save,
-  Loader2
+  Loader2,
+  Wallet,
+  Plus,
+  TrendingUp,
+  History,
+  X,
+  AlertCircle,
+  Clock,
+  ArrowDownLeft,
+  ArrowUpRight,
+  Fingerprint
 } from "lucide-react";
 import { getPlatformSettings, updateSettingAction } from "@/app/actions/admin";
+import { getInvestorStats, addFundsAction, withdrawFundsAction } from "@/app/actions/investor";
+import { createClient } from "@/lib/client";
+import { formatINR } from "@/lib/utils";
 import { toast } from "sonner";
+import Link from "next/link";
 
 export default function SettingsPage() {
+  const [role, setRole] = useState<string | null>(null);
   const [settings, setSettings] = useState<Record<string, any>>({});
+  const [investorStats, setInvestorStats] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState<string | null>(null);
+  const [isAddingFunds, setIsAddingFunds] = useState(false);
+  const [isWithdrawingFunds, setIsWithdrawingFunds] = useState(false);
+  const [addAmount, setAddAmount] = useState("");
+  const [withdrawAmount, setWithdrawAmount] = useState("");
+  const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    async function loadSettings() {
+    async function loadData() {
       try {
-        const data = await getPlatformSettings();
-        setSettings(data);
+        const supabase = createClient();
+        const { data: { user } } = await supabase.auth.getUser();
+        const userRole = user?.app_metadata?.role || user?.user_metadata?.role || "investor";
+        setRole(userRole);
+
+        if (userRole === 'admin') {
+          const data = await getPlatformSettings();
+          setSettings(data);
+        } else if (userRole === 'investor') {
+          const stats = await getInvestorStats();
+          setInvestorStats(stats);
+        }
       } catch (error) {
         console.error("Failed to load settings:", error);
-        toast.error("Failed to load platform settings.");
+        toast.error("Failed to load settings data.");
       } finally {
         setLoading(false);
       }
     }
-    loadSettings();
+    loadData();
   }, []);
 
   const handleUpdateSetting = async (key: string, value: any) => {
@@ -53,6 +84,73 @@ export default function SettingsPage() {
     }
   };
 
+  const handleAddFunds = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseFloat(addAmount);
+    
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Invalid Amount", { description: "Please enter a valid positive number." });
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const result = await addFundsAction({ amount });
+      if (result?.data?.success) {
+        toast.success("Liquidity Added", { 
+          description: `₹${amount.toLocaleString('en-IN')} has been successfully credited.` 
+        });
+        setAddAmount("");
+        setIsAddingFunds(false);
+        // Refresh stats
+        const stats = await getInvestorStats();
+        setInvestorStats(stats);
+      } else {
+        toast.error("Transaction Failed", { description: result?.serverError || "An error occurred." });
+      }
+    } catch (error) {
+      toast.error("Critical System Error", { description: "Failed to process the transaction." });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  const handleWithdrawFunds = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const amount = parseFloat(withdrawAmount);
+    
+    if (isNaN(amount) || amount <= 0) {
+      toast.error("Invalid Amount", { description: "Please enter a valid positive number." });
+      return;
+    }
+
+    if (amount > (investorStats?.walletBalance || 0)) {
+      toast.error("Insufficient Funds", { description: "You cannot withdraw more than your available balance." });
+      return;
+    }
+
+    setProcessing(true);
+    try {
+      const result = await withdrawFundsAction({ amount });
+      if (result?.data?.success) {
+        toast.success("Withdrawal Requested", { 
+          description: `₹${amount.toLocaleString('en-IN')} has been successfully reserved.` 
+        });
+        setWithdrawAmount("");
+        setIsWithdrawingFunds(false);
+        // Refresh stats
+        const stats = await getInvestorStats();
+        setInvestorStats(stats);
+      } else {
+        toast.error("Withdrawal Failed", { description: result?.serverError || "An error occurred." });
+      }
+    } catch (error) {
+      toast.error("Critical System Error", { description: "Failed to process the withdrawal." });
+    } finally {
+      setProcessing(false);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
@@ -61,6 +159,281 @@ export default function SettingsPage() {
     );
   }
 
+  // --- INVESTOR VIEW ---
+  if (role === 'investor') {
+    return (
+      <div className="space-y-8 animate-in fade-in duration-700">
+        <div className="space-y-1">
+          <h1 className="text-4xl font-black tracking-tight text-white flex items-center gap-3 italic uppercase">
+            <SettingsIcon className="w-8 h-8 text-primary" /> Investor Settings
+          </h1>
+          <p className="text-muted-foreground font-medium text-lg italic">Manage your investment preferences and capital wallet.</p>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          {/* Wallet Overview Card */}
+          <Card className="lg:col-span-2 glass-dark border-white/5 relative overflow-hidden group">
+            <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Wallet className="w-48 h-48 text-white" />
+            </div>
+            <CardHeader className="border-b border-white/5 p-8 relative z-10">
+              <div className="flex justify-between items-center">
+                <div>
+                  <CardTitle className="text-2xl font-black italic uppercase tracking-tight">Fund Management</CardTitle>
+                  <CardDescription className="font-bold uppercase tracking-widest text-[10px] text-muted-foreground italic">Liquidity control and audit</CardDescription>
+                </div>
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 font-black uppercase tracking-widest text-[8px]">Verified Ledger</Badge>
+              </div>
+            </CardHeader>
+            <CardContent className="p-8 relative z-10 space-y-8">
+              <div className="flex flex-col md:flex-row justify-between gap-8">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Available Liquidity</p>
+                  <p className="text-5xl font-black text-white italic">{formatINR(investorStats?.walletBalance || 0)}</p>
+                </div>
+                <div className="flex items-end pb-1 gap-4">
+                  <Button 
+                    onClick={() => setIsAddingFunds(true)}
+                    className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
+                  >
+                    <Plus className="mr-2 w-5 h-5" /> Add Funds
+                  </Button>
+                  <Button 
+                    onClick={() => setIsWithdrawingFunds(true)}
+                    variant="outline"
+                    className="h-14 px-8 border-white/10 hover:bg-white/5 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl"
+                  >
+                    <IndianRupee className="mr-2 w-5 h-5" /> Withdraw
+                  </Button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-white/5">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Invested</p>
+                  <p className="text-lg font-black text-white italic">{formatINR(investorStats?.totalInvested || 0)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Locked Capital</p>
+                  <p className="text-lg font-black text-white italic">{formatINR(investorStats?.lockedAmount || 0)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Returns Received</p>
+                  <p className="text-lg font-black text-emerald-400 italic">{formatINR(investorStats?.receivedReturns || 0)}</p>
+                </div>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Pending Payouts</p>
+                  <p className="text-lg font-black text-blue-400 italic">{formatINR(investorStats?.pendingRepayments || 0)}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Wallet Actions / Quick Links */}
+          <div className="space-y-6">
+            <Card className="glass-dark border-white/5 p-6">
+              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] mb-6 text-white/60">Quick Access</CardTitle>
+              <div className="space-y-3">
+                <Link href="/investor/wallet" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
+                  <History className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Full Transaction Ledger</span>
+                </Link>
+                <Link href="/investor/portfolio" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
+                  <TrendingUp className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
+                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Yield Performance Analytics</span>
+                </Link>
+              </div>
+            </Card>
+
+            <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10">
+              <div className="flex gap-3 items-start">
+                <AlertCircle className="w-5 h-5 text-primary shrink-0" />
+                <div className="space-y-1">
+                  <p className="text-xs font-bold text-white">Manual Clearing Enforced</p>
+                  <p className="text-[10px] text-muted-foreground italic leading-relaxed">
+                    Withdrawals are processed manually within 24-48 hours after security verification.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Recent Activity Summary */}
+            <Card className="glass-dark border-white/5 p-6">
+              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] mb-6 text-white/60 flex items-center gap-2">
+                <History className="w-3 h-3" /> Recent Activity
+              </CardTitle>
+              <div className="space-y-4">
+                {investorStats?.recentTransactions?.length > 0 ? (
+                  investorStats.recentTransactions.map((tx: any) => (
+                    <div key={tx.id} className="flex justify-between items-center group/item">
+                      <div className="flex gap-3 items-center">
+                        <div className={`p-2 rounded-lg ${tx.amount < 0 ? 'bg-white/5 text-white' : 'bg-emerald-500/10 text-emerald-500'}`}>
+                          {tx.amount < 0 ? <ArrowDownLeft className="w-3 h-3" /> : <ArrowUpRight className="w-3 h-3" />}
+                        </div>
+                        <div className="space-y-0.5">
+                          <p className="text-[10px] font-bold text-white uppercase tracking-tight line-clamp-1">{tx.description}</p>
+                          <p className="text-[8px] text-muted-foreground font-medium uppercase tracking-widest">{new Date(tx.created_at).toLocaleDateString()}</p>
+                        </div>
+                      </div>
+                      <p className={`text-[10px] font-black italic ${tx.amount < 0 ? 'text-white' : 'text-emerald-500'}`}>
+                        {tx.amount > 0 ? '+' : ''}{formatINR(tx.amount)}
+                      </p>
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-[10px] text-muted-foreground italic text-center py-4">No recent activity.</p>
+                )}
+              </div>
+            </Card>
+          </div>
+        </div>
+
+        {/* Add Funds Modal Overlay */}
+        {isAddingFunds && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <Card className="w-full max-w-md glass-dark border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+              <CardHeader className="p-8 border-b border-white/5 relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsAddingFunds(false)}
+                  className="absolute top-4 right-4 rounded-full text-muted-foreground hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+                <div className="p-3 rounded-2xl bg-primary/10 text-primary w-fit mb-4">
+                  <IndianRupee className="w-6 h-6" />
+                </div>
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Add Liquidity</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Increase your available capital</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <form onSubmit={handleAddFunds} className="space-y-6">
+                  <div className="space-y-3">
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Investment Amount (₹)</label>
+                    <div className="relative group">
+                      <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                      <Input 
+                        type="number"
+                        value={addAmount}
+                        onChange={(e) => setAddAmount(e.target.value)}
+                        placeholder="e.g. 1,00,000"
+                        className="pl-12 bg-white/5 border-white/10 h-16 font-black italic text-2xl text-white focus:bg-white/10 transition-all placeholder:text-white/10"
+                        autoFocus
+                      />
+                    </div>
+                    {addAmount && (
+                      <p className="text-[10px] text-emerald-400 font-bold italic text-right animate-in fade-in">
+                        ≈ ₹{parseFloat(addAmount).toLocaleString('en-IN')} INR
+                      </p>
+                    )}
+                  </div>
+
+                  <Button 
+                    type="submit"
+                    disabled={processing}
+                    className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
+                  >
+                    {processing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
+                    Confirm Capital Addition
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Withdraw Funds Modal Overlay */}
+        {isWithdrawingFunds && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
+            <Card className="w-full max-w-md glass-dark border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+              <CardHeader className="p-8 border-b border-white/5 relative">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={() => setIsWithdrawingFunds(false)}
+                  className="absolute top-4 right-4 rounded-full text-muted-foreground hover:text-white"
+                >
+                  <X className="w-4 h-4" />
+                </Button>
+                <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500 w-fit mb-4">
+                  <IndianRupee className="w-6 h-6" />
+                </div>
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Withdraw Capital</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Transfer liquidity to bank account</CardDescription>
+              </CardHeader>
+              <CardContent className="p-8 space-y-6">
+                <form onSubmit={handleWithdrawFunds} className="space-y-8">
+                  <div className="space-y-6">
+                    {/* Bank Details Verification */}
+                    <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-4">
+                      <div className="flex items-center gap-3">
+                        <Fingerprint className="w-4 h-4 text-orange-400" />
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Destination Account</span>
+                      </div>
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Account Number</p>
+                          <p className="text-xs font-bold text-white tracking-tighter">•••• {investorStats?.bankDetails?.accountNo?.slice(-4) || "N/A"}</p>
+                        </div>
+                        <div className="space-y-1">
+                          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">IFSC Code</p>
+                          <p className="text-xs font-bold text-primary uppercase">{investorStats?.bankDetails?.ifscCode || "N/A"}</p>
+                        </div>
+                      </div>
+                      {!investorStats?.bankDetails?.accountNo && (
+                        <p className="text-[10px] text-red-400 font-bold italic flex items-center gap-2">
+                          <ShieldAlert className="w-3 h-3" /> No bank account linked. Update profile.
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-end">
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Withdrawal Amount (₹)</label>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Available: <span className="text-white">{formatINR(investorStats?.walletBalance || 0)}</span></p>
+                      </div>
+                      <div className="relative group">
+                        <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                        <Input 
+                          type="number"
+                          value={withdrawAmount}
+                          onChange={(e) => setWithdrawAmount(e.target.value)}
+                          placeholder="e.g. 50,000"
+                          className="pl-12 bg-white/5 border-white/10 h-16 font-black italic text-2xl text-white focus:bg-white/10 transition-all placeholder:text-white/10"
+                          autoFocus
+                        />
+                      </div>
+                      {withdrawAmount && (
+                        <p className="text-[10px] text-orange-400 font-bold italic text-right animate-in fade-in">
+                          ≈ ₹{parseFloat(withdrawAmount).toLocaleString('en-IN')} INR
+                        </p>
+                      )}
+                    </div>
+                  </div>
+
+                  <Button 
+                    type="submit"
+                    disabled={processing || !withdrawAmount || parseFloat(withdrawAmount) > (investorStats?.walletBalance || 0) || !investorStats?.bankDetails?.accountNo}
+                    className="w-full h-14 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-orange-500/20 rounded-2xl"
+                  >
+                    {processing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <IndianRupee className="w-5 h-5 mr-2" />}
+                    Confirm Withdrawal
+                  </Button>
+                  <p className="text-[8px] text-muted-foreground text-center uppercase tracking-widest font-bold italic">
+                    Funds will be reserved and transferred within 48 hours.
+                  </p>
+                </form>
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+      </div>
+    );
+  }
+
+  // --- ADMIN VIEW ---
   return (
     <div className="space-y-8">
       <div className="space-y-1">

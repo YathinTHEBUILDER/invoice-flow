@@ -1,8 +1,8 @@
 import { createServerClient, type CookieOptions } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-export async function middleware(request: NextRequest) {
-  let response = NextResponse.next({
+export async function proxy(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
     request: {
       headers: request.headers,
     },
@@ -13,49 +13,25 @@ export async function middleware(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
+        getAll() {
+          return request.cookies.getAll()
         },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value,
-            ...options,
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
           })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value,
-            ...options,
-          })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
-          response = NextResponse.next({
-            request: {
-              headers: request.headers,
-            },
-          })
-          response.cookies.set({
-            name,
-            value: '',
-            ...options,
-          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
         },
       },
     }
   )
 
-  const { data } = await supabase.auth.getUser()
-  const user = data?.user
+  // IMPORTANT: Do not use supabase.auth.getSession() here.
+  // It is insecure and can lead to token theft.
+  const { data: { user } } = await supabase.auth.getUser()
 
   const role = user?.user_metadata?.role
 
@@ -63,10 +39,6 @@ export async function middleware(request: NextRequest) {
                      request.nextUrl.pathname.startsWith('/signup') || 
                      request.nextUrl.pathname.startsWith('/get-started') ||
                      request.nextUrl.pathname.startsWith('/auth/forgot-password')
-
-  // These pages require a session or are part of a verification flow
-  const isFlowPage = request.nextUrl.pathname.startsWith('/auth/reset-password') ||
-                     request.nextUrl.pathname.startsWith('/auth/verify')
 
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/admin') ||
                            request.nextUrl.pathname.startsWith('/msme') ||
@@ -93,7 +65,6 @@ export async function middleware(request: NextRequest) {
   if (user && isDashboardRoute) {
     const currentPath = request.nextUrl.pathname
     
-    // Check if the user is trying to access a route that doesn't match their role
     if (role) {
       if (currentPath.startsWith('/admin') && role !== 'admin') {
         return NextResponse.redirect(new URL(`/${role}`, request.url))
@@ -107,7 +78,7 @@ export async function middleware(request: NextRequest) {
     }
   }
 
-  return response
+  return supabaseResponse
 }
 
 export const config = {

@@ -22,24 +22,32 @@ import {
   RefreshCcw,
   ShieldCheck,
   Briefcase,
-  FileText
+  FileText,
+  ArrowDownLeft
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import {
   getAdminStats,
   getKYCQueue,
   getInvoices,
+  getPlatformSettings,
+  getDisputeRecords,
+  getSettlements,
+  getAuditLogs,
+  getTransactions,
+  getWithdrawalRequests,
   approveKYCAction,
   rejectKYCAction,
-  getPlatformSettings,
   updateSettingAction,
-  getDisputes,
-  getAuditLogs,
-  getSettlements,
   verifySettlementAction,
   approveInvoiceAction,
   rejectInvoiceAction,
-  resolveDisputeAction
+  resolveDisputeAction,
+  approveWithdrawalAction,
+  rejectWithdrawalAction,
+  getPreClosureRequests,
+  approvePreClosureAction,
+  disburseToMSMEAction
 } from "@/app/actions/admin";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
@@ -55,8 +63,11 @@ export default function AdminDashboard() {
   const [invoices, setInvoices] = useState<any[]>([]);
   const [disputes, setDisputes] = useState<any[]>([]);
   const [settlements, setSettlements] = useState<any[]>([]);
+  const [withdrawals, setWithdrawals] = useState<any[]>([]);
   const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});
+  const [preClosureRequests, setPreClosureRequests] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
@@ -108,7 +119,7 @@ export default function AdminDashboard() {
           catch (e) { console.error("Failed to load Platform Settings:", e); }
         })(),
         (async () => {
-          try { setDisputes(await getDisputes()); } 
+          try { setDisputes(await getDisputeRecords()); } 
           catch (e) { console.error("Failed to load Dispute Records:", e); }
         })(),
         (async () => {
@@ -118,6 +129,18 @@ export default function AdminDashboard() {
         (async () => {
           try { setAuditLogs(await getAuditLogs()); } 
           catch (e) { console.error("Failed to load Audit Trail:", e); }
+        })(),
+        (async () => {
+          try { setTransactions(await getTransactions()); } 
+          catch (e) { console.error("Failed to load Transaction Ledger:", e); }
+        })(),
+        (async () => {
+          try { setWithdrawals(await getWithdrawalRequests()); } 
+          catch (e) { console.error("Failed to load Withdrawal Queue:", e); }
+        })(),
+        (async () => {
+          try { setPreClosureRequests(await getPreClosureRequests()); } 
+          catch (e) { console.error("Failed to load Pre-closure Queue:", e); }
         })()
       ]);
 
@@ -247,6 +270,72 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleWithdrawalUpdate = async (withdrawalId: string, status: "approved" | "rejected") => {
+    setActionLoading(withdrawalId);
+    try {
+      if (status === "approved") {
+        const result = await approveWithdrawalAction({ withdrawalId });
+        if (result?.data?.success) {
+          toast.success("Withdrawal approved and completed.");
+          await loadData();
+        } else {
+          toast.error(result?.serverError || "Approval failed.");
+        }
+      } else {
+        const reason = prompt("Enter rejection reason (Required):");
+        if (!reason) {
+          toast.error("Rejection reason is mandatory.");
+          return;
+        }
+        const result = await rejectWithdrawalAction({ withdrawalId, notes: reason });
+        if (result?.data?.success) {
+          toast.success("Withdrawal rejected and funds refunded.");
+          await loadData();
+        } else {
+          toast.error(result?.serverError || "Rejection failed.");
+        }
+      }
+    } catch (error) {
+      toast.error("System error during withdrawal processing.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleApprovePreClosure = async (requestId: string) => {
+    setActionLoading(requestId);
+    try {
+      const result = await approvePreClosureAction({ requestId });
+      if (result?.data?.success) {
+        toast.success("Pre-closure approved. Repayment schedule adjusted.");
+        await loadData();
+      } else {
+        toast.error(result?.serverError || "Approval failed.");
+      }
+    } catch (error) {
+      toast.error("System error during pre-closure processing.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleDisburseToMSME = async (invoiceId: string) => {
+    setActionLoading(invoiceId);
+    try {
+      const result = await disburseToMSMEAction({ invoiceId });
+      if (result?.data?.success) {
+        toast.success("Funds disbursed to MSME wallet successfully.");
+        await loadData();
+      } else {
+        toast.error(result?.serverError || "Disbursement failed.");
+      }
+    } catch (error) {
+      toast.error("System error during disbursement.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
@@ -326,8 +415,21 @@ export default function AdminDashboard() {
                    <Badge className="ml-2 bg-emerald-500 text-white border-none px-2 h-4 text-[10px] font-black">{settlements.length}</Badge>
                  )}
                </TabsTrigger>
+                <TabsTrigger value="withdrawals" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                  Withdrawals
+                  {withdrawals.filter(w => w.status === 'pending').length > 0 && (
+                    <Badge className="ml-2 bg-orange-500 text-white border-none px-2 h-4 text-[10px] font-black">{withdrawals.filter(w => w.status === 'pending').length}</Badge>
+                  )}
+                </TabsTrigger>
+                <TabsTrigger value="preclosures" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                  Pre-closures
+                  {preClosureRequests.filter(r => r.status === 'pending').length > 0 && (
+                    <Badge className="ml-2 bg-purple-500 text-white border-none px-2 h-4 text-[10px] font-black">{preClosureRequests.filter(r => r.status === 'pending').length}</Badge>
+                  )}
+                </TabsTrigger>
 
                <TabsTrigger value="logs" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Audit Logs</TabsTrigger>
+               <TabsTrigger value="transactions" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Transactions</TabsTrigger>
               <TabsTrigger value="settings" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Settings</TabsTrigger>
             </TabsList>
           </ScrollArea>
@@ -718,6 +820,18 @@ export default function AdminDashboard() {
                                 </Button>
                               </div>
                             )}
+                            {inv.status === "funded" && (
+                              <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleDisburseToMSME(inv.id)}
+                                  disabled={actionLoading === inv.id}
+                                  className="h-8 bg-primary hover:bg-primary/90 text-[8px] font-black uppercase shadow-lg shadow-primary/20"
+                                >
+                                  <ArrowDownLeft className="mr-1 h-3 w-3" /> Disburse Funds
+                                </Button>
+                              </div>
+                            )}
                           </td>
                         </tr>
                       ))
@@ -879,7 +993,227 @@ export default function AdminDashboard() {
           </Card>
         </TabsContent>
 
+        {/* --- WITHDRAWALS TAB --- */}
+        <TabsContent value="withdrawals" className="focus-visible:outline-none">
+          <Card className="glass-dark border-white/5">
+            <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02]">
+              <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Withdrawal Queue</CardTitle>
+              <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Approve capital transfers to investor bank accounts.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/5 text-left bg-white/[0.01]">
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Investor</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Bank Details</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Amount</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {withdrawals.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-8 py-20 text-center">
+                          <div className="space-y-4">
+                            <ArrowDownLeft className="w-12 h-12 text-muted-foreground/10 mx-auto" />
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No withdrawal requests found.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      withdrawals.map((w) => (
+                        <tr key={w.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="px-8 py-8">
+                            <div className="flex flex-col">
+                              <span className="font-black text-white">{w.profiles?.full_name}</span>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{w.profiles?.email}</span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-8">
+                            <div className="flex flex-col">
+                              <span className="text-xs font-bold text-white/80 tracking-tighter">A/C: {w.bank_account_no}</span>
+                              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">IFSC: {w.ifsc_code}</span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-8 font-black text-orange-400 text-lg">
+                            {formatCurrency(w.amount)}
+                          </td>
+                          <td className="px-8 py-8">
+                            <Badge className={
+                              w.status === "completed" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
+                              w.status === "pending" ? "bg-orange-500/10 text-orange-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
+                              "bg-red-500/10 text-red-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
+                            }>
+                              {w.status}
+                            </Badge>
+                          </td>
+                          <td className="px-8 py-8 text-right">
+                            {w.status === "pending" && (
+                              <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleWithdrawalUpdate(w.id, "approved")}
+                                  disabled={actionLoading === w.id}
+                                  className="h-8 bg-emerald-500 hover:bg-emerald-600 text-[8px] font-black uppercase"
+                                >
+                                  {actionLoading === w.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Approve"}
+                                </Button>
+                                <Button 
+                                  size="sm" 
+                                  variant="destructive"
+                                  onClick={() => handleWithdrawalUpdate(w.id, "rejected")}
+                                  disabled={actionLoading === w.id}
+                                  className="h-8 text-[8px] font-black uppercase"
+                                >
+                                  Reject
+                                </Button>
+                              </div>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="preclosures" className="focus-visible:outline-none">
+          <Card className="glass-dark border-white/5">
+            <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02]">
+              <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Pre-closure Requests</CardTitle>
+              <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Approve requests for early asset liquidation and debt settlement.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/5 text-left bg-white/[0.01]">
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Asset Ref</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">MSME Issuer</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Settlement (INR)</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Penalty</th>
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {preClosureRequests.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-8 py-20 text-center">
+                          <div className="space-y-4">
+                            <IndianRupee className="w-12 h-12 text-muted-foreground/10 mx-auto" />
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No active pre-closure requests</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      preClosureRequests.map((req) => (
+                        <tr key={req.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="px-8 py-8 font-black text-white tracking-tight">#{req.invoices?.invoice_number}</td>
+                          <td className="px-8 py-8">
+                            <span className="font-bold text-white/80">{req.invoices?.profiles?.company_name}</span>
+                          </td>
+                          <td className="px-8 py-8 font-black text-primary text-lg">{formatCurrency(req.pre_closure_amount)}</td>
+                          <td className="px-8 py-8 font-bold text-orange-400">{formatCurrency(req.penalty_amount)}</td>
+                          <td className="px-8 py-8 text-right">
+                            {req.status === 'pending' ? (
+                              <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button 
+                                  size="sm" 
+                                  onClick={() => handleApprovePreClosure(req.id)}
+                                  disabled={actionLoading === req.id}
+                                  className="h-8 bg-purple-500 hover:bg-purple-600 text-[8px] font-black uppercase"
+                                >
+                                  {actionLoading === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Approve Pre-closure"}
+                                </Button>
+                              </div>
+                            ) : (
+                              <Badge className="bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]">
+                                {req.status}
+                              </Badge>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+
         {/* --- AUDIT LOGS TAB --- */}
+        {/* --- TRANSACTIONS TAB --- */}
+        <TabsContent value="transactions" className="focus-visible:outline-none">
+          <Card className="glass-dark border-white/5 overflow-hidden">
+            <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02]">
+              <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Platform Ledger</CardTitle>
+              <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Universal transaction monitoring for wallet funding and capital deployment.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/5 text-left bg-white/[0.01]">
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Stakeholder</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Activity</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Type</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] text-right">Amount</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em] text-right">Epoch</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {transactions.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-8 py-20 text-center">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No transaction records found.</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      transactions.map((tx) => (
+                        <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors">
+                          <td className="px-8 py-6">
+                            <div className="flex flex-col">
+                              <span className="font-bold text-white">{tx.profiles?.full_name || "Unknown"}</span>
+                              <span className="text-[10px] text-muted-foreground uppercase tracking-widest">{tx.profiles?.role} • {tx.profiles?.email}</span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-6">
+                            <p className="text-xs font-medium text-white/80 italic">{tx.description}</p>
+                          </td>
+                          <td className="px-8 py-6">
+                            <Badge variant="outline" className={`h-6 px-3 rounded-lg text-[8px] font-black uppercase tracking-widest ${
+                               tx.type === 'investment' ? 'border-blue-500/20 text-blue-400 bg-blue-500/5' : 
+                               tx.type === 'funding' ? 'border-primary/20 text-primary bg-primary/5' :
+                               tx.type === 'withdrawal' ? 'border-orange-500/20 text-orange-400 bg-orange-500/5' :
+                               'border-white/10 text-muted-foreground bg-white/5'
+                            }`}>
+                               {tx.type}
+                            </Badge>
+                          </td>
+                          <td className={`px-8 py-6 text-right font-black italic ${tx.amount < 0 ? 'text-white' : 'text-emerald-400'}`}>
+                            {tx.amount > 0 ? '+' : ''}{formatCurrency(tx.amount)}
+                          </td>
+                          <td className="px-8 py-6 text-right">
+                            <p className="text-[10px] font-bold text-white/60">{new Date(tx.created_at).toLocaleDateString()}</p>
+                            <p className="text-[10px] text-muted-foreground uppercase tracking-tighter">{new Date(tx.created_at).toLocaleTimeString()}</p>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
         <TabsContent value="logs" className="focus-visible:outline-none">
           <Card className="glass-dark border-white/5">
             <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02]">

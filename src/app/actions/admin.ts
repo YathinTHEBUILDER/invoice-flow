@@ -80,7 +80,7 @@ export async function getAdminStats() {
   const { data: invoices } = await supabase
     .from('invoices')
     .select('amount, status')
-    .in('status', ['approved', 'funded', 'repaid']);
+    .in('status', ['approved', 'partially_funded', 'funded', 'repaid']);
   
   const gmv = invoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
   
@@ -109,7 +109,7 @@ export async function getAdminStats() {
   const { count: activeInvoices } = await supabase
     .from('invoices')
     .select('*', { count: 'exact', head: true })
-    .in('status', ['approved', 'funded']);
+    .in('status', ['approved', 'partially_funded', 'funded']);
 
   // 5. Pending KYC
   const { count: pendingKYC } = await supabase
@@ -215,6 +215,10 @@ export async function getInvoices() {
       *,
       profiles:msme_id (
         company_name
+      ),
+      investments (
+        amount,
+        investor_id
       )
     `)
     .order('created_at', { ascending: false });
@@ -264,7 +268,7 @@ export const updateSettingAction = actionClient
 /**
  * Fetch Disputes
  */
-export async function getDisputes() {
+export async function getDisputeRecords() {
   await ensureAdmin();
   const supabase = await createClient();
   const { data, error } = await supabase
@@ -443,17 +447,34 @@ export const approveInvoiceAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
+    // 1. Fetch invoice to check verified_amount
+    const { data: currentInv } = await supabase
+      .from('invoices')
+      .select('amount, verified_amount')
+      .eq('id', invoiceId)
+      .single();
+
+    const updatePayload: any = { 
+      status: 'approved', 
+      updated_at: new Date().toISOString() 
+    };
+
+    // If admin hasn't explicitly set a verified amount, default to the original face value
+    if (currentInv && (currentInv.verified_amount === null || currentInv.verified_amount === undefined)) {
+      updatePayload.verified_amount = currentInv.amount;
+    }
+
     const { error } = await supabase
       .from('invoices')
-      .update({ 
-        status: 'approved', 
-        updated_at: new Date().toISOString() 
-      })
+      .update(updatePayload)
       .eq('id', invoiceId);
 
     if (error) throw new Error(error.message);
     
-    await logAdminAction('approve_invoice', 'invoice', invoiceId, { status: 'approved' });
+    await logAdminAction('approve_invoice', 'invoice', invoiceId, { 
+      status: 'approved',
+      verified_amount: updatePayload.verified_amount || currentInv?.verified_amount 
+    });
     
     revalidatePath("/admin");
 
@@ -560,7 +581,7 @@ export async function getSettlements() {
         profiles:msme_id(company_name)
       )
     `)
-    .eq('status', 'paid') 
+    .eq('status', 'pending_verification') 
     .order('updated_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -598,11 +619,65 @@ export const verifySettlementAction = actionClient
     if (error) throw new Error(error.message);
 
     if (status === 'repaid') {
+      // 1. Update Invoice status
       await supabase
         .from('invoices')
         .update({ status: 'repaid' })
         .eq('id', repayment.invoice_id);
       
+      // 2. Fetch all participating investments
+      const { data: investments } = await supabase
+        .from('investments')
+        .select('*, profiles:investor_id(wallet_balance)')
+        .eq('invoice_id', repayment.invoice_id);
+
+      if (investments && investments.length > 0) {
+        const { data: invoice } = await supabase
+          .from('invoices')
+          .select('verified_amount, amount')
+          .eq('id', repayment.invoice_id)
+          .single();
+        
+        const totalPrincipal = Number(invoice?.verified_amount || invoice?.amount);
+        const totalPaid = Number(repayment.amount_paid);
+
+        for (const investment of investments) {
+          const shareRatio = Number(investment.amount) / totalPrincipal;
+          const creditAmount = totalPaid * shareRatio;
+          
+          const currentBalance = Number(investment.profiles?.wallet_balance || 0);
+          
+          await supabase
+            .from('profiles')
+            .update({ 
+              wallet_balance: currentBalance + creditAmount 
+            })
+            .eq('id', investment.investor_id);
+
+          await supabase
+            .from('investments')
+            .update({ status: 'repaid' })
+            .eq('id', investment.id);
+
+          await supabase.from('transactions').insert({
+            user_id: investment.investor_id,
+            amount: creditAmount,
+            type: 'payout',
+            description: `Repayment received for Invoice #${repayment.invoices.invoice_number}`,
+            reference_id: repayment.invoice_id
+          });
+
+          await createNotification(
+            investment.investor_id,
+            "Repayment Received! 💰",
+            `₹${creditAmount.toLocaleString('en-IN')} credited for Invoice #${repayment.invoices.invoice_number}.`,
+            "success",
+            "/investor/portfolio"
+          );
+        }
+      }
+
+      // 3. Notify MSME
       await createNotification(
         repayment.invoices.msme_id,
         "Settlement Confirmed! 🏦",
@@ -616,4 +691,270 @@ export const verifySettlementAction = actionClient
     
     revalidatePath("/admin");
     return { success: true };
+  });
+
+/**
+ * Fetch All Transactions for Admin
+ */
+export async function getTransactions() {
+  await ensureAdmin();
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('transactions')
+    .select(`
+      *,
+      profiles:user_id (
+        full_name,
+        email,
+        company_name,
+        role
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/**
+ * Fetch All Withdrawal Requests for Admin
+ */
+export async function getWithdrawalRequests() {
+  await ensureAdmin();
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('withdrawals')
+    .select(`
+      *,
+      profiles:user_id (
+        full_name,
+        email,
+        company_name,
+        wallet_balance
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/**
+ * Approve/Complete Withdrawal Action
+ */
+export const approveWithdrawalAction = actionClient
+  .schema(z.object({ withdrawalId: z.string().uuid() }))
+  .action(async ({ parsedInput: { withdrawalId } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    // 1. Update status to completed
+    const { data: withdrawal, error: updateError } = await supabase
+      .from('withdrawals')
+      .update({ 
+        status: 'completed',
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', withdrawalId)
+      .select()
+      .single();
+
+    if (updateError) throw new Error(updateError.message);
+    
+    await logAdminAction('approve_withdrawal', 'withdrawal', withdrawalId, { status: 'completed' });
+    
+    // 2. Notify User
+    await createNotification(
+      withdrawal.user_id,
+      "Withdrawal Completed! 🏦",
+      `Your withdrawal of ₹${withdrawal.amount.toLocaleString('en-IN')} has been processed to your bank account.`,
+      "success",
+      "/investor/wallet"
+    );
+
+    revalidatePath("/admin");
+    revalidatePath("/investor/wallet");
+    
+    return { success: true };
+  });
+
+/**
+ * Reject Withdrawal Action (Refunds balance)
+ */
+export const rejectWithdrawalAction = actionClient
+  .schema(z.object({ 
+    withdrawalId: z.string().uuid(),
+    notes: z.string().min(5, "Reason required")
+  }))
+  .action(async ({ parsedInput: { withdrawalId, notes } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    // 1. Fetch withdrawal details
+    const { data: withdrawal } = await supabase
+      .from('withdrawals')
+      .select('*')
+      .eq('id', withdrawalId)
+      .single();
+
+    if (!withdrawal) throw new Error("Withdrawal record not found.");
+    if (withdrawal.status !== 'pending') throw new Error("Only pending withdrawals can be rejected.");
+
+    // 2. Update status to rejected
+    const { error: updateError } = await supabase
+      .from('withdrawals')
+      .update({ 
+        status: 'rejected',
+        notes: notes,
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', withdrawalId);
+
+    if (updateError) throw new Error(updateError.message);
+    
+    // 3. Refund Wallet Balance
+    const { data: profile } = await supabase.from('profiles').select('wallet_balance').eq('id', withdrawal.user_id).single();
+    const refundAmount = Number(withdrawal.amount);
+    
+    await supabase
+      .from('profiles')
+      .update({ wallet_balance: Number(profile?.wallet_balance || 0) + refundAmount })
+      .eq('id', withdrawal.user_id);
+
+    // 4. Create Refund Transaction
+    await supabase.from('transactions').insert({
+      user_id: withdrawal.user_id,
+      amount: refundAmount,
+      type: 'funding', // Or 'refund'
+      description: `Refund: Withdrawal Request #${withdrawalId.split('-')[0].toUpperCase()} Rejected`,
+      reference_id: withdrawalId
+    });
+
+    await logAdminAction('reject_withdrawal', 'withdrawal', withdrawalId, { status: 'rejected', notes });
+    
+    // 5. Notify User
+    await createNotification(
+      withdrawal.user_id,
+      "Withdrawal Rejected ⚠️",
+      `Your withdrawal of ₹${withdrawal.amount.toLocaleString('en-IN')} was rejected. Reason: ${notes}. Funds have been refunded to your wallet.`,
+      "error",
+      "/investor/wallet"
+    );
+
+    revalidatePath("/admin");
+    revalidatePath("/investor/wallet");
+    
+    return { success: true };
+  });
+
+/**
+ * Fetch Pre-closure Requests
+ */
+export async function getPreClosureRequests() {
+  await ensureAdmin();
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('pre_closure_requests')
+    .select(`
+      *,
+      invoices!inner(
+        invoice_number,
+        msme_id,
+        profiles:msme_id(company_name)
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/**
+ * Approve Pre-closure Request
+ */
+export const approvePreClosureAction = actionClient
+  .schema(z.object({ requestId: z.string().uuid() }))
+  .action(async ({ parsedInput: { requestId } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    // 1. Fetch request details
+    const { data: request } = await supabase
+      .from('pre_closure_requests')
+      .select('*, invoices!inner(msme_id, invoice_number)')
+      .eq('id', requestId)
+      .single();
+
+    if (!request) throw new Error("Request not found.");
+
+    // 2. Update Request status
+    await supabase
+      .from('pre_closure_requests')
+      .update({ status: 'approved', updated_at: new Date().toISOString() })
+      .eq('id', requestId);
+
+    // 3. Create a scheduled repayment for the pre-closure amount
+    await supabase
+      .from('repayments')
+      .update({ status: 'cancelled' })
+      .eq('invoice_id', request.invoice_id)
+      .eq('status', 'scheduled');
+
+    await supabase.from('repayments').insert({
+      invoice_id: request.invoice_id,
+      amount_due: request.pre_closure_amount,
+      due_date: new Date().toISOString(),
+      status: 'scheduled',
+      penalty_amount: request.penalty_amount
+    });
+
+    // 4. Notify MSME
+    await createNotification(
+      request.invoices.msme_id,
+      "Pre-closure Approved! 🛡️",
+      `Your request for Invoice #${request.invoices.invoice_number} is approved. Total settlement: ₹${request.pre_closure_amount.toLocaleString('en-IN')}.`,
+      "success",
+      "/msme/repayments"
+    );
+
+    await logAdminAction('approve_preclosure', 'pre_closure_request', requestId, { status: 'approved' });
+    
+    revalidatePath("/admin");
+    revalidatePath("/msme/investments");
+    return { success: true };
+  });
+
+/**
+ * Disburse Funds to MSME (After Invoice is Fully Funded)
+ */
+export const disburseToMSMEAction = actionClient
+  .schema(z.object({ invoiceId: z.string().uuid() }))
+  .action(async ({ parsedInput: { invoiceId } }) => {
+    const { user } = await ensureAdmin();
+    const supabase = await createClient();
+
+    // Call the RPC we created
+    const { data, error: rpcError } = await supabase.rpc('disburse_to_msme', {
+      p_invoice_id: invoiceId,
+      p_admin_id: user.id
+    });
+
+    if (rpcError) {
+      console.error("RPC Error (disburse_to_msme):", rpcError);
+      throw new Error(rpcError.message);
+    }
+
+    const result = data as any;
+    if (!result.success) {
+      throw new Error(result.error || "Disbursement failed.");
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/msme");
+    revalidatePath("/msme/invoices");
+
+    return { success: true, payout: result.payout };
   });

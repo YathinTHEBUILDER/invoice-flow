@@ -13,7 +13,9 @@ import {
   Gavel,
   History,
   Mail,
-  ChevronRight
+  ChevronRight,
+  Wallet,
+  Zap
 } from "lucide-react";
 
 export default async function DashboardLayout({
@@ -68,6 +70,7 @@ export default async function DashboardLayout({
           { label: "Dashboard", href: "/msme", icon: LayoutDashboard },
           { label: "Invoice Management", href: "/msme/invoices", icon: Briefcase },
           { label: "Funding Requests", href: "/msme/funding", icon: PieChart },
+          { label: "Active Investments", href: "/msme/investments", icon: Zap },
           { label: "Repayments", href: "/msme/repayments", icon: History },
         ]
       },
@@ -98,6 +101,7 @@ export default async function DashboardLayout({
         group: "Account",
         items: [
           { label: "Profile", href: "/profile", icon: UserIcon },
+          { label: "Wallet", href: "/investor/wallet", icon: Wallet },
           { label: "Settings", href: "/settings", icon: Settings },
         ]
       }

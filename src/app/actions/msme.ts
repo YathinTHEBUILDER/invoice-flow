@@ -201,8 +201,8 @@ export async function getMSMEStats() {
 
   const totalSubmitted = invoices.length;
   const underReview = invoices.filter(i => i.status === "pending_verification").length;
-  const funded = invoices.filter(i => i.status === "funded").length;
-  const totalFundedAmount = invoices.filter(i => i.status === "funded").reduce((sum, i) => sum + Number(i.amount), 0);
+  const funded = invoices.filter(i => i.status === "funded" || i.status === "partially_funded").length;
+  const totalFundedAmount = invoices.filter(i => i.status === "funded" || i.status === "partially_funded").reduce((sum, i) => sum + Number(i.funded_amount || 0), 0);
   
   // Repayments
   const { data: repayments, error: repaymentsError } = await supabase
@@ -215,8 +215,9 @@ export async function getMSMEStats() {
   }
 
   const safeRepayments = repayments || [];
-  const pendingRepayments = safeRepayments.filter(r => r.status === "scheduled").length;
-  const totalOutstanding = safeRepayments.filter(r => r.status === "scheduled").reduce((sum, r) => sum + Number(r.amount_due), 0);
+  const pendingRepayments = safeRepayments.filter(r => r.status === "scheduled" || r.status === "overdue").length;
+  const inReviewRepayments = safeRepayments.filter(r => r.status === "pending_verification").length;
+  const totalOutstanding = safeRepayments.filter(r => r.status === "scheduled" || r.status === "overdue").reduce((sum, r) => sum + Number(r.amount_due), 0);
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -239,12 +240,49 @@ export async function getMSMEStats() {
     funded,
     totalFundedAmount,
     pendingRepayments,
+    inReviewRepayments,
     totalOutstanding,
     kycStatus: profile?.kyc_status || 'not_started',
     kycNotes: profile?.kyc_notes,
     userRole: profile?.role,
     platformLimit
   };
+}
+
+/**
+ * Fetch MSME Active Investments
+ * Returns invoices that are partially or fully funded, along with investor details and repayments.
+ */
+export async function getMSMEInvestments() {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select(`
+      *,
+      repayments(*),
+      investments(
+        *,
+        profiles:investor_id(
+          full_name,
+          company_name
+        )
+      )
+    `)
+    .eq("msme_id", user.id)
+    .in("status", ["partially_funded", "funded"])
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("MSME Investments fetch error:", error);
+    throw new Error(error.message);
+  }
+
+  return data;
 }
 
 export async function getRecentMSMEInvoices(limit = 5) {
@@ -293,7 +331,7 @@ export async function submitRepaymentProofAction(formData: FormData) {
       payment_reference: utr,
       amount_paid: amountPaid,
       payment_date: new Date().toISOString(),
-      status: "paid", // Moving to paid status (admin will verify later)
+      status: "pending_verification", // Admin will verify and update balances
       updated_at: new Date().toISOString()
     })
     .eq("id", repaymentId);
@@ -365,5 +403,49 @@ export async function raiseDisputeAction(formData: FormData) {
   }
 
   revalidatePath("/msme/invoices");
+  return { success: true };
+}
+
+/**
+ * Request Pre-closure Action
+ */
+export async function requestPreClosureAction(invoiceId: string, details: any) {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return { error: "Unauthorized" };
+
+  const { error } = await supabase
+    .from("pre_closure_requests")
+    .insert([
+      {
+        invoice_id: invoiceId,
+        requested_by: user.id,
+        outstanding_principal: details.outstandingPrincipal,
+        pre_closure_fee: details.preClosureFee,
+        total_settlement_amount: details.totalSettlement,
+        status: "pending",
+        notes: "Requested via MSME Dashboard"
+      }
+    ]);
+
+  if (error) return { error: error.message };
+
+  // Notify Admins
+  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+  if (admins) {
+    for (const admin of admins) {
+      await createNotification(
+        admin.id,
+        "Pre-closure Request ⚡",
+        `New pre-closure request for Invoice #${invoiceId.split('-')[0].toUpperCase()}`,
+        "warning",
+        "/admin?tab=disputes"
+      );
+    }
+  }
+
+  revalidatePath("/msme/investments");
   return { success: true };
 }

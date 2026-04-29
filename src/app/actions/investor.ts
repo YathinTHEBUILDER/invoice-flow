@@ -16,43 +16,72 @@ export async function getInvestorStats() {
 
   if (!user) return null;
 
-  // 1. Fetch investments (Invoices funded by this investor)
-  const { data: myInvoices } = await supabase
-    .from('invoices')
-    .select('*, repayments(*)')
+  // 1. Fetch investments participation
+  const { data: investments } = await supabase
+    .from('investments')
+    .select('*, invoices(*)')
     .eq('investor_id', user.id);
 
-  const totalInvested = myInvoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-  const activeAssets = myInvoices?.filter(inv => inv.status === 'funded').length || 0;
+  const totalInvestedFaceValue = investments?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
+  const activeAssets = investments?.filter(inv => inv.status === 'active').length || 0;
+  
+  // 2. Calculate actual deployment costs (What investor actually paid)
+  const totalDeployed = investments?.reduce((sum, inv) => {
+    const rate = inv.invoices?.discount_rate || 0.12;
+    const tenure = inv.invoices?.tenure_days || 45;
+    const discount = Number(inv.amount) * rate * (tenure / 365);
+    return sum + (Number(inv.amount) - discount);
+  }, 0) || 0;
 
-  // 2. Fetch Repayment Data for Yields
-  const { data: repayments } = await supabase
-    .from('repayments')
-    .select('*, invoices!inner(*)')
-    .eq('invoices.investor_id', user.id);
+  // 3. Fetch Payouts (Face Value received back)
+  const { data: payoutTxs } = await supabase
+    .from('transactions')
+    .select('amount')
+    .eq('user_id', user.id)
+    .eq('type', 'payout');
 
-  const totalReturns = repayments?.filter(r => r.status === 'paid').reduce((sum, r) => sum + (Number(r.amount_paid) - Number(r.invoices.amount)), 0) || 0;
-  const pendingReturns = repayments?.filter(r => r.status === 'scheduled').reduce((sum, r) => sum + (Number(r.amount_due) - Number(r.invoices.amount)), 0) || 0;
-  const receivedPayouts = repayments?.filter(r => r.status === 'paid').reduce((sum, r) => sum + Number(r.amount_paid), 0) || 0;
+  const totalReceived = payoutTxs?.reduce((sum, tx) => sum + Number(tx.amount), 0) || 0;
+  
+  // 4. Calculate Net Profit (Yield)
+  // For realized investments: Payout - Deployment
+  // For unrealized: (Face Value - Deployment) is projected profit
+  const realizedInvestments = investments?.filter(inv => inv.status === 'repaid') || [];
+  const realizedProfit = realizedInvestments.reduce((sum, inv) => {
+    const rate = inv.invoices?.discount_rate || 0.12;
+    const tenure = inv.invoices?.tenure_days || 45;
+    return sum + (Number(inv.amount) * rate * (tenure / 365));
+  }, 0);
 
-  // 3. Fetch Wallet Balance & KYC Status
+  // 3. Fetch Wallet Balance & KYC Status & Recent Transactions
   const { data: profile } = await supabase
     .from('profiles')
-    .select('wallet_balance, kyc_status')
+    .select('wallet_balance, locked_balance, kyc_status, bank_account_no, ifsc_code')
     .eq('id', user.id)
     .single();
 
+  const { data: recentTransactions } = await supabase
+    .from('transactions')
+    .select('*')
+    .eq('user_id', user.id)
+    .order('created_at', { ascending: false })
+    .limit(10);
+
   return {
-    totalInvested,
+    totalInvested: totalInvestedFaceValue,
     activeAssets,
-    totalReturns,
-    pendingReturns,
-    receivedPayouts,
+    totalDeployed,
+    realizedProfit,
+    totalReceived,
     walletBalance: profile?.wallet_balance || 0,
+    lockedBalance: profile?.locked_balance || 0,
     kycStatus: profile?.kyc_status || 'not_started',
-    expectedARR: 14.5
+    bankDetails: {
+      accountNo: profile?.bank_account_no,
+      ifscCode: profile?.ifsc_code
+    },
+    recentTransactions: recentTransactions || []
   };
-}
+};
 
 /**
  * Fetch Detailed Portfolio
@@ -65,11 +94,13 @@ export async function getInvestorPortfolio() {
   if (!user) return [];
 
   const { data, error } = await supabase
-    .from('invoices')
+    .from('investments')
     .select(`
       *,
-      profiles:msme_id (company_name),
-      repayments (*)
+      invoices (
+        *,
+        profiles:msme_id (company_name)
+      )
     `)
     .eq('investor_id', user.id)
     .order('created_at', { ascending: false });
@@ -93,7 +124,7 @@ export async function getMarketplaceInvoices() {
         kyc_status
       )
     `)
-    .eq('status', 'approved')
+    .in('status', ['approved', 'partially_funded'])
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
@@ -190,8 +221,11 @@ export async function submitInvestorKYCAction(formData: FormData) {
  * Fund Invoice Action
  */
 export const fundInvoiceAction = actionClient
-  .schema(z.object({ invoiceId: z.string().uuid() }))
-  .action(async ({ parsedInput: { invoiceId } }) => {
+  .schema(z.object({ 
+    invoiceId: z.string().uuid(),
+    amount: z.number().positive("Amount must be greater than zero")
+  }))
+  .action(async ({ parsedInput: { invoiceId, amount } }) => {
     const supabase = await createClient();
     const { data: userData } = await supabase.auth.getUser();
     const user = userData?.user;
@@ -209,68 +243,21 @@ export const fundInvoiceAction = actionClient
       throw new Error("Compliance Clearance Required. Please complete KYC verification.");
     }
 
-    // 2. Check if invoice is still available
-    const { data: invoice } = await supabase
-      .from('invoices')
-      .select('amount, status, msme_id, invoice_number, discount_rate, tenure_days')
-      .eq('id', invoiceId)
-      .single();
-
-    if (!invoice || invoice.status !== 'approved') {
-      throw new Error("Asset no longer available for liquidity.");
-    }
-
-    if ((profile?.wallet_balance || 0) < Number(invoice.amount)) {
-      throw new Error("Insufficient wallet liquidity to fund this asset.");
-    }
-
-    // 3. Perform atomic update (In RPC for production)
-    const { error: updateError } = await supabase
-      .from('invoices')
-      .update({ 
-        status: 'funded', 
-        investor_id: user.id,
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', invoiceId);
-
-    if (updateError) throw new Error(updateError.message);
-
-    await supabase
-      .from('profiles')
-      .update({ 
-        wallet_balance: (profile?.wallet_balance || 0) - Number(invoice.amount) 
-      })
-      .eq('id', user.id);
-
-    // 4. Create Transaction Log
-    await supabase.from('transactions').insert({
-      user_id: user.id,
-      amount: -Number(invoice.amount),
-      type: 'investment',
-      description: `Funded Invoice #${invoice.invoice_number}`,
-      reference_id: invoiceId
+    // 2. Call Atomic RPC for investment
+    const { data, error: rpcError } = await supabase.rpc('invest_in_invoice', {
+      p_investor_id: user.id,
+      p_invoice_id: invoiceId,
+      p_amount: amount
     });
 
-    // 5. Create Repayment Schedule (Principal + Yield)
-    const dueDate = new Date();
-    dueDate.setDate(dueDate.getDate() + (invoice.tenure_days || 45));
-    
-    // Simple yield calculation for example
-    const yieldAmount = Number(invoice.amount) * ((invoice.discount_rate || 0.12) / 365 * (invoice.tenure_days || 45));
-    
-    await supabase.from('repayments').insert({
-      invoice_id: invoiceId,
-      amount_due: Number(invoice.amount) + yieldAmount,
-      due_date: dueDate.toISOString(),
-      status: 'scheduled'
-    });
+    if (rpcError) throw new Error(rpcError.message);
+    if (!data.success) throw new Error(data.error || "Investment execution failed.");
 
-    // 6. Notifications
+    // 3. Notifications
     await createNotification(
       user.id,
       "Investment Successful! 🚀",
-      `You have funded Invoice #${invoice.invoice_number}. Target Yield: ${((yieldAmount/Number(invoice.amount))*100).toFixed(2)}%`,
+      `You have committed ₹${amount.toLocaleString('en-IN')} to Invoice #${data?.invoice_number || 'Asset'}.`,
       "success",
       "/investor"
     );
@@ -278,4 +265,151 @@ export const fundInvoiceAction = actionClient
     revalidatePath("/investor");
     revalidatePath("/msme");
     return { success: true };
+  });
+
+/**
+ * Add Funds to Wallet Action
+ */
+export const addFundsAction = actionClient
+  .schema(z.object({ 
+    amount: z.number().min(100, "Minimum amount is ₹100"),
+    description: z.string().optional()
+  }))
+  .action(async ({ parsedInput: { amount, description } }) => {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+
+    if (!user) throw new Error("Not authenticated");
+
+    // 1. Fetch current balance
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('wallet_balance')
+      .eq('id', user.id)
+      .single();
+
+    const newBalance = Number(profile?.wallet_balance || 0) + amount;
+
+    // 2. Update Balance
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ 
+        wallet_balance: newBalance,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', user.id);
+
+    if (updateError) throw new Error(updateError.message);
+
+    // 3. Create Transaction Log
+    const { error: txError } = await supabase.from('transactions').insert({
+      user_id: user.id,
+      amount: amount,
+      type: 'funding',
+      description: description || "Wallet Funding (Manual Upload)",
+    });
+
+    if (txError) {
+      // Rollback balance (not truly atomic here but better than nothing)
+      await supabase
+        .from('profiles')
+        .update({ wallet_balance: profile?.wallet_balance })
+        .eq('id', user.id);
+      throw new Error(txError.message);
+    }
+
+    // 4. Notification
+    await createNotification(
+      user.id,
+      "Funds Added! 💰",
+      `₹${amount.toLocaleString('en-IN')} has been successfully credited to your liquidity wallet.`,
+      "success",
+      "/investor/wallet"
+    );
+
+    revalidatePath("/investor/wallet");
+    revalidatePath("/investor");
+    return { success: true, newBalance };
+  });
+
+/**
+ * Withdraw Funds from Wallet Action
+ */
+export const withdrawFundsAction = actionClient
+  .schema(z.object({ 
+    amount: z.number().min(100, "Minimum withdrawal is ₹100"),
+    description: z.string().optional()
+  }))
+  .action(async ({ parsedInput: { amount, description } }) => {
+    const supabase = await createClient();
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData?.user;
+
+    if (!user) throw new Error("Not authenticated");
+
+    // 1. Fetch current balance and bank details
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('wallet_balance, bank_account_no, ifsc_code, kyc_status')
+      .eq('id', user.id)
+      .single();
+
+    if (profile?.kyc_status !== 'verified') {
+      throw new Error("KYC verification required for withdrawals.");
+    }
+
+    if (!profile?.bank_account_no || !profile?.ifsc_code) {
+      throw new Error("Bank account details not found. Please update your profile.");
+    }
+
+    const currentBalance = Number(profile?.wallet_balance || 0);
+
+    if (currentBalance < amount) {
+      throw new Error("Insufficient liquidity for this withdrawal.");
+    }
+
+    // Call Atomic RPC for withdrawal
+    const { data: withdrawalId, error: rpcError } = await supabase.rpc('create_withdrawal_request', {
+      p_user_id: user.id,
+      p_amount: amount,
+      p_description: description || "Wallet Withdrawal Request"
+    });
+
+    if (rpcError) {
+      throw new Error(rpcError.message);
+    }
+
+    // 3. Notifications
+    // To Investor
+    await createNotification(
+      user.id,
+      "Withdrawal Requested 💸",
+      `Your request for ₹${amount.toLocaleString('en-IN')} is being processed. Funds have been reserved.`,
+      "info",
+      "/investor/wallet"
+    );
+
+    // To Admins
+    const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
+    if (admins) {
+      for (const admin of admins) {
+        await createNotification(
+          admin.id,
+          "New Withdrawal Request ⚠️",
+          `Investor ${user.email} requested ₹${amount.toLocaleString('en-IN')}.`,
+          "info",
+          "/admin?tab=withdrawals"
+        );
+      }
+    }
+
+    revalidatePath("/investor/wallet");
+    revalidatePath("/investor");
+    revalidatePath("/admin");
+    
+    // Fetch new balance for UI update
+    const { data: newProfile } = await supabase.from('profiles').select('wallet_balance').eq('id', user.id).single();
+
+    return { success: true, newBalance: newProfile?.wallet_balance, withdrawalId };
   });

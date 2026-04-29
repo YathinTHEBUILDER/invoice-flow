@@ -65,6 +65,14 @@ export default function InvestorKYCPage() {
 
   const handleFileChange = (type: keyof typeof documents, file: File | null) => {
     if (!file) return;
+
+    // Check file size (10MB limit per file for UX)
+    if (file.size > 10 * 1024 * 1024) {
+      toast.error("File Too Large", {
+        description: `${file.name} exceeds the 10MB individual limit.`
+      });
+      return;
+    }
     
     setDocuments(prev => ({ ...prev, [type]: file }));
     

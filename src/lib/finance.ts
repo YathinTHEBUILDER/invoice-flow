@@ -17,7 +17,8 @@ export interface FinancialSummary {
 }
 
 /**
- * Calculates the full financial summary for a single investor scenario.
+ * Calculates the full financial summary for a single investor scenario (Discounting Model).
+ * Formula: Investor pays Discounted Amount, MSME pays Face Value at maturity.
  */
 export function calculateFinancials(
   invoiceValue: number,
@@ -30,12 +31,16 @@ export function calculateFinancials(
   // Platform Fee = Invoice Value x 1%
   const platformFee = Math.round(invoiceValue * 0.01);
 
-  // MSME Receives = Invoice - Discount - Platform Fee
+  // MSME Perspective
+  // MSME receives Face Value - Discount - Platform Fee
   const msmeReceives = invoiceValue - discountAmount - platformFee;
 
   // Investor Perspective
+  // Investor deploys Face Value - Discount
   const investorIn = invoiceValue - discountAmount;
+  // Investor receives full Face Value at maturity
   const investorOut = invoiceValue;
+  // Investor profit is the Discount Amount
   const investorProfit = discountAmount;
 
   // Annualized Return for Investor
@@ -62,7 +67,7 @@ export function calculateFinancials(
 export function calculateInvestorShare(
   invoiceValue: number,
   discountAmount: number,
-  sharePercentage: number // e.g., 0.25 for 25%
+  sharePercentage: number // e.g., 0.25 for 25% of the FACE VALUE
 ) {
   const shareOfInvoice = invoiceValue * sharePercentage;
   const shareOfDiscount = discountAmount * sharePercentage;
