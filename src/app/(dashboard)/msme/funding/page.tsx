@@ -15,7 +15,7 @@ import {
   Loader2
 } from "lucide-react";
 import { createClient } from "@/lib/client";
-import { formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/utils";
 
 export default function FundingPage() {
   const [fundingRequests, setFundingRequests] = useState<any[]>([]);

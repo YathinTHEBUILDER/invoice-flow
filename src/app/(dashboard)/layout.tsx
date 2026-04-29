@@ -29,7 +29,7 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const role = user.user_metadata?.role || "investor";
+  const role = user.app_metadata?.role || user.user_metadata?.role || "investor";
   const initials = (user.email?.[0] || user.user_metadata?.full_name?.[0] || "U").toUpperCase();
 
   const navItems = {

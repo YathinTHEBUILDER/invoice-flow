@@ -16,7 +16,7 @@ import {
   History
 } from "lucide-react";
 import { getInvestorPortfolio } from "@/app/actions/investor";
-import { formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/utils";
 
 export default function InvestorPortfolio() {
   const [investments, setInvestments] = useState<any[]>([]);

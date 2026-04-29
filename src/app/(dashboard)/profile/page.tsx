@@ -37,7 +37,7 @@ export default function ProfilePage() {
       if (user) {
         setUser(user);
         setFullName(user.user_metadata.full_name || "");
-        const role = user.user_metadata.role;
+        const role = user.app_metadata?.role || user.user_metadata?.role;
         const company = user.user_metadata.company_name;
         if (role === 'admin' && !company) {
           setCompanyName("InvoiceFlow");

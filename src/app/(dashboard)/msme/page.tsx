@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Plus, ArrowUpRight, Clock, CheckCircle2, History, AlertCircle, ShieldCheck, Users } from "lucide-react";
 import Link from "next/link";
 import { getMSMEStats, getRecentMSMEInvoices } from "@/app/actions/msme";
-import { formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/utils";
 
 export const dynamic = "force-dynamic";
 
@@ -154,18 +154,18 @@ export default async function MsmeDashboard() {
                 <div className="flex justify-between items-center">
                   <span className="text-sm font-bold text-muted-foreground uppercase tracking-widest">Platform Limit</span>
                   <span className="text-sm font-black text-white">
-                    {stats.kycStatus === 'verified' ? "₹ 50,00,000" : "KYC Pending"}
+                    {stats.kycStatus === 'verified' ? formatINR(stats.platformLimit) : "KYC Pending"}
                   </span>
                 </div>
                 <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                   <div 
                     className="h-full bg-primary transition-all duration-1000" 
-                    style={{ width: stats.kycStatus === 'verified' ? '40%' : '0%' }} 
+                    style={{ width: stats.kycStatus === 'verified' ? `${Math.min(100, (stats.totalFundedAmount / stats.platformLimit) * 100)}%` : '0%' }} 
                   />
                 </div>
                 <p className="text-[10px] text-muted-foreground font-bold leading-relaxed">
                   {stats.kycStatus === 'verified' 
-                    ? "Your current utilization is at 40% of the maximum allowed limit for your business profile."
+                    ? `Your current utilization is at ${Math.round((stats.totalFundedAmount / stats.platformLimit) * 100)}% of the maximum allowed limit for your business profile.`
                     : "Complete KYC to receive your initial platform credit limit and start raising capital."
                   }
                 </p>

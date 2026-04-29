@@ -62,6 +62,7 @@ export default function AdminDashboard() {
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [rejectionNotes, setRejectionNotes] = useState("");
   const [resolutionNotes, setResolutionNotes] = useState("");
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     setActiveTab(tabParam);
@@ -69,6 +70,7 @@ export default function AdminDashboard() {
 
   const loadData = async () => {
     setLoading(true);
+    setError(null);
     try {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
@@ -81,28 +83,53 @@ export default function AdminDashboard() {
         return;
       }
 
-      const [statsData, kycData, invoiceData, settingsData, disputeData, settlementData, logsData] = await Promise.all([
-        getAdminStats(),
-        getKYCQueue(),
-        getInvoices(),
-        getPlatformSettings(),
-        getDisputes(),
-        getSettlements(),
-        getAuditLogs()
+      // Fetch stats first as they are critical
+      try {
+        const statsData = await getAdminStats();
+        setStats(statsData);
+      } catch (err) {
+        console.error("Failed to load admin stats:", err);
+        // If stats fail, we might still want to try other things, 
+        // but stats are central to the overview.
+      }
+
+      // Fetch other data in parallel but independently
+      await Promise.all([
+        (async () => {
+          try { setKycQueue(await getKYCQueue()); } 
+          catch (e) { console.error("Failed to load Compliance Queue:", e); }
+        })(),
+        (async () => {
+          try { setInvoices(await getInvoices()); } 
+          catch (e) { console.error("Failed to load Asset List:", e); }
+        })(),
+        (async () => {
+          try { setSettings(await getPlatformSettings()); } 
+          catch (e) { console.error("Failed to load Platform Settings:", e); }
+        })(),
+        (async () => {
+          try { setDisputes(await getDisputes()); } 
+          catch (e) { console.error("Failed to load Dispute Records:", e); }
+        })(),
+        (async () => {
+          try { setSettlements(await getSettlements()); } 
+          catch (e) { console.error("Failed to load Settlement Queue:", e); }
+        })(),
+        (async () => {
+          try { setAuditLogs(await getAuditLogs()); } 
+          catch (e) { console.error("Failed to load Audit Trail:", e); }
+        })()
       ]);
-      setStats(statsData);
-      setKycQueue(kycData);
-      setInvoices(invoiceData);
-      setSettings(settingsData);
-      setDisputes(disputeData);
-      setSettlements(settlementData);
-      setAuditLogs(logsData);
-    } catch (error: any) {
-      console.error("Failed to load dashboard data:", error);
-      if (error.message?.includes("Unauthorized") || error.message?.includes("Admin access required")) {
+
+    } catch (err: any) {
+      console.error("Critical failure during dashboard load:", err);
+      const errorMessage = err.message || "Unknown error occurred";
+      setError(errorMessage);
+      
+      if (errorMessage.includes("Unauthorized") || errorMessage.includes("Admin access required")) {
         router.push("/");
       } else {
-        toast.error("Failed to sync with real-time platform data.");
+        toast.error(`Terminal Sync Error: ${errorMessage}`);
       }
     } finally {
       setLoading(false);
@@ -220,14 +247,39 @@ export default function AdminDashboard() {
     }
   };
 
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
         <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-muted-foreground font-medium animate-pulse text-xs">Loading dashboard...</p>
+        <p className="text-muted-foreground font-medium animate-pulse text-xs uppercase tracking-widest">Initialising Secure Session...</p>
       </div>
     );
   }
+
+  if (error || !stats) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-6 max-w-md mx-auto text-center">
+        <div className="p-4 rounded-full bg-red-500/10 text-red-500">
+          <XCircle className="w-12 h-12" />
+        </div>
+        <div className="space-y-2">
+          <h2 className="text-2xl font-black text-white italic">Terminal Connection Failure</h2>
+          <p className="text-muted-foreground text-sm font-medium">
+            We encountered a protocol error while synchronising with the liquidity engine. 
+            {error && <span className="block mt-2 text-red-400/80 font-mono text-[10px] uppercase tracking-tighter">{error}</span>}
+          </p>
+        </div>
+        <Button 
+          onClick={loadData}
+          className="bg-white/5 border border-white/10 hover:bg-white/10 font-black uppercase tracking-widest text-[10px] h-12 px-8"
+        >
+          <RefreshCcw className="mr-2 h-4 w-4" /> Retry Handshake
+        </Button>
+      </div>
+    );
+  }
+
+
 
   return (
     <div className="space-y-10 pb-20">

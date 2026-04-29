@@ -16,7 +16,7 @@ import {
   ArrowRight
 } from "lucide-react";
 import { getInvestorStats } from "@/app/actions/investor";
-import { formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/utils";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 

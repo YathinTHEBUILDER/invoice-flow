@@ -18,7 +18,7 @@ import {
   AlertCircle
 } from "lucide-react";
 import { getMarketplaceInvoices, fundInvoiceAction, getInvestorStats } from "@/app/actions/investor";
-import { formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 

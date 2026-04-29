@@ -39,9 +39,10 @@ async function ensureAdmin() {
     .single();
 
   if (profile?.role !== 'admin') {
-    // Second check: check app_metadata just in case
+    // Second check: check metadata just in case
     const { data: userDetails } = await supabase.auth.getUser();
-    if (userDetails.user?.app_metadata?.role !== 'admin') {
+    const metadataRole = userDetails.user?.app_metadata?.role || userDetails.user?.user_metadata?.role;
+    if (metadataRole !== 'admin') {
       throw new Error("Unauthorized: Admin access required");
     }
   }
@@ -153,27 +154,45 @@ export async function getKYCQueue() {
     `)
     .order('created_at', { ascending: false });
 
-  if (error) throw new Error(error.message);
+  if (error) {
+    console.error("KYC Queue Fetch Error:", error);
+    throw new Error(`KYC fetch failed: ${error.message}`);
+  }
 
-  const supabaseAdmin = await createAdminClient();
+  let supabaseAdmin;
+  try {
+    supabaseAdmin = await createAdminClient();
+  } catch (e) {
+    console.warn("Admin client initialization failed, skipping signed URLs:", e);
+    return data || [];
+  }
 
   // Generate signed URLs for private documents
   const enrichedData = await Promise.all((data || []).map(async (req) => {
     const enrichedDocs: Record<string, string> = {};
-    if (req.documents) {
-      for (const [key, path] of Object.entries(req.documents as Record<string, string>)) {
+    if (req.documents && typeof req.documents === 'object') {
+      const docs = req.documents as Record<string, string>;
+      for (const [key, path] of Object.entries(docs)) {
+        if (!path) continue;
+        
         // If it's already a full URL, use it (backward compatibility)
-        if (path.startsWith('http')) {
+        if (typeof path === 'string' && path.startsWith('http')) {
           enrichedDocs[key] = path;
           continue;
         }
         
-        const { data: signedData, error: signedError } = await supabaseAdmin.storage
-          .from('kyc-documents')
-          .createSignedUrl(path, 3600); // 1 hour access
-          
-        if (!signedError && signedData) {
-          enrichedDocs[key] = signedData.signedUrl;
+        try {
+          const { data: signedData, error: signedError } = await supabaseAdmin.storage
+            .from('kyc-documents')
+            .createSignedUrl(path, 3600); // 1 hour access
+            
+          if (!signedError && signedData) {
+            enrichedDocs[key] = signedData.signedUrl;
+          } else {
+            console.warn(`Failed to sign URL for ${key}:`, signedError);
+          }
+        } catch (storageErr) {
+          console.error(`Storage signing error for ${key}:`, storageErr);
         }
       }
     }

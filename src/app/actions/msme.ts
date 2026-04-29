@@ -224,6 +224,15 @@ export async function getMSMEStats() {
     .eq("id", user.id)
     .single();
 
+  // Fetch platform limit from settings or use default
+  const { data: settings } = await supabase
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'default_credit_limit')
+    .single();
+  
+  const platformLimit = Number(settings?.value || 5000000);
+
   return {
     totalSubmitted,
     underReview,
@@ -233,7 +242,8 @@ export async function getMSMEStats() {
     totalOutstanding,
     kycStatus: profile?.kyc_status || 'not_started',
     kycNotes: profile?.kyc_notes,
-    userRole: profile?.role
+    userRole: profile?.role,
+    platformLimit
   };
 }
 

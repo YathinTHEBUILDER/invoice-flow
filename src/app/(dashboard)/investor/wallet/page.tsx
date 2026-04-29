@@ -16,7 +16,7 @@ import {
   CreditCard
 } from "lucide-react";
 import { getInvestorStats } from "@/app/actions/investor";
-import { formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/utils";
 import { createClient } from "@/lib/client";
 
 export default function InvestorWalletPage() {

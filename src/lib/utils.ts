@@ -19,14 +19,19 @@ export function formatCurrency(amount: number | string | null | undefined) {
 /**
  * Formats numbers into Indian shorthand (Lakhs/Crores)
  */
-export function formatIndianNumber(value: number) {
-  if (value >= 10000000) {
-    return `₹${(value / 10000000).toFixed(2)} Cr`;
-  } else if (value >= 100000) {
-    return `₹${(value / 100000).toFixed(2)} L`;
+export function formatIndianNumber(value: number | string | null | undefined) {
+  const num = value === null || value === undefined ? 0 : Number(value);
+  if (isNaN(num)) return "₹0";
+
+  if (num >= 10000000) {
+    return `₹${(num / 10000000).toFixed(2)} Cr`;
+  } else if (num >= 100000) {
+    return `₹${(num / 100000).toFixed(2)} Lakh`;
   }
-  return formatCurrency(value);
+  return formatCurrency(num);
 }
+
+export const formatINR = formatCurrency;
 
 export function formatPercent(value: number) {
   return new Intl.NumberFormat("en-IN", {

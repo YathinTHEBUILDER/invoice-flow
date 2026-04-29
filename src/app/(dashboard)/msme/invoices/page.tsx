@@ -20,7 +20,7 @@ import {
 } from "lucide-react";
 import { uploadInvoiceAction, raiseDisputeAction } from "@/app/actions/msme";
 import { createClient } from "@/lib/client";
-import { formatINR } from "@/lib/format";
+import { formatINR } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function InvoicesPage() {
