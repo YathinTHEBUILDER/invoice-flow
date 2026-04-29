@@ -933,7 +933,7 @@ export const approvePreClosureAction = actionClient
 export const disburseToMSMEAction = actionClient
   .schema(z.object({ invoiceId: z.string().uuid() }))
   .action(async ({ parsedInput: { invoiceId } }) => {
-    const { user } = await ensureAdmin();
+    const user = await ensureAdmin();
     const supabase = await createClient();
 
     // Call the RPC we created
