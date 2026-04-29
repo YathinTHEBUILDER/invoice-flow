@@ -62,29 +62,30 @@ export function SelfieCapture({ onCapture, onClose }: SelfieCaptureProps) {
           (e.message && e.message.toLowerCase().includes('permission'));
 
         if (isPermissionError) {
-          console.error("Camera permission explicitly denied by user or browser security policy.");
-          throw e;
-        }
-        
-        console.log("Falling back to default 'user' facing camera...");
-        try {
-          mediaStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: "user" } 
-          });
-        } catch (fallbackErr: any) {
-          console.warn(`Facing-mode 'user' fallback failed (${fallbackErr.name}): ${fallbackErr.message}`);
-          
-          if (fallbackErr.name === 'NotAllowedError' || fallbackErr.name === 'PermissionDeniedError' || fallbackErr.name === 'SecurityError') {
-            throw fallbackErr;
+          // Let it fall through to the outer catch for unified error handling
+        } else {
+          console.log("Falling back to default 'user' facing camera...");
+          try {
+            mediaStream = await navigator.mediaDevices.getUserMedia({ 
+              video: { facingMode: "user" } 
+            });
+          } catch (fallbackErr: any) {
+            console.warn(`Facing-mode 'user' fallback failed (${fallbackErr.name}): ${fallbackErr.message}`);
+            
+            if (fallbackErr.name === 'NotAllowedError' || fallbackErr.name === 'PermissionDeniedError' || fallbackErr.name === 'SecurityError') {
+              // Fatal permission error, let outer catch handle it
+            } else {
+              console.log("Final fallback: Requesting ANY available video source...");
+              mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
+            }
           }
-          
-          console.log("Final fallback: Requesting ANY available video source...");
-          mediaStream = await navigator.mediaDevices.getUserMedia({ video: true });
         }
       }
-      console.log("Camera stream acquired successfully.");
-      clearTimeout(timeout);
-      setStream(mediaStream);
+      if (mediaStream) {
+        console.log("Camera stream acquired successfully.");
+        clearTimeout(timeout);
+        setStream(mediaStream);
+      }
     } catch (err: any) {
       clearTimeout(timeout);
       console.error("Critical Camera Access Error:", err);

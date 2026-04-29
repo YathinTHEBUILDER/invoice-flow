@@ -225,13 +225,19 @@ export default function SupportPage() {
                       <select 
                         name="category" 
                         required 
-                        className="w-full bg-white/5 border border-white/10 h-14 rounded-md px-4 font-bold text-white focus:bg-white/10 transition-all appearance-none outline-none"
+                        className="w-full bg-white/5 border border-white/10 h-14 rounded-md px-4 font-bold text-white focus:bg-white/10 transition-all appearance-none outline-none pr-10"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 1rem center',
+                          backgroundSize: '1.2em'
+                        }}
                       >
-                        <option value="invoice">Invoice Issue</option>
-                        <option value="kyc">KYC/Verification</option>
-                        <option value="repayment">Repayment/Late Fee</option>
-                        <option value="technical">Technical Problem</option>
-                        <option value="other">Other Concern</option>
+                        <option value="invoice" className="bg-zinc-900">Invoice Issue</option>
+                        <option value="kyc" className="bg-zinc-900">KYC/Verification</option>
+                        <option value="repayment" className="bg-zinc-900">Repayment/Late Fee</option>
+                        <option value="technical" className="bg-zinc-900">Technical Problem</option>
+                        <option value="other" className="bg-zinc-900">Other Concern</option>
                       </select>
                     </div>
                     <div className="space-y-3">
@@ -239,12 +245,19 @@ export default function SupportPage() {
                       <select 
                         name="priority" 
                         required 
-                        className="w-full bg-white/5 border border-white/10 h-14 rounded-md px-4 font-bold text-white focus:bg-white/10 transition-all appearance-none outline-none"
+                        defaultValue="medium"
+                        className="w-full bg-white/5 border border-white/10 h-14 rounded-md px-4 font-bold text-white focus:bg-white/10 transition-all appearance-none outline-none pr-10"
+                        style={{
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                          backgroundRepeat: 'no-repeat',
+                          backgroundPosition: 'right 1rem center',
+                          backgroundSize: '1.2em'
+                        }}
                       >
-                        <option value="low">Low</option>
-                        <option value="medium" selected>Medium</option>
-                        <option value="high">High</option>
-                        <option value="urgent">Urgent</option>
+                        <option value="low" className="bg-zinc-900">Low</option>
+                        <option value="medium" className="bg-zinc-900">Medium</option>
+                        <option value="high" className="bg-zinc-900">High</option>
+                        <option value="urgent" className="bg-zinc-900">Urgent</option>
                       </select>
                     </div>
                   </div>

@@ -794,34 +794,54 @@ export default function AdminDashboard() {
                             </Badge>
                           </td>
                           <td className="px-8 py-8 text-right">
-                            {inv.status === "pending_verification" && (
-                              <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                                <Button 
-                                  size="sm" 
-                                  onClick={() => handleInvoiceUpdate(inv.id, "approved")}
-                                  disabled={actionLoading === inv.id}
-                                  className="h-8 bg-emerald-500 hover:bg-emerald-600 text-[8px] font-black uppercase"
-                                >
-                                  Approve
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  variant="destructive"
-                                  onClick={() => {
-                                    const reason = prompt("Enter rejection reason:");
-                                    if (reason) {
-                                      setRejectionNotes(reason);
-                                      handleInvoiceUpdate(inv.id, "rejected");
-                                    }
-                                  }}
-                                  className="h-8 text-[8px] font-black uppercase"
-                                >
-                                  Reject
-                                </Button>
-                              </div>
-                            )}
-                            {inv.status === "funded" && (
-                              <div className="flex justify-end opacity-0 group-hover:opacity-100 transition-opacity">
+                            <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button 
+                                variant="ghost" 
+                                size="sm" 
+                                onClick={() => {
+                                  const url = inv.documents?.invoice_url;
+                                  if (url) {
+                                    window.open(url, '_blank');
+                                  } else {
+                                    const mockUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+                                    toast.info("Invoice document missing. Opening Demo Preview.", {
+                                      description: "Existing records may lack documents. Use upload for new ones."
+                                    });
+                                    window.open(mockUrl, '_blank');
+                                  }
+                                }}
+                                className="h-8 text-white/40 hover:text-white"
+                              >
+                                <FileText className="w-4 h-4" />
+                              </Button>
+
+                              {inv.status === "pending_verification" && (
+                                <div className="flex gap-2">
+                                  <Button 
+                                    size="sm" 
+                                    onClick={() => handleInvoiceUpdate(inv.id, "approved")}
+                                    disabled={actionLoading === inv.id}
+                                    className="h-8 bg-emerald-500 hover:bg-emerald-600 text-[8px] font-black uppercase"
+                                  >
+                                    Approve
+                                  </Button>
+                                  <Button 
+                                    size="sm" 
+                                    variant="destructive"
+                                    onClick={() => {
+                                      const reason = prompt("Enter rejection reason:");
+                                      if (reason) {
+                                        setRejectionNotes(reason);
+                                        handleInvoiceUpdate(inv.id, "rejected");
+                                      }
+                                    }}
+                                    className="h-8 text-[8px] font-black uppercase"
+                                  >
+                                    Reject
+                                  </Button>
+                                </div>
+                              )}
+                              {inv.status === "funded" && (
                                 <Button 
                                   size="sm" 
                                   onClick={() => handleDisburseToMSME(inv.id)}
@@ -830,8 +850,8 @@ export default function AdminDashboard() {
                                 >
                                   <ArrowDownLeft className="mr-1 h-3 w-3" /> Disburse Funds
                                 </Button>
-                              </div>
-                            )}
+                              )}
+                            </div>
                           </td>
                         </tr>
                       ))

@@ -150,6 +150,16 @@ export default function KYCPage() {
   };
 
   const getKYCBadge = (status: string) => {
+    // Check for cooldown first
+    if (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt) {
+      const lastRejected = new Date(profile.lastKycRejectedAt).getTime();
+      const now = new Date().getTime();
+      const cooldownMs = 8 * 60 * 60 * 1000;
+      if (now - lastRejected < cooldownMs) {
+        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[10px] px-4 py-1">Submission Locked - Cooldown Active</Badge>;
+      }
+    }
+
     switch (status) {
       case "pending":
         return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20 font-black uppercase tracking-widest text-[10px] px-4 py-1">Manual Vetting in Progress</Badge>;
@@ -216,12 +226,39 @@ export default function KYCPage() {
         ) : (
           <>
             {profile?.kyc_status === 'rejected' && (
-              <div className="p-6 rounded-3xl bg-red-500/5 border border-red-500/20 space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
-                <div className="flex items-center gap-3 text-red-500">
-                  <AlertTriangle className="w-5 h-5" />
-                  <p className="text-sm font-black italic">Rejection Remarks</p>
-                </div>
-                <p className="text-sm text-white font-medium pl-8">{profile.kyc_notes || "No specific reason provided. Please ensure all documents are clear and valid."}</p>
+              <div className="space-y-6">
+                {(profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) ? (
+                   <div className="p-8 rounded-3xl bg-red-500/10 border border-red-500/20 space-y-4 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="flex items-center gap-3 text-red-500">
+                      <AlertTriangle className="w-6 h-6" />
+                      <p className="text-xl font-black italic uppercase tracking-tighter text-white">Temporary Lockout Active</p>
+                    </div>
+                    <div className="pl-9 space-y-2">
+                      <p className="text-sm text-muted-foreground font-medium leading-relaxed">
+                        Due to multiple consecutive KYC rejections, a security cooldown has been applied to your account. 
+                        You will be able to resubmit for manual vetting in <span className="text-white font-bold">{
+                          (() => {
+                            const remaining = 8 * 60 * 60 * 1000 - (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime());
+                            const hours = Math.floor(remaining / (1000 * 60 * 60));
+                            const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                            return `${hours}h ${minutes}m`;
+                          })()
+                        }</span>.
+                      </p>
+                      <div className="pt-2">
+                        <p className="text-xs text-red-400 font-bold italic">Previous Rejection Reason: {profile.kyc_notes || "N/A"}</p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="p-6 rounded-3xl bg-red-500/5 border border-red-500/20 space-y-2 animate-in fade-in slide-in-from-top-4 duration-700">
+                    <div className="flex items-center gap-3 text-red-500">
+                      <AlertTriangle className="w-5 h-5" />
+                      <p className="text-sm font-black italic">Rejection Remarks</p>
+                    </div>
+                    <p className="text-sm text-white font-medium pl-8">{profile.kyc_notes || "No specific reason provided. Please ensure all documents are clear and valid."}</p>
+                  </div>
+                )}
               </div>
             )}
 
@@ -434,11 +471,13 @@ export default function KYCPage() {
                 {profile?.kyc_status !== 'verified' && profile?.kyc_status !== 'pending' ? (
                   <Button 
                     type="submit"
-                    disabled={saving}
+                    disabled={saving || (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000))}
                     className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20"
                   >
                     {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                    Submit for Compliance Clearance
+                    {(profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) 
+                      ? "Cooldown Active" 
+                      : "Submit for Compliance Clearance"}
                   </Button>
                 ) : (
                   <div className="h-14 flex items-center justify-center bg-white/5 rounded-2xl border border-white/10">

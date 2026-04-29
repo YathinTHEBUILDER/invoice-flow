@@ -84,14 +84,8 @@ export async function getAdminStats() {
   
   const gmv = invoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
   
-  // 2. Fetch platform commission from settings
-  const { data: settingsData } = await supabase
-    .from('platform_settings')
-    .select('value')
-    .eq('key', 'platform_commission')
-    .single();
-  
-  const commission = Number(settingsData?.value || 1.0) / 100;
+  // 2. Calculate Projected Revenue (0.42% on withdrawals, modeled as 0.42% of GMV for projection)
+  const commission = 0.0042;
   const revenue = gmv * commission;
 
   // 3. User counts
@@ -182,17 +176,45 @@ export async function getKYCQueue() {
         }
         
         try {
-          const { data: signedData, error: signedError } = await supabaseAdmin.storage
-            .from('kyc-documents')
-            .createSignedUrl(path, 3600); // 1 hour access
-            
-          if (!signedError && signedData) {
-            enrichedDocs[key] = signedData.signedUrl;
-          } else {
-            console.warn(`Failed to sign URL for ${key}:`, signedError);
+          let signedUrl = null;
+          
+          if (supabaseAdmin) {
+            // Try primary bucket (hyphen)
+            const { data: signedData } = await supabaseAdmin.storage
+              .from('kyc-documents')
+              .createSignedUrl(path, 3600);
+              
+            if (signedData) {
+              signedUrl = signedData.signedUrl;
+            } else {
+              // Fallback to secondary bucket (underscore)
+              const { data: fallbackData } = await supabaseAdmin.storage
+                .from('kyc_documents')
+                .createSignedUrl(path, 3600);
+              
+              if (fallbackData) {
+                signedUrl = fallbackData.signedUrl;
+              }
+            }
           }
+
+          // Ultimate Fallback: Public URL
+          if (!signedUrl) {
+            const supabase = await createClient();
+            const { data: { publicUrl } } = supabase.storage
+              .from('kyc-documents')
+              .getPublicUrl(path);
+            signedUrl = publicUrl;
+          }
+
+          enrichedDocs[key] = signedUrl;
         } catch (storageErr) {
-          console.error(`Storage signing error for ${key}:`, storageErr);
+          console.error(`Storage retrieval error for ${key}:`, storageErr);
+          // Last resort: try to construct a public URL manually if path is relative
+          if (path && !path.startsWith('http')) {
+            const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+            enrichedDocs[key] = `${baseUrl}/storage/v1/object/public/kyc-documents/${path}`;
+          }
         }
       }
     }
@@ -312,10 +334,15 @@ export const approveKYCAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
-    // 1. Update Profile status
+    // 1. Update Profile status and reset rejection tracking
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ kyc_status: 'verified', kyc_notes: 'KYC verified successfully.' })
+      .update({ 
+        kyc_status: 'verified', 
+        kyc_notes: 'KYC verified successfully.',
+        kyc_rejection_count: 0,
+        last_kyc_rejected_at: null
+      })
       .eq('id', userId);
 
     if (profileError) throw new Error(profileError.message);
@@ -328,10 +355,21 @@ export const approveKYCAction = actionClient
 
     if (kycError) throw new Error(kycError.message);
 
+    // 3. Log Platform Fee (1% of the default facility limit of 50 Lakhs = 50,000)
+    // The user rules specify Platform Fee = Invoice Value * 1% but charged ONLY at KYC.
+    // We treat this as a one-time onboarding fee based on the standard credit limit.
+    await supabase.from('transactions').insert({
+      user_id: userId,
+      amount: -50000,
+      type: 'platform_fee' as any, // Cast to any if 'platform_fee' is not in the enum yet
+      description: 'One-time Platform Onboarding Fee (1% of facility limit)',
+      reference_id: requestId
+    });
+
+    await logAdminAction('approve_kyc', 'profile', userId, { requestId, fee: 50000 });
+    
     const { data: userProfile } = await supabase.from('profiles').select('role').eq('id', userId).single();
 
-    await logAdminAction('approve_kyc', 'profile', userId, { requestId });
-    
     revalidatePath("/admin");
     revalidatePath("/msme");
     revalidatePath("/msme/kyc");
@@ -370,10 +408,24 @@ export const rejectKYCAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
-    // 1. Update Profile status
+    // 1. Fetch current rejection stats
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('kyc_rejection_count')
+      .eq('id', userId)
+      .single();
+
+    const newCount = (profile?.kyc_rejection_count || 0) + 1;
+
+    // 2. Update Profile status and tracking
     const { error: profileError } = await supabase
       .from('profiles')
-      .update({ kyc_status: 'rejected', kyc_notes: notes })
+      .update({ 
+        kyc_status: 'rejected', 
+        kyc_notes: notes,
+        kyc_rejection_count: newCount,
+        last_kyc_rejected_at: new Date().toISOString()
+      })
       .eq('id', userId);
 
     if (profileError) throw new Error(profileError.message);
@@ -602,82 +654,24 @@ export const verifySettlementAction = actionClient
     
     const { data: repayment } = await supabase
       .from('repayments')
-      .select('*, invoices!inner(msme_id, invoice_number)')
+      .select('*, invoices!inner(msme_id, invoice_number, verified_amount, amount)')
       .eq('id', repaymentId)
       .single();
 
     if (!repayment) throw new Error("Repayment record not found.");
 
-    const { error } = await supabase
-      .from('repayments')
-      .update({ 
-        status: status === 'repaid' ? 'paid' : 'overdue',
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', repaymentId);
+    // 1. Call Atomic RPC for settlement
+    const { data, error: rpcError } = await supabase.rpc('settle_repayment', {
+      p_repayment_id: repaymentId,
+      p_admin_id: (await supabase.auth.getUser()).data.user?.id,
+      p_status: status
+    });
 
-    if (error) throw new Error(error.message);
+    if (rpcError) throw new Error(rpcError.message);
+    if (!data.success) throw new Error(data.error || "Settlement failed.");
 
     if (status === 'repaid') {
-      // 1. Update Invoice status
-      await supabase
-        .from('invoices')
-        .update({ status: 'repaid' })
-        .eq('id', repayment.invoice_id);
-      
-      // 2. Fetch all participating investments
-      const { data: investments } = await supabase
-        .from('investments')
-        .select('*, profiles:investor_id(wallet_balance)')
-        .eq('invoice_id', repayment.invoice_id);
-
-      if (investments && investments.length > 0) {
-        const { data: invoice } = await supabase
-          .from('invoices')
-          .select('verified_amount, amount')
-          .eq('id', repayment.invoice_id)
-          .single();
-        
-        const totalPrincipal = Number(invoice?.verified_amount || invoice?.amount);
-        const totalPaid = Number(repayment.amount_paid);
-
-        for (const investment of investments) {
-          const shareRatio = Number(investment.amount) / totalPrincipal;
-          const creditAmount = totalPaid * shareRatio;
-          
-          const currentBalance = Number(investment.profiles?.wallet_balance || 0);
-          
-          await supabase
-            .from('profiles')
-            .update({ 
-              wallet_balance: currentBalance + creditAmount 
-            })
-            .eq('id', investment.investor_id);
-
-          await supabase
-            .from('investments')
-            .update({ status: 'repaid' })
-            .eq('id', investment.id);
-
-          await supabase.from('transactions').insert({
-            user_id: investment.investor_id,
-            amount: creditAmount,
-            type: 'payout',
-            description: `Repayment received for Invoice #${repayment.invoices.invoice_number}`,
-            reference_id: repayment.invoice_id
-          });
-
-          await createNotification(
-            investment.investor_id,
-            "Repayment Received! 💰",
-            `₹${creditAmount.toLocaleString('en-IN')} credited for Invoice #${repayment.invoices.invoice_number}.`,
-            "success",
-            "/investor/portfolio"
-          );
-        }
-      }
-
-      // 3. Notify MSME
+      // 2. Notify MSME
       await createNotification(
         repayment.invoices.msme_id,
         "Settlement Confirmed! 🏦",
@@ -685,6 +679,28 @@ export const verifySettlementAction = actionClient
         "success",
         "/msme/repayments"
       );
+
+      // 3. Notify Participating Investors (Batch)
+      const { data: investments } = await supabase
+        .from('investments')
+        .select('investor_id, amount')
+        .eq('invoice_id', repayment.invoice_id);
+
+      if (investments) {
+        for (const inv of investments) {
+          const totalFace = Number(repayment.invoices.verified_amount || repayment.invoices.amount || 1);
+          const share = Number(inv.amount) / totalFace;
+          const payout = Math.round(Number(repayment.amount_paid - (repayment.penalty_amount || 0)) * share);
+
+          await createNotification(
+            inv.investor_id,
+            "Repayment Received! 💰",
+            `₹${payout.toLocaleString('en-IN')} credited for Invoice #${repayment.invoices.invoice_number}.`,
+            "success",
+            "/investor/portfolio"
+          );
+        }
+      }
     }
 
     await logAdminAction('verify_settlement', 'repayment', repaymentId, { status });

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Wallet, ArrowUpRight, ArrowDownLeft, History, Plus, Loader2, TrendingUp, ShieldCheck, CreditCard, IndianRupee, AlertCircle, X } from "lucide-react";
 import { getInvestorStats, addFundsAction, withdrawFundsAction } from "@/app/actions/investor";
-import { formatINR, formatIndianNumber } from "@/lib/utils";
+import { formatINR, formatIndianNumber, formatDate } from "@/lib/utils";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
@@ -218,14 +218,35 @@ export default function InvestorWalletPage() {
                       value={withdrawAmount}
                       onChange={(e) => setWithdrawAmount(e.target.value)}
                       placeholder="e.g. 25,000"
-                      className="pl-12 bg-white/5 border-white/10 h-16 font-black italic text-2xl text-white focus:bg-white/10 transition-all placeholder:text-white/10"
+                      className="pl-12 pr-16 bg-white/5 border-white/10 h-16 font-black italic text-2xl text-white focus:bg-white/10 transition-all placeholder:text-white/10"
                       autoFocus
                     />
+                    <Button
+                      type="button"
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setWithdrawAmount((stats?.walletBalance || 0).toString())}
+                      className="absolute right-2 top-1/2 -translate-y-1/2 h-8 px-2 font-black text-[10px] uppercase tracking-widest text-primary hover:bg-primary/10 rounded-lg transition-all"
+                    >
+                      MAX
+                    </Button>
                   </div>
                   {withdrawAmount && (
-                    <p className="text-[10px] text-orange-400 font-bold italic text-right animate-in fade-in">
-                      ≈ ₹{formatIndianNumber(parseFloat(withdrawAmount))} INR
-                    </p>
+                    <div className="space-y-2 py-2">
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/40">
+                        <span>Gross Withdrawal</span>
+                        <span>₹{formatIndianNumber(parseFloat(withdrawAmount))}</span>
+                      </div>
+                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-[0.2em] text-orange-400/60">
+                        <span>Platform Fee (0.42%)</span>
+                        <span>- ₹{formatIndianNumber(parseFloat(withdrawAmount) * 0.0042)}</span>
+                      </div>
+                      <div className="h-px bg-white/5" />
+                      <div className="flex justify-between items-center">
+                        <span className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Net Settlement</span>
+                        <span className="text-xl font-black italic text-emerald-400">₹{formatIndianNumber(parseFloat(withdrawAmount) * (1 - 0.0042))}</span>
+                      </div>
+                    </div>
                   )}
                 </div>
 
@@ -381,7 +402,7 @@ export default function InvestorWalletPage() {
                        transactions.map((tx) => (
                           <tr key={tx.id} className="hover:bg-white/[0.02] transition-colors group">
                              <td className="px-10 py-6">
-                                <p className="text-xs font-bold text-white italic">{new Date(tx.created_at).toLocaleDateString()}</p>
+                                <p className="text-xs font-bold text-white italic">{formatDate(tx.created_at)}</p>
                                 <p className="text-[10px] text-muted-foreground uppercase tracking-widest">{new Date(tx.created_at).toLocaleTimeString()}</p>
                              </td>
                              <td className="px-10 py-6">

@@ -31,7 +31,8 @@ export async function uploadInvoiceAction(formData: FormData) {
   const buyerName = formData.get("buyer_name") as string;
   const buyerGstin = formData.get("buyer_gstin") as string;
   const dueDate = formData.get("due_date") as string;
-  const tenureDays = parseInt(formData.get("tenure_days") as string);
+  const tenureDays = parseInt(formData.get("tenure_days") as string) || 0;
+  const invoiceFile = formData.get("invoice_file") as File | null;
 
   // Check for duplicate invoice number
   const { data: existing } = await supabase
@@ -54,6 +55,27 @@ export async function uploadInvoiceAction(formData: FormData) {
   
   const discountRate = Number(settings?.value || 0.12);
 
+  // Upload Invoice File
+  let invoiceUrl = null;
+  if (invoiceFile && invoiceFile.size > 0) {
+    const fileExt = invoiceFile.name.split('.').pop();
+    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from('invoices')
+      .upload(fileName, invoiceFile);
+
+    if (uploadError) {
+      console.error("Storage upload error:", uploadError);
+      return { error: "Failed to upload invoice document." };
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('invoices')
+      .getPublicUrl(fileName);
+    
+    invoiceUrl = publicUrl;
+  }
+
   const { data, error } = await supabase
     .from("invoices")
     .insert([
@@ -66,7 +88,8 @@ export async function uploadInvoiceAction(formData: FormData) {
         buyer_name: buyerName,
         buyer_gstin: buyerGstin,
         due_date: dueDate,
-        status: "pending_verification"
+        status: "pending_verification",
+        documents: invoiceUrl ? { invoice_url: invoiceUrl } : null
       }
     ])
     .select();
@@ -101,13 +124,36 @@ export async function submitKYCAction(formData: FormData, documentUrls: Record<s
 
   if (!user) return { error: "Unauthorized" };
 
+  // 1. Check for rejection cooldown (8 hours after 2 rejections)
+  const { data: profile } = await supabase
+    .from("profiles")
+    .select("kyc_rejection_count, last_kyc_rejected_at")
+    .eq("id", user.id)
+    .single();
+
+  if (profile && (profile.kyc_rejection_count || 0) >= 2 && profile.last_kyc_rejected_at) {
+    const lastRejected = new Date(profile.last_kyc_rejected_at).getTime();
+    const now = new Date().getTime();
+    const msSinceRejection = now - lastRejected;
+    const cooldownMs = 8 * 60 * 60 * 1000; // 8 hours
+
+    if (msSinceRejection < cooldownMs) {
+      const remainingMs = cooldownMs - msSinceRejection;
+      const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+      const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+      return { 
+        error: `Submission locked. Due to multiple rejections, you must wait 8 hours before resubmitting. Remaining: ${hours}h ${minutes}m.` 
+      };
+    }
+  }
+
   const gstin = formData.get("gstin") as string;
   const pan = formData.get("pan") as string;
   const bankAccountNo = formData.get("bank_account_no") as string;
   const ifscCode = formData.get("ifsc_code") as string;
   const companyAddress = formData.get("company_address") as string;
 
-  // 1. Update Profile
+  // 2. Update Profile
   const { error: profileError } = await supabase
     .from("profiles")
     .update({
@@ -214,14 +260,14 @@ export async function getMSMEStats() {
     console.error("Repayments fetch error:", repaymentsError);
   }
 
-  const safeRepayments = repayments || [];
+  const safeRepayments = Array.isArray(repayments) ? repayments : (repayments ? [repayments] : []);
   const pendingRepayments = safeRepayments.filter(r => r.status === "scheduled" || r.status === "overdue").length;
   const inReviewRepayments = safeRepayments.filter(r => r.status === "pending_verification").length;
   const totalOutstanding = safeRepayments.filter(r => r.status === "scheduled" || r.status === "overdue").reduce((sum, r) => sum + Number(r.amount_due), 0);
 
   const { data: profile } = await supabase
     .from("profiles")
-    .select("kyc_status, kyc_notes, role")
+    .select("kyc_status, kyc_notes, role, kyc_rejection_count, last_kyc_rejected_at")
     .eq("id", user.id)
     .single();
 
@@ -245,7 +291,9 @@ export async function getMSMEStats() {
     kycStatus: profile?.kyc_status || 'not_started',
     kycNotes: profile?.kyc_notes,
     userRole: profile?.role,
-    platformLimit
+    platformLimit,
+    kycRejectionCount: profile?.kyc_rejection_count || 0,
+    lastKycRejectedAt: profile?.last_kyc_rejected_at
   };
 }
 
@@ -337,6 +385,21 @@ export async function submitRepaymentProofAction(formData: FormData) {
     .eq("id", repaymentId);
 
   if (error) return { error: error.message };
+
+  // --- AUTOMATION FOR MOCK DEMO ---
+  // In a real system, we'd wait for admin verification.
+  // For the mock, we settle immediately to "disburse funds to investors" as requested.
+  const { data: settlementData, error: settlementError } = await supabase.rpc('settle_repayment', {
+    p_repayment_id: repaymentId,
+    p_admin_id: user.id, // Using the MSME as admin for the RPC call in mock
+    p_status: 'repaid'
+  });
+
+  if (settlementError) {
+    console.error("Auto-settlement Error:", settlementError);
+    // We don't fail the whole action if settlement fails (it's in the background), 
+    // but the record is already updated to pending_verification.
+  }
 
   // Notify Admins
   const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');

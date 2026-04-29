@@ -3,8 +3,9 @@ import { formatINR } from "./utils";
 /**
  * Calculates the outstanding balance for an invoice based on scheduled repayments.
  */
-export function calculateOutstandingBalance(repayments: any[]) {
-  return repayments.reduce((sum, r) => {
+export function calculateOutstandingBalance(repayments: any) {
+  const arr = Array.isArray(repayments) ? repayments : (repayments ? [repayments] : []);
+  return arr.reduce((sum, r) => {
     if (r.status !== "paid") {
       return sum + Number(r.amount_due) + Number(r.penalty_amount || 0) - Number(r.amount_paid || 0);
     }
@@ -16,8 +17,9 @@ export function calculateOutstandingBalance(repayments: any[]) {
  * Calculates pre-closure amount.
  * Formula: Outstanding Principal + (2% of Outstanding Principal as pre-closure fee)
  */
-export function calculatePreClosureDetails(repayments: any[]) {
-  const outstandingPrincipal = repayments.reduce((sum, r) => {
+export function calculatePreClosureDetails(repayments: any) {
+  const arr = Array.isArray(repayments) ? repayments : (repayments ? [repayments] : []);
+  const outstandingPrincipal = arr.reduce((sum, r) => {
     if (r.status !== "paid") {
       // In a real system, we'd separate principal and interest. 
       // Here we treat amount_due as the total to be settled.

@@ -184,6 +184,31 @@ export default function InvestorKYCPage() {
               </Badge>
             </div>
           </Card>
+        ) : (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) ? (
+          <Card className="glass-dark border-white/5 overflow-hidden text-center p-20 space-y-8 animate-in fade-in zoom-in duration-700">
+            <div className="mx-auto w-24 h-24 rounded-[30px] bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-2xl shadow-red-500/10">
+              <AlertTriangle className="w-12 h-12 text-red-500" />
+            </div>
+            <div className="space-y-3">
+              <h3 className="text-4xl font-black text-white italic">Compliance Lockout Active</h3>
+              <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
+                Due to multiple consecutive KYC rejections, your ability to submit credentials has been temporarily restricted for security purposes.
+              </p>
+              <div className="pt-4 flex flex-col items-center gap-4">
+                <div className="px-8 py-3 bg-red-500/5 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] text-red-500">
+                  Resubmission Available in: {
+                    (() => {
+                      const remaining = 8 * 60 * 60 * 1000 - (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime());
+                      const hours = Math.floor(remaining / (1000 * 60 * 60));
+                      const minutes = Math.floor((remaining % (1000 * 60 * 60)) / (1000 * 60));
+                      return `${hours}H ${minutes}M`;
+                    })()
+                  }
+                </div>
+                <p className="text-xs text-muted-foreground italic">Previous Rejection Remark: {profile.kycNotes || "N/A"}</p>
+              </div>
+            </div>
+          </Card>
         ) : (
           <form onSubmit={handleSubmit} className="space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -381,11 +406,13 @@ export default function InvestorKYCPage() {
 
                     <Button 
                       type="submit"
-                      disabled={saving}
+                      disabled={saving || (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000))}
                       className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
                     >
                       {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                      Submit Documents for Audit
+                      {(profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) 
+                        ? "Cooldown In Effect" 
+                        : "Submit Documents for Audit"}
                     </Button>
                   </CardContent>
                 </Card>

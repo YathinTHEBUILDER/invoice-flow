@@ -22,12 +22,9 @@ export async function getInvestorStats() {
     .select('*, invoices(*)')
     .eq('investor_id', user.id);
 
-  const totalInvestedFaceValue = investments?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-  const activeAssets = investments?.filter(inv => inv.status === 'active').length || 0;
-  
-  // 2. Calculate actual deployment costs (What investor actually paid)
+  // 2. Calculate actual deployment costs (Discounting: Paid Face Value - Discount)
   const totalDeployed = investments?.reduce((sum, inv) => {
-    const rate = inv.invoices?.discount_rate || 0.12;
+    const rate = inv.invoices?.discount_rate || 0.145;
     const tenure = inv.invoices?.tenure_days || 45;
     const discount = Number(inv.amount) * rate * (tenure / 365);
     return sum + (Number(inv.amount) - discount);
@@ -43,11 +40,9 @@ export async function getInvestorStats() {
   const totalReceived = payoutTxs?.reduce((sum, tx) => sum + Number(tx.amount), 0) || 0;
   
   // 4. Calculate Net Profit (Yield)
-  // For realized investments: Payout - Deployment
-  // For unrealized: (Face Value - Deployment) is projected profit
   const realizedInvestments = investments?.filter(inv => inv.status === 'repaid') || [];
   const realizedProfit = realizedInvestments.reduce((sum, inv) => {
-    const rate = inv.invoices?.discount_rate || 0.12;
+    const rate = inv.invoices?.discount_rate || 0.145;
     const tenure = inv.invoices?.tenure_days || 45;
     return sum + (Number(inv.amount) * rate * (tenure / 365));
   }, 0);
@@ -55,7 +50,7 @@ export async function getInvestorStats() {
   // 3. Fetch Wallet Balance & KYC Status & Recent Transactions
   const { data: profile } = await supabase
     .from('profiles')
-    .select('wallet_balance, locked_balance, kyc_status, bank_account_no, ifsc_code')
+    .select('wallet_balance, locked_balance, kyc_status, bank_account_no, ifsc_code, kyc_rejection_count, last_kyc_rejected_at')
     .eq('id', user.id)
     .single();
 
@@ -66,12 +61,17 @@ export async function getInvestorStats() {
     .order('created_at', { ascending: false })
     .limit(10);
 
+  const totalInvestedFaceValue = investments?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
+  const activeAssets = investments?.filter(inv => inv.status === 'active').length || 0;
+
   return {
     totalInvested: totalInvestedFaceValue,
     activeAssets,
     totalDeployed,
     realizedProfit,
     totalReceived,
+    receivedPayouts: totalReceived,
+    pendingReturns: totalInvestedFaceValue - totalDeployed - realizedProfit,
     walletBalance: profile?.wallet_balance || 0,
     lockedBalance: profile?.locked_balance || 0,
     kycStatus: profile?.kyc_status || 'not_started',
@@ -79,7 +79,9 @@ export async function getInvestorStats() {
       accountNo: profile?.bank_account_no,
       ifscCode: profile?.ifsc_code
     },
-    recentTransactions: recentTransactions || []
+    recentTransactions: recentTransactions || [],
+    kycRejectionCount: profile?.kyc_rejection_count || 0,
+    lastKycRejectedAt: profile?.last_kyc_rejected_at
   };
 };
 
@@ -161,8 +163,31 @@ export async function submitInvestorKYCAction(formData: FormData) {
   const user = userData?.user;
 
   if (!user) return { error: "Unauthorized" };
-
+  
   try {
+    // 1. Check for rejection cooldown (8 hours after 2 rejections)
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("kyc_rejection_count, last_kyc_rejected_at")
+      .eq("id", user.id)
+      .single();
+
+    if (profile && (profile.kyc_rejection_count || 0) >= 2 && profile.last_kyc_rejected_at) {
+      const lastRejected = new Date(profile.last_kyc_rejected_at).getTime();
+      const now = new Date().getTime();
+      const msSinceRejection = now - lastRejected;
+      const cooldownMs = 8 * 60 * 60 * 1000; // 8 hours
+
+      if (msSinceRejection < cooldownMs) {
+        const remainingMs = cooldownMs - msSinceRejection;
+        const hours = Math.floor(remainingMs / (1000 * 60 * 60));
+        const minutes = Math.floor((remainingMs % (1000 * 60 * 60)) / (1000 * 60));
+        return { 
+          error: `Verification Locked. Multiple rejections detected. Cooldown active for ${hours}h ${minutes}m more.` 
+        };
+      }
+    }
+
     const documents: Record<string, string> = {};
     
     // Process File Uploads

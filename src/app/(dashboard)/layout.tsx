@@ -17,6 +17,7 @@ import {
   Wallet,
   Zap
 } from "lucide-react";
+import { NotificationBell } from "@/components/NotificationBell";
 
 export default async function DashboardLayout({
   children,
@@ -69,7 +70,6 @@ export default async function DashboardLayout({
         items: [
           { label: "Dashboard", href: "/msme", icon: LayoutDashboard },
           { label: "Invoice Management", href: "/msme/invoices", icon: Briefcase },
-          { label: "Funding Requests", href: "/msme/funding", icon: PieChart },
           { label: "Active Investments", href: "/msme/investments", icon: Zap },
           { label: "Repayments", href: "/msme/repayments", icon: History },
         ]
@@ -176,6 +176,7 @@ export default async function DashboardLayout({
           </div>
 
           <div className="flex items-center gap-4">
+            <NotificationBell />
             <Link href="/profile">
               <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-white font-black text-xs hover:scale-110 transition-transform">
                 {initials}

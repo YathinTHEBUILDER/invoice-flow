@@ -50,15 +50,20 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
     }
   }, [isOpen]);
 
-  const yieldRate = (invoice?.discount_rate || 0.12) * 100;
   const tenure = invoice?.tenure_days || 45;
+  const yieldRate = (invoice?.discount_rate || 0.12) * 100;
   
-  // Discounting Model Math:
-  // Discount = Face Value * Rate * (Tenure / 365)
-  // Payable = Face Value - Discount
   const numAmount = Number(amount) || 0;
-  const discountAmount = Math.round(numAmount * (yieldRate / 100) * (tenure / 365));
+  const yieldRateRaw = (invoice?.discount_rate || 0.145);
+  const discountAmount = Math.round(numAmount * yieldRateRaw * (tenure / 365));
+  
+  // New Rules:
+  // Investor deploys: Face Value - Discount
   const payableAmount = numAmount - discountAmount;
+  const estYield = discountAmount;
+  
+  // Investor ROI (p.a.): (Profit / Deployed) * (365 / Tenure) * 100
+  const annualizedROI = payableAmount > 0 ? (estYield / payableAmount) * (365 / tenure) * 100 : 0;
 
   async function handleInvest() {
     if (numAmount < minInvestment) {
@@ -184,17 +189,20 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
             </div>
 
             {numAmount > 0 && (
-              <div className="p-6 rounded-[24px] bg-emerald-500/5 border border-emerald-500/10 space-y-4">
+              <div className="p-6 rounded-[24px] bg-primary/5 border border-primary/10 space-y-4">
                 <div className="flex justify-between items-center">
-                  <span className="text-[10px] font-black text-emerald-500/70 uppercase tracking-widest">Immediate Discount (Profit)</span>
-                  <span className="text-lg font-black text-emerald-400 italic">+{formatINR(discountAmount)}</span>
-                </div>
-                <div className="flex justify-between items-center border-t border-emerald-500/10 pt-4">
-                   <span className="text-[10px] font-black text-emerald-500/70 uppercase tracking-widest">Your Payable Amount</span>
+                   <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Participation</span>
                    <span className="text-xl font-black text-white italic">{formatINR(payableAmount)}</span>
                 </div>
-                <div className="pt-2 text-center">
-                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest italic">You pay {formatINR(payableAmount)} now to receive {formatINR(numAmount)} at maturity.</p>
+                <div className="flex justify-between items-center border-t border-white/5 pt-4">
+                   <div className="space-y-1">
+                      <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest block">Est. Return</span>
+                      <span className="text-[9px] font-black text-muted-foreground uppercase tracking-widest block">~{annualizedROI.toFixed(1)}% ROI p.a.</span>
+                   </div>
+                   <span className="text-xl font-black text-emerald-400 italic">+{formatINR(estYield)}</span>
+                </div>
+                <div className="pt-2 text-center mt-2">
+                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest italic">You deploy {formatINR(payableAmount)} (Discounted) to receive {formatINR(numAmount)} (Face Value) after {tenure} days.</p>
                 </div>
               </div>
             )}

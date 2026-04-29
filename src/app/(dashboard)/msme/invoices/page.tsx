@@ -16,14 +16,17 @@ import {
   Clock,
   AlertCircle,
   X,
-  Loader2
+  Loader2,
+  Calendar
 } from "lucide-react";
 import { uploadInvoiceAction, raiseDisputeAction } from "@/app/actions/msme";
 import { createClient } from "@/lib/client";
 import { formatINR } from "@/lib/utils";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 
 export default function InvoicesPage() {
+  const router = useRouter();
   const [invoices, setInvoices] = useState<any[]>([]);
   const [filteredInvoices, setFilteredInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -33,6 +36,29 @@ export default function InvoicesPage() {
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [disputing, setDisputing] = useState(false);
+  const [formData, setFormData] = useState({
+    dueDate: "",
+    tenure: ""
+  });
+
+  useEffect(() => {
+    if (formData.dueDate) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      // Parse the due date correctly as local date
+      const [year, month, day] = formData.dueDate.split('-').map(Number);
+      const due = new Date(year, month - 1, day);
+      due.setHours(0, 0, 0, 0);
+
+      const diffTime = due.getTime() - today.getTime();
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      setFormData(prev => ({ ...prev, tenure: Math.max(0, diffDays).toString() }));
+    } else {
+      setFormData(prev => ({ ...prev, tenure: "" }));
+    }
+  }, [formData.dueDate]);
 
   useEffect(() => {
     fetchInvoices();
@@ -90,6 +116,7 @@ export default function InvoicesPage() {
       if (result.success) {
         toast.success("Invoice submitted for verification");
         setShowUploadModal(false);
+        setFormData({ dueDate: "", tenure: "" });
         fetchInvoices();
       } else {
         toast.error(result.error || "Failed to submit invoice");
@@ -130,6 +157,8 @@ export default function InvoicesPage() {
         return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[8px]">Approved</Badge>;
       case "funded":
         return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black uppercase tracking-widest text-[8px]">Funded</Badge>;
+      case "disbursed":
+        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[8px]">Disbursed</Badge>;
       case "rejected":
         return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[8px]">Rejected</Badge>;
       case "repaid":
@@ -271,7 +300,24 @@ export default function InvoicesPage() {
                             >
                               Raise Dispute
                             </Button>
-                            <Button variant="ghost" size="sm" className="h-8">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => {
+                                const url = invoice.documents?.invoice_url;
+                                if (url) window.open(url, '_blank');
+                                else toast.error("Invoice document not available.");
+                              }}
+                              className="h-8 text-white/40 hover:text-white"
+                            >
+                              <FileText className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => router.push(`/msme/investments?id=${invoice.id}`)}
+                              className="h-8"
+                            >
                               <ChevronRight className="w-4 h-4" />
                             </Button>
                           </div>
@@ -345,25 +391,47 @@ export default function InvoicesPage() {
                       className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase"
                       placeholder=""
                     />
-                  </div>
-                  <div className="space-y-3">
+                  </div>                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Due Date</label>
-                    <Input 
-                      name="due_date" 
-                      type="date" 
-                      required 
-                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                    />
+                    <div className="relative group">
+                      <Input 
+                        name="due_date" 
+                        type="date" 
+                        required 
+                        value={formData.dueDate}
+                        onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
+                        className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all pl-12"
+                      />
+                      <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-hover:text-primary transition-colors" />
+                    </div>
                   </div>
                   <div className="space-y-3">
                     <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Tenure (Days)</label>
-                    <Input 
-                      name="tenure_days" 
-                      type="number" 
-                      required 
-                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
-                      placeholder=""
-                    />
+                    <div className="relative group">
+                      <Input 
+                        name="tenure_days" 
+                        type="number" 
+                        value={formData.tenure}
+                        readOnly
+                        className="bg-white/5 border-white/10 h-14 font-bold text-white/50 focus:bg-white/10 transition-all pl-12 cursor-not-allowed"
+                        placeholder="Auto-calculated"
+                      />
+                      <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-hover:text-primary transition-colors" />
+                    </div>
+                  </div>
+
+                  <div className="md:col-span-2 space-y-3">
+                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Upload Invoice Document (PDF/JPG)</label>
+                    <div className="relative group">
+                      <Input 
+                        name="invoice_file" 
+                        type="file" 
+                        accept=".pdf,.jpg,.jpeg,.png"
+                        required 
+                        className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all pt-3 cursor-pointer file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                      />
+                      <FileText className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-hover:text-primary transition-colors" />
+                    </div>
                   </div>
                 </div>
 
@@ -380,7 +448,10 @@ export default function InvoicesPage() {
                   <Button 
                     type="button"
                     variant="ghost" 
-                    onClick={() => setShowUploadModal(false)}
+                    onClick={() => {
+                      setShowUploadModal(false);
+                      setFormData({ dueDate: "", tenure: "" });
+                    }}
                     className="flex-1 h-14 font-black uppercase tracking-widest text-[10px]"
                     disabled={uploading}
                   >

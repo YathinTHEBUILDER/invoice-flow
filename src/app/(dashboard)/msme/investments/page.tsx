@@ -23,7 +23,7 @@ import {
   FileText
 } from "lucide-react";
 import { createClient } from "@/lib/client";
-import { formatINR } from "@/lib/utils";
+import { formatINR, formatDate } from "@/lib/utils";
 import { calculateOutstandingBalance, calculatePreClosureDetails } from "@/lib/finance-logic";
 import { 
   submitRepaymentProofAction, 
@@ -32,8 +32,11 @@ import {
   getMSMEInvestments
 } from "@/app/actions/msme";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 
 export default function InvestmentsPage() {
+  const searchParams = useSearchParams();
+  const invoiceId = searchParams.get("id");
   const [fundedInvoices, setFundedInvoices] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
@@ -57,6 +60,14 @@ export default function InvestmentsPage() {
       setLoading(false);
     }
   }
+
+  // Handle direct navigation via ID param
+  useEffect(() => {
+    if (invoiceId && fundedInvoices.length > 0) {
+      const inv = fundedInvoices.find(i => i.id === invoiceId);
+      if (inv) setSelectedInvoice(inv);
+    }
+  }, [invoiceId, fundedInvoices]);
 
   const handleRepayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -247,8 +258,7 @@ export default function InvestmentsPage() {
                         <p className="text-lg font-black text-emerald-500 italic">{formatINR(selectedInvoice.funded_amount || selectedInvoice.amount)}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Due Date</p>
-                        <p className="text-lg font-black text-white">{new Date(selectedInvoice.due_date).toLocaleDateString()}</p>
+                        <p className="text-lg font-black text-white">{formatDate(selectedInvoice.due_date)}</p>
                       </div>
                     </div>
 
@@ -332,10 +342,10 @@ export default function InvestmentsPage() {
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
-                        {(selectedInvoice.repayments || []).map((r: any) => (
+                        {(Array.isArray(selectedInvoice.repayments) ? selectedInvoice.repayments : (selectedInvoice.repayments ? [selectedInvoice.repayments] : [])).map((r: any) => (
                           <tr key={r.id} className="hover:bg-white/[0.01] transition-colors">
                             <td className="p-6">
-                              <p className="text-sm font-bold text-white">{new Date(r.due_date).toLocaleDateString()}</p>
+                              <p className="text-sm font-bold text-white">{formatDate(r.due_date)}</p>
                               <p className="text-[9px] text-muted-foreground">Standard Schedule</p>
                             </td>
                             <td className="p-6 font-black text-white text-sm">{formatINR(r.amount_due)}</td>
@@ -385,12 +395,19 @@ export default function InvestmentsPage() {
                     <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Transaction Ledger</p>
                   </div>
                   <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden divide-y divide-white/5">
-                    {selectedInvoice.repayments?.filter((r: any) => r.status === 'paid').length === 0 ? (
-                      <div className="p-20 text-center text-muted-foreground text-[10px] font-black uppercase tracking-widest italic">
-                        No transactions recorded yet.
-                      </div>
-                    ) : (
-                      selectedInvoice.repayments?.filter((r: any) => r.status === 'paid').map((r: any) => (
+                    {(() => {
+                      const repaymentsArr = Array.isArray(selectedInvoice.repayments) ? selectedInvoice.repayments : (selectedInvoice.repayments ? [selectedInvoice.repayments] : []);
+                      const paidRepayments = repaymentsArr.filter((r: any) => r.status === 'paid');
+                      
+                      if (paidRepayments.length === 0) {
+                        return (
+                          <div className="p-20 text-center text-muted-foreground text-[10px] font-black uppercase tracking-widest italic">
+                            No transactions recorded yet.
+                          </div>
+                        );
+                      }
+                      
+                      return paidRepayments.map((r: any) => (
                         <div key={r.id} className="p-6 flex justify-between items-center">
                           <div className="flex items-center gap-4">
                             <div className="h-10 w-10 rounded-xl bg-emerald-500/10 text-emerald-500 flex items-center justify-center border border-emerald-500/20">
@@ -403,11 +420,11 @@ export default function InvestmentsPage() {
                           </div>
                           <div className="text-right">
                             <p className="text-sm font-black text-emerald-500">+{formatINR(r.amount_paid)}</p>
-                            <p className="text-[9px] text-muted-foreground uppercase">{new Date(r.payment_date).toLocaleDateString()}</p>
+                            <p className="text-[9px] text-muted-foreground uppercase">{formatDate(r.payment_date)}</p>
                           </div>
                         </div>
-                      ))
-                    )}
+                      ));
+                    })()}
                   </div>
                 </div>
               )}
@@ -418,7 +435,7 @@ export default function InvestmentsPage() {
                 <div>
                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Total Liability Cleared</p>
                   <p className="text-lg font-black text-white">
-                    {formatINR(selectedInvoice.repayments?.filter((r: any) => r.status === 'paid').reduce((sum: number, r: any) => sum + Number(r.amount_paid), 0) || 0)}
+                    {formatINR((Array.isArray(selectedInvoice.repayments) ? selectedInvoice.repayments : (selectedInvoice.repayments ? [selectedInvoice.repayments] : [])).filter((r: any) => r.status === 'paid').reduce((sum: number, r: any) => sum + Number(r.amount_paid), 0) || 0)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/10">
@@ -521,9 +538,16 @@ export default function InvestmentsPage() {
                   <select 
                     name="subject"
                     required
-                    className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-white font-bold text-sm focus:outline-none focus:border-primary/50 appearance-none"
+                    defaultValue=""
+                    className="w-full h-14 bg-white/5 border border-white/10 rounded-xl px-4 text-white font-bold text-sm focus:outline-none focus:border-primary/50 appearance-none pr-10"
+                    style={{
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
+                      backgroundRepeat: 'no-repeat',
+                      backgroundPosition: 'right 1rem center',
+                      backgroundSize: '1.2em'
+                    }}
                   >
-                    <option value="" disabled selected className="bg-zinc-900">Select reason</option>
+                    <option value="" disabled className="bg-zinc-900">Select reason</option>
                     <option value="Repayment Discrepancy" className="bg-zinc-900">Repayment Discrepancy</option>
                     <option value="Funding Amount Mismatch" className="bg-zinc-900">Funding Amount Mismatch</option>
                     <option value="Delayed Disbursement" className="bg-zinc-900">Delayed Disbursement</option>

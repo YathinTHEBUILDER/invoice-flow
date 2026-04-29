@@ -15,10 +15,11 @@ import {
   ArrowUpRight,
   Info,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  FileText
 } from "lucide-react";
 import { getMarketplaceInvoices, getInvestorStats } from "@/app/actions/investor";
-import { formatINR, formatIndianNumber } from "@/lib/utils";
+import { formatINR, formatIndianNumber, formatDate } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
 import { InvestmentModal } from "@/components/investor/InvestmentModal";
@@ -150,14 +151,26 @@ export default function InvestorMarketplace() {
                        <Progress value={progress} className="h-2 bg-white/5" />
                     </div>
 
-                    <div className="grid grid-cols-2 gap-6 py-6 border-y border-white/5">
+                    <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-white/5">
                       <div className="space-y-1">
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Net Yield</p>
-                        <p className="text-lg font-black text-emerald-400 uppercase italic">~{yieldRate.toFixed(1)}% p.a.</p>
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Discount Rate</p>
+                        <p className="text-lg font-black text-white uppercase italic">{(invoice.discount_rate * 100 || 14.5).toFixed(1)}% p.a.</p>
                       </div>
                       <div className="space-y-1">
                         <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Tenure</p>
                         <p className="text-lg font-black text-white uppercase italic">{invoice.tenure_days || 45} Days</p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">MSME Receives</p>
+                        <p className="text-lg font-black text-emerald-400 uppercase italic">
+                          {formatINR(targetAmount - (targetAmount * (invoice.discount_rate || 0.145) * (invoice.tenure_days || 45) / 365))}
+                        </p>
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Investor ROI</p>
+                        <p className="text-lg font-black text-primary uppercase italic">
+                          ~{((targetAmount * (invoice.discount_rate || 0.145) * (invoice.tenure_days || 45) / 365) / (targetAmount - (targetAmount * (invoice.discount_rate || 0.145) * (invoice.tenure_days || 45) / 365)) * (365 / (invoice.tenure_days || 45)) * 100).toFixed(1)}% p.a.
+                        </p>
                       </div>
                     </div>
 
@@ -165,19 +178,37 @@ export default function InvestorMarketplace() {
                       <div className="flex items-center gap-6">
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Calendar className="w-4 h-4" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest">Due {new Date(invoice.due_date).toLocaleDateString()}</span>
+                          <span className="text-[10px] font-bold uppercase tracking-widest">Due {formatDate(invoice.due_date)}</span>
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Clock className="w-4 h-4" />
                           <span className="text-[10px] font-bold uppercase tracking-widest">Immediate Funding</span>
                         </div>
                       </div>
-                      <Button 
-                        onClick={() => handleOpenModal(invoice)}
-                        className="h-14 px-10 bg-white text-black hover:bg-white/90 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-2xl shadow-white/5"
-                      >
-                        Invest Now <ArrowUpRight className="ml-2 w-4 h-4" />
-                      </Button>
+                      <div className="flex items-center gap-3">
+                        <Button 
+                          variant="ghost"
+                          onClick={() => {
+                            const url = invoice.documents?.invoice_url;
+                            if (url) {
+                              window.open(url, '_blank');
+                            } else {
+                              const mockUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
+                              toast.info("Invoice document missing. Opening Demo Preview.");
+                              window.open(mockUrl, '_blank');
+                            }
+                          }}
+                          className="h-14 px-6 font-black uppercase tracking-widest text-[10px] text-white/40 hover:text-white"
+                        >
+                          <FileText className="mr-2 w-4 h-4" /> View
+                        </Button>
+                        <Button 
+                          onClick={() => handleOpenModal(invoice)}
+                          className="h-14 px-10 bg-white text-black hover:bg-white/90 font-black uppercase tracking-widest text-[10px] rounded-2xl shadow-2xl shadow-white/5"
+                        >
+                          Invest Now <ArrowUpRight className="ml-2 w-4 h-4" />
+                        </Button>
+                      </div>
                     </div>
                   </div>
 
