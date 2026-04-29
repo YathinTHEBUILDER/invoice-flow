@@ -41,7 +41,7 @@ export function SelfieCapture({ onCapture, onClose }: SelfieCaptureProps) {
         stream.getTracks().forEach(track => track.stop());
       }
       
-      let mediaStream: MediaStream;
+      let mediaStream: MediaStream | null = null;
       try {
         console.log("Attempting high-resolution 'user' facing camera...");
         mediaStream = await navigator.mediaDevices.getUserMedia({ 
