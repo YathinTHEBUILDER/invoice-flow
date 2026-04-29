@@ -84,13 +84,15 @@ export async function getAdminStats() {
   
   const gmv = invoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
   
-  // 2. Calculate actual revenue from platform fee transactions
-  const { data: fees } = await supabase
-    .from('transactions')
-    .select('amount')
-    .eq('type', 'platform_fee');
+  // 2. Fetch platform commission from settings
+  const { data: settingsData } = await supabase
+    .from('platform_settings')
+    .select('value')
+    .eq('key', 'platform_commission')
+    .single();
   
-  const revenue = fees?.reduce((sum, tx) => sum + Number(tx.amount), 0) || 0;
+  const commission = Number(settingsData?.value || 1.0) / 100;
+  const revenue = gmv * commission;
 
   // 3. User counts
   const { count: msmeCount } = await supabase
@@ -129,7 +131,7 @@ export async function getAdminStats() {
     activeInvoices: activeInvoices || 0,
     pendingKYC: pendingKYC || 0,
     disputes: disputes || 0,
-    commissionPercent: 1.0
+    commissionPercent: commission * 100
   };
 }
 
@@ -598,63 +600,96 @@ export const verifySettlementAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
-    // Call atomic RPC for settlement verification and distribution
-    const { data: result, error: rpcError } = await supabase.rpc('verify_repayment', {
-      p_repayment_id: repaymentId,
-      p_status: status
-    });
+    const { data: repayment } = await supabase
+      .from('repayments')
+      .select('*, invoices!inner(msme_id, invoice_number)')
+      .eq('id', repaymentId)
+      .single();
 
-    if (rpcError) throw new Error(rpcError.message);
-    if (!result.success) throw new Error(result.error || "Settlement verification failed.");
+    if (!repayment) throw new Error("Repayment record not found.");
+
+    const { error } = await supabase
+      .from('repayments')
+      .update({ 
+        status: status === 'repaid' ? 'paid' : 'overdue',
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', repaymentId);
+
+    if (error) throw new Error(error.message);
 
     if (status === 'repaid') {
-      // 1. Notify MSME
+      // 1. Update Invoice status
+      await supabase
+        .from('invoices')
+        .update({ status: 'repaid' })
+        .eq('id', repayment.invoice_id);
+      
+      // 2. Fetch all participating investments
+      const { data: investments } = await supabase
+        .from('investments')
+        .select('*, profiles:investor_id(wallet_balance)')
+        .eq('invoice_id', repayment.invoice_id);
+
+      if (investments && investments.length > 0) {
+        const { data: invoice } = await supabase
+          .from('invoices')
+          .select('verified_amount, amount')
+          .eq('id', repayment.invoice_id)
+          .single();
+        
+        const totalPrincipal = Number(invoice?.verified_amount || invoice?.amount);
+        const totalPaid = Number(repayment.amount_paid);
+
+        for (const investment of investments) {
+          const shareRatio = Number(investment.amount) / totalPrincipal;
+          const creditAmount = totalPaid * shareRatio;
+          
+          const currentBalance = Number(investment.profiles?.wallet_balance || 0);
+          
+          await supabase
+            .from('profiles')
+            .update({ 
+              wallet_balance: currentBalance + creditAmount 
+            })
+            .eq('id', investment.investor_id);
+
+          await supabase
+            .from('investments')
+            .update({ status: 'repaid' })
+            .eq('id', investment.id);
+
+          await supabase.from('transactions').insert({
+            user_id: investment.investor_id,
+            amount: creditAmount,
+            type: 'payout',
+            description: `Repayment received for Invoice #${repayment.invoices.invoice_number}`,
+            reference_id: repayment.invoice_id
+          });
+
+          await createNotification(
+            investment.investor_id,
+            "Repayment Received! 💰",
+            `₹${creditAmount.toLocaleString('en-IN')} credited for Invoice #${repayment.invoices.invoice_number}.`,
+            "success",
+            "/investor/portfolio"
+          );
+        }
+      }
+
+      // 3. Notify MSME
       await createNotification(
-        result.msme_id,
+        repayment.invoices.msme_id,
         "Settlement Confirmed! 🏦",
-        `Your payment for Invoice #${result.invoice_number} has been verified. Asset is now fully repaid.`,
+        `Your payment for Invoice #${repayment.invoices.invoice_number} has been verified. Asset is now fully repaid.`,
         "success",
         "/msme/repayments"
       );
-
-      // 2. Notify participating investors (We need to fetch them for notifications)
-      const { data: investments } = await supabase
-        .from('investments')
-        .select('investor_id, amount')
-        .eq('invoice_id', result.invoice_id || result.reference_id); // The RPC returns invoice_number, but we might need the ID or just fetch by number if needed.
-      
-      // Since we don't have the ID easily from the RPC return without more changes, 
-      // let's fetch based on the repayment's invoice_id.
-      const { data: repayment } = await supabase.from('repayments').select('invoice_id').eq('id', repaymentId).single();
-      
-      if (repayment) {
-        const { data: investors } = await supabase
-          .from('investments')
-          .select('investor_id, amount')
-          .eq('invoice_id', repayment.invoice_id);
-
-        if (investors) {
-          for (const inv of investors) {
-            // Recalculate share for notification text
-            // Note: The RPC already handled the wallet credit.
-            await createNotification(
-              inv.investor_id,
-              "Repayment Received! 💰",
-              `Payout processed for Invoice #${result.invoice_number}. Check your liquidity wallet.`,
-              "success",
-              "/investor/portfolio"
-            );
-          }
-        }
-      }
     }
 
     await logAdminAction('verify_settlement', 'repayment', repaymentId, { status });
     
     revalidatePath("/admin");
-    revalidatePath("/investor/portfolio");
-    revalidatePath("/msme/repayments");
-    
     return { success: true };
   });
 

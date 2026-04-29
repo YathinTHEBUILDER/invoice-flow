@@ -27,16 +27,8 @@ export async function getInvestorStats() {
   
   // 2. Calculate actual deployment costs (What investor actually paid)
   const totalDeployed = investments?.reduce((sum, inv) => {
-    // These must exist for any verified/active investment
-    const rate = Number(inv.invoices?.discount_rate);
-    const tenure = Number(inv.invoices?.tenure_days);
-    
-    if (isNaN(rate) || isNaN(tenure)) {
-      console.warn(`Missing financial terms for investment ${inv.id}`);
-      return sum + Number(inv.amount); 
-    }
-
-    // Calculation: Face Value - Discount
+    const rate = inv.invoices?.discount_rate || 0.12;
+    const tenure = inv.invoices?.tenure_days || 45;
     const discount = Number(inv.amount) * rate * (tenure / 365);
     return sum + (Number(inv.amount) - discount);
   }, 0) || 0;

@@ -367,17 +367,6 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                {/* Financial Summary Preview */}
-                <div className="p-6 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
-                  <div className="flex justify-between items-center">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Est. Platform Fee (1%)</span>
-                    <span className="text-sm font-black text-red-400">Fixed Commission</span>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-white/5">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest italic">Note: MSME receives Net Amount (Invoice - Discount - Fee) upon funding.</span>
-                  </div>
-                </div>
-
                 <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4">
                   <div className="p-2 rounded-full bg-primary/20 text-primary">
                     <AlertCircle className="w-5 h-5" />
