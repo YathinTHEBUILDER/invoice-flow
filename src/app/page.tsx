@@ -19,12 +19,19 @@ import {
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { createClient } from "@/lib/server";
+import { formatINR } from "@/lib/utils";
 
 export default async function LandingPage() {
   const supabase = await createClient();
   const { data } = await supabase.auth.getUser();
   const user = data?.user;
   const role = user?.user_metadata?.role || "investor";
+  const { data: marketplaceInvoices } = await supabase
+    .from('invoices')
+    .select('*, profiles(company_name)')
+    .in('status', ['approved', 'partially_funded'])
+    .limit(2);
+
   return (
     <div className="flex flex-col w-full items-center bg-background selection:bg-blue-500/30 overflow-hidden font-sans">
       <Navbar />
@@ -63,18 +70,11 @@ export default async function LandingPage() {
                 </Link>
               </Button>
             ) : (
-              <>
-                <Button size="lg" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
-                  <Link href="/signup?role=msme">
-                    Get Funded Now
-                  </Link>
-                </Button>
-                <Button size="lg" variant="outline" asChild className="h-16 px-10 text-lg font-bold w-full sm:w-auto border-white/10 glass-dark hover:bg-white/10 transition-all hover:scale-[1.05] active:scale-[0.95]">
-                  <Link href="/get-started">
-                    Investor Access <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
-              </>
+              <Button size="lg" asChild className="h-16 px-12 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
+                <Link href="/get-started">
+                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
             )}
           </div>
 
@@ -224,28 +224,36 @@ export default async function LandingPage() {
                     </div>
                   </div>
                 </div>
-
                 <div className="grid gap-4">
-                  {[
-                    { id: "INV-602", buyer: "Automotive Parts Corp", amount: "₹24.5 L", tenure: "45 Days", yield: "12.5%" },
-                    { id: "INV-841", buyer: "Infrastructure Group", amount: "₹8.2 L", tenure: "60 Days", yield: "13.2%" }
-                  ].map((inv, i) => (
-                    <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-white/5 glass-dark hover:border-primary/30 transition-all gap-4">
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
-                          <CheckCircle2 className="w-6 h-6" />
+                  {marketplaceInvoices && marketplaceInvoices.length > 0 ? (
+                    marketplaceInvoices.map((inv: any, i: number) => (
+                      <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-white/5 glass-dark hover:border-primary/30 transition-all gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <CheckCircle2 className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-black uppercase tracking-tight">#{inv.invoice_number}</div>
+                            <div className="text-xs text-muted-foreground font-bold">{inv.profiles?.company_name || inv.buyer_name}</div>
+                          </div>
                         </div>
-                        <div>
-                          <div className="text-sm font-black uppercase tracking-tight">{inv.id}</div>
-                          <div className="text-xs text-muted-foreground font-bold">{inv.buyer}</div>
+                        <div className="text-right space-y-1">
+                          <div className="text-sm font-black text-emerald-500">{formatINR(inv.amount)}</div>
+                          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{inv.tenure_days} Days • {(Number(inv.discount_rate) * 100).toFixed(1)}%</div>
                         </div>
                       </div>
-                      <div className="text-right space-y-1">
-                        <div className="text-sm font-black text-emerald-500">{inv.amount}</div>
-                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{inv.tenure} • {inv.yield}</div>
+                    ))
+                  ) : (
+                    <div className="flex flex-col items-center justify-center py-12 text-center space-y-4">
+                      <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
+                        <Activity className="w-8 h-8 text-white/20" />
+                      </div>
+                      <div className="space-y-1">
+                        <p className="text-xs font-black uppercase tracking-widest text-muted-foreground">Marketplace Standby</p>
+                        <p className="text-[10px] font-medium italic text-muted-foreground/60 max-w-[200px]">New institutional-grade assets are currently undergoing manual vetting.</p>
                       </div>
                     </div>
-                  ))}
+                  )}
                 </div>
               </CardContent>
             </Card>
