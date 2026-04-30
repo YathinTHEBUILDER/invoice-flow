@@ -20,7 +20,8 @@ import {
   Zap,
   Info,
   MessageSquareWarning,
-  FileText
+  FileText,
+  X
 } from "lucide-react";
 import { createClient } from "@/lib/client";
 import { formatINR, formatDate } from "@/lib/utils";
@@ -217,7 +218,7 @@ export default function InvestmentsPage() {
                 <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Managing Investment Obligations</CardDescription>
               </div>
               <Button variant="ghost" size="icon" onClick={() => setSelectedInvoice(null)} className="hover:bg-white/5 text-muted-foreground">
-                <Clock className="w-6 h-6 rotate-45" />
+                <X className="w-6 h-6" />
               </Button>
             </CardHeader>
 
@@ -350,7 +351,7 @@ export default function InvestmentsPage() {
                             </td>
                             <td className="p-6 font-black text-white text-sm">{formatINR(r.amount_due)}</td>
                             <td className="p-6">
-                              <Badge className={`uppercase tracking-widest text-[8px] font-black ${r.status === 'paid' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                              <Badge className={`uppercase tracking-widest text-[10px] font-black ${r.status === 'paid' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
                                 {r.status}
                               </Badge>
                             </td>
@@ -362,15 +363,15 @@ export default function InvestmentsPage() {
                                     name="utr" 
                                     required 
                                     placeholder="UTR #" 
-                                    className="h-10 w-32 bg-white/5 border border-white/10 rounded-lg px-3 text-[10px] text-white focus:outline-none focus:border-primary/50"
+                                    className="h-10 flex-1 min-w-[120px] bg-white/5 border border-white/10 rounded-lg px-3 text-[10px] text-white focus:outline-none focus:border-primary/50"
                                   />
                                   <input 
                                     name="amount_paid" 
                                     type="hidden" 
                                     value={r.amount_due}
                                   />
-                                  <Button type="submit" disabled={isSubmitting} className="h-10 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[8px]">
-                                    {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Verify Pay"}
+                                  <Button type="submit" disabled={isSubmitting} className="h-10 px-6 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px]">
+                                    {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Verify Settlement"}
                                   </Button>
                                 </form>
                               )}

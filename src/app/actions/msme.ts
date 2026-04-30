@@ -293,7 +293,50 @@ export async function getMSMEStats() {
     userRole: profile?.role,
     platformLimit,
     kycRejectionCount: profile?.kyc_rejection_count || 0,
-    lastKycRejectedAt: profile?.last_kyc_rejected_at
+    lastKycRejectedAt: profile?.last_kyc_rejected_at,
+    repayments: safeRepayments.map(r => ({
+      id: r.id,
+      amount: r.amount_due,
+      dueDate: r.due_date,
+      status: r.status,
+      invoiceNumber: r.invoices?.invoice_number,
+      buyerName: r.invoices?.buyer_name
+    })).sort((a, b) => new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime()),
+    buyerAnalytics: Object.values(invoices.reduce((acc: any, inv) => {
+      const buyer = inv.buyer_name || 'Unspecified';
+      if (!acc[buyer]) {
+        acc[buyer] = { name: buyer, totalAmount: 0, count: 0, fundedCount: 0 };
+      }
+      acc[buyer].totalAmount += Number(inv.amount);
+      acc[buyer].count += 1;
+      if (inv.status === 'funded' || inv.status === 'partially_funded') {
+        acc[buyer].fundedCount += 1;
+      }
+      return acc;
+    }, {})).sort((a: any, b: any) => b.totalAmount - a.totalAmount),
+    insights: [
+      profile?.kyc_status !== 'verified' && {
+        type: 'warning',
+        title: 'KYC Clearance Pending',
+        message: 'Your funding access is restricted. Complete verification to unlock ₹50L+ in liquidity.',
+        action: '/msme/kyc',
+        actionLabel: 'Verify Now'
+      },
+      (totalFundedAmount / platformLimit) > 0.8 && {
+        type: 'info',
+        title: 'Limit Utilization High',
+        message: 'You are at 80%+ of your credit limit. Settle dues to free up capacity.',
+        action: '/msme/repayments',
+        actionLabel: 'Settle Dues'
+      },
+      funded > 0 && {
+        type: 'success',
+        title: 'Investor Interest High',
+        message: 'Your assets are being funded rapidly. Consider uploading more inventory.',
+        action: '/msme/invoices',
+        actionLabel: 'Raise Funding'
+      }
+    ].filter(Boolean)
   };
 }
 

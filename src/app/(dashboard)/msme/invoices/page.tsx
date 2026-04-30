@@ -46,13 +46,16 @@ export default function InvoicesPage() {
       const today = new Date();
       today.setHours(0, 0, 0, 0);
       
-      // Parse the due date correctly as local date
       const [year, month, day] = formData.dueDate.split('-').map(Number);
       const due = new Date(year, month - 1, day);
       due.setHours(0, 0, 0, 0);
 
       const diffTime = due.getTime() - today.getTime();
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (diffDays < 30) {
+        toast.warning("Discounting typically requires >30 days tenure.");
+      }
       
       setFormData(prev => ({ ...prev, tenure: Math.max(0, diffDays).toString() }));
     } else {
@@ -152,19 +155,19 @@ export default function InvoicesPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "pending_verification":
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[8px]">Under Review</Badge>;
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[9px]">Under Review</Badge>;
       case "approved":
-        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[8px]">Approved</Badge>;
+        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[9px]">Approved</Badge>;
       case "funded":
-        return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black uppercase tracking-widest text-[8px]">Funded</Badge>;
+        return <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 font-black uppercase tracking-widest text-[9px]">Funded</Badge>;
       case "disbursed":
-        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[8px]">Disbursed</Badge>;
+        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[9px]">Disbursed</Badge>;
       case "rejected":
-        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[8px]">Rejected</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[9px]">Rejected</Badge>;
       case "repaid":
-        return <Badge variant="outline" className="bg-white/10 text-white border-white/20 font-black uppercase tracking-widest text-[8px]">Repaid</Badge>;
+        return <Badge variant="outline" className="bg-white/10 text-white border-white/20 font-black uppercase tracking-widest text-[10px]">Repaid</Badge>;
       default:
-        return <Badge variant="outline" className="font-black uppercase tracking-widest text-[8px]">{status}</Badge>;
+        return <Badge variant="outline" className="font-black uppercase tracking-widest text-[10px]">{status}</Badge>;
     }
   };
 
@@ -175,13 +178,22 @@ export default function InvoicesPage() {
           <h2 className="text-5xl font-black tracking-tighter text-white">Invoice Management</h2>
           <p className="text-muted-foreground font-medium text-lg italic">Submit and track your receivables for financing.</p>
         </div>
-        <Button 
-          onClick={() => profile?.kyc_status === 'verified' ? setShowUploadModal(true) : toast.error("KYC Verification Required")}
-          disabled={profile?.kyc_status !== 'verified'}
-          className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 disabled:opacity-50"
-        >
-          <Plus className="mr-2 h-5 w-5" /> {profile?.kyc_status === 'verified' ? "Submit New Invoice" : "Verification Required"}
-        </Button>
+        <div className="flex gap-4">
+          <Button 
+            onClick={() => fetchInvoices()}
+            variant="outline"
+            className="h-14 px-6 border-white/10 hover:bg-white/5 text-white font-black uppercase tracking-widest text-xs"
+          >
+            <Loader2 className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
+          </Button>
+          <Button 
+            onClick={() => profile?.kyc_status === 'verified' ? setShowUploadModal(true) : toast.error("KYC Verification Required")}
+            disabled={profile?.kyc_status !== 'verified'}
+            className="h-14 px-8 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/20 disabled:opacity-50"
+          >
+            <Plus className="mr-2 h-5 w-5" /> {profile?.kyc_status === 'verified' ? "Submit New Invoice" : "Verification Required"}
+          </Button>
+        </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
@@ -191,31 +203,31 @@ export default function InvoicesPage() {
               <div className="relative group">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input 
-                  placeholder="Search by invoice number or buyer..." 
+                  placeholder="Search assets..." 
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 w-[350px] bg-white/5 border-white/10 h-11 font-bold text-xs"
+                  className="pl-10 w-full sm:w-[300px] md:w-[350px] bg-white/5 border-white/10 h-11 font-bold text-xs"
                 />
               </div>
               <div className="flex items-center gap-2">
                 <Button 
                   variant="outline" 
                   onClick={() => setStatusFilter("all")}
-                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[9px] ${statusFilter === 'all' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
+                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[10px] px-6 ${statusFilter === 'all' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
                 >
                   All
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setStatusFilter("pending_verification")}
-                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[9px] ${statusFilter === 'pending_verification' ? 'bg-blue-500/20 border-blue-500/40 text-blue-500' : 'text-white'}`}
+                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[10px] px-6 ${statusFilter === 'pending_verification' ? 'bg-blue-500/20 border-blue-500/40 text-blue-500' : 'text-white'}`}
                 >
                   Review
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setStatusFilter("funded")}
-                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[9px] ${statusFilter === 'funded' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
+                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[10px] px-6 ${statusFilter === 'funded' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
                 >
                   Funded
                 </Button>
@@ -291,14 +303,14 @@ export default function InvoicesPage() {
                           {getStatusBadge(invoice.status)}
                         </td>
                         <td className="px-8 py-6 text-right">
-                          <div className="flex justify-end gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                          <div className="flex justify-end gap-2">
                             <Button 
                               variant="ghost" 
                               size="sm" 
                               onClick={() => setSelectedInvoice(invoice)}
-                              className="h-8 text-[8px] font-black uppercase text-red-500 hover:text-red-600 hover:bg-red-500/10"
+                              className="h-9 text-[10px] font-black uppercase text-red-500/80 hover:text-red-500 hover:bg-red-500/10"
                             >
-                              Raise Dispute
+                              Dispute
                             </Button>
                             <Button 
                               variant="ghost" 
@@ -308,7 +320,7 @@ export default function InvoicesPage() {
                                 if (url) window.open(url, '_blank');
                                 else toast.error("Invoice document not available.");
                               }}
-                              className="h-8 text-white/40 hover:text-white"
+                              className="h-9 text-white/60 hover:text-white"
                             >
                               <FileText className="w-4 h-4" />
                             </Button>
@@ -316,7 +328,7 @@ export default function InvoicesPage() {
                               variant="ghost" 
                               size="sm" 
                               onClick={() => router.push(`/msme/investments?id=${invoice.id}`)}
-                              className="h-8"
+                              className="h-9 text-white/60 hover:text-white"
                             >
                               <ChevronRight className="w-4 h-4" />
                             </Button>
@@ -430,7 +442,6 @@ export default function InvoicesPage() {
                         required 
                         className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all pt-3 cursor-pointer file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
                       />
-                      <FileText className="absolute right-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-hover:text-primary transition-colors" />
                     </div>
                   </div>
                 </div>

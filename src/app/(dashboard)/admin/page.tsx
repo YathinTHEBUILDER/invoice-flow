@@ -47,7 +47,9 @@ import {
   rejectWithdrawalAction,
   getPreClosureRequests,
   approvePreClosureAction,
-  disburseToMSMEAction
+  disburseToMSMEAction,
+  getSupportTickets,
+  resolveSupportTicketAction
 } from "@/app/actions/admin";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
@@ -68,12 +70,15 @@ export default function AdminDashboard() {
   const [transactions, setTransactions] = useState<any[]>([]);
   const [settings, setSettings] = useState<any>({});
   const [preClosureRequests, setPreClosureRequests] = useState<any[]>([]);
+  const [supportTickets, setSupportTickets] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
+  const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [rejectionNotes, setRejectionNotes] = useState("");
   const [resolutionNotes, setResolutionNotes] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [tempVerifiedAmount, setTempVerifiedAmount] = useState<string>("");
 
   useEffect(() => {
     setActiveTab(tabParam);
@@ -141,6 +146,10 @@ export default function AdminDashboard() {
         (async () => {
           try { setPreClosureRequests(await getPreClosureRequests()); } 
           catch (e) { console.error("Failed to load Pre-closure Queue:", e); }
+        })(),
+        (async () => {
+          try { setSupportTickets(await getSupportTickets()); } 
+          catch (e) { console.error("Failed to load Support Tickets:", e); }
         })()
       ]);
 
@@ -224,13 +233,14 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleInvoiceUpdate = async (invoiceId: string, status: "approved" | "rejected") => {
+  const handleInvoiceUpdate = async (invoiceId: string, status: "approved" | "rejected", verifiedAmount?: number) => {
     setActionLoading(invoiceId);
     try {
       if (status === "approved") {
-        const result = await approveInvoiceAction({ invoiceId });
+        const result = await approveInvoiceAction({ invoiceId, verifiedAmount });
         if (result?.data?.success) {
           toast.success("Asset verified and live.");
+          setSelectedInvoice(null);
           await loadData();
         } else {
           toast.error(result?.serverError || "Approval failed.");
@@ -240,6 +250,7 @@ export default function AdminDashboard() {
         if (result?.data?.success) {
           toast.success("Asset rejected.");
           setRejectionNotes("");
+          setSelectedInvoice(null);
           await loadData();
         } else {
           toast.error(result?.serverError || "Rejection failed.");
@@ -331,6 +342,24 @@ export default function AdminDashboard() {
       }
     } catch (error) {
       toast.error("System error during disbursement.");
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleResolveTicket = async (ticketId: string) => {
+    setActionLoading(ticketId);
+    try {
+      const resolution = prompt("Enter resolution details:");
+      if (!resolution) return;
+      
+      const result = await resolveSupportTicketAction({ ticketId, resolution });
+      if (result?.data?.success) {
+        toast.success("Ticket resolved.");
+        await loadData();
+      }
+    } catch (error) {
+      toast.error("Failed to resolve ticket.");
     } finally {
       setActionLoading(null);
     }
@@ -428,7 +457,13 @@ export default function AdminDashboard() {
                   )}
                 </TabsTrigger>
 
-               <TabsTrigger value="logs" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Audit Logs</TabsTrigger>
+              <TabsTrigger value="logs" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Audit Logs</TabsTrigger>
+               <TabsTrigger value="support" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">
+                 Support
+                 {supportTickets.filter(t => t.status === 'open').length > 0 && (
+                   <Badge className="ml-2 bg-blue-500 text-white border-none px-2 h-4 text-[10px] font-black">{supportTickets.filter(t => t.status === 'open').length}</Badge>
+                 )}
+               </TabsTrigger>
                <TabsTrigger value="transactions" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Transactions</TabsTrigger>
               <TabsTrigger value="settings" className="px-8 font-black uppercase tracking-widest text-[10px] data-[state=active]:bg-white/10 data-[state=active]:text-white">Settings</TabsTrigger>
             </TabsList>
@@ -557,7 +592,7 @@ export default function AdminDashboard() {
                       <CardDescription>Inspect high-resolution business registrations and tax identifiers.</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Object.entries(selectedRequest.documents || {}).filter(([key]) => key !== 'selfie').map(([key, url]: [string, any]) => (
+                      {Object.entries(selectedRequest.documents || {}).map(([key, url]: [string, any]) => (
                         <div key={key} className="space-y-4">
                           <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">{key.replace('_', ' ')}</label>
                           <a
@@ -621,23 +656,7 @@ export default function AdminDashboard() {
                 </div>
 
                 <div className="space-y-10">
-                  <Card className="glass-dark border-white/5 overflow-hidden">
-                    <CardHeader className="p-8 border-b border-white/5 bg-white/[0.01]">
-                      <CardTitle className="text-xl font-black italic">Biometric Selfie</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-8">
-                      <div className="aspect-[3/4] w-full rounded-[60px/80px] border-4 border-dashed border-white/10 overflow-hidden bg-white/[0.02]">
-                        {selectedRequest.documents?.selfie ? (
-                          <img src={selectedRequest.documents.selfie} alt="Identity Selfie" className="w-full h-full object-cover" />
-                        ) : (
-                          <div className="w-full h-full flex items-center justify-center text-muted-foreground italic text-xs">No selfie submitted</div>
-                        )}
-                      </div>
-                      <p className="mt-6 text-[10px] text-muted-foreground font-medium text-center leading-relaxed italic">
-                        Verify if the person in the selfie matches the identity proof and business records.
-                      </p>
-                    </CardContent>
-                  </Card>
+
 
                   <Card className="glass-dark border-white/5">
                     <CardHeader className="p-8 border-b border-white/5">
@@ -745,122 +764,232 @@ export default function AdminDashboard() {
             </Card>
           )}
         </TabsContent>        {/* --- INVOICES TAB --- */}
-        <TabsContent value="invoices" className="focus-visible:outline-none">
-          <Card className="glass-dark border-white/5">
-            <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
-              <div className="space-y-1">
-                <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Asset Monitoring</CardTitle>
-                <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Active Invoice Debt Instruments</CardDescription>
+         <TabsContent value="invoices" className="focus-visible:outline-none">
+          {selectedInvoice ? (
+            <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex items-center justify-between">
+                <Button
+                  variant="ghost"
+                  onClick={() => setSelectedInvoice(null)}
+                  className="font-black uppercase tracking-widest text-[10px] hover:bg-white/5"
+                >
+                  <RefreshCcw className="mr-2 h-4 w-4" /> Back to Assets
+                </Button>
+                <div className="flex items-center gap-4">
+                  <Badge variant="outline" className="border-white/10 px-4 py-1 text-[10px] font-black uppercase tracking-widest">
+                    Instrument #{selectedInvoice.invoice_number}
+                  </Badge>
+                </div>
               </div>
-            </CardHeader>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-white/5 text-left bg-white/[0.01]">
-                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Instrument ID</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Issuer (MSME)</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Face Value</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
-                      <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {invoices.length === 0 ? (
-                      <tr>
-                        <td colSpan={5} className="px-8 py-20 text-center">
-                          <div className="space-y-4">
-                            <Briefcase className="w-12 h-12 text-muted-foreground/10 mx-auto" />
-                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No active assets detected in liquidity pool</p>
-                          </div>
-                        </td>
-                      </tr>
-                    ) : (
-                      invoices.map((inv) => (
-                        <tr key={inv.id} className="group hover:bg-white/[0.02] transition-colors">
-                          <td className="px-8 py-8 font-black text-white tracking-tight text-lg">#{inv.invoice_number}</td>
-                          <td className="px-8 py-8">
-                            <span className="font-bold text-white/80">{inv.profiles?.company_name || "Unknown MSME"}</span>
-                          </td>
-                          <td className="px-8 py-8 font-black text-primary text-lg">{formatCurrency(inv.amount)}</td>
-                          <td className="px-8 py-8">
-                            <Badge className={
-                              inv.status === "funded" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
-                              inv.status === "approved" ? "bg-primary/10 text-primary border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
-                              inv.status === "pending_verification" ? "bg-blue-500/10 text-blue-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" :
-                              "bg-white/5 text-muted-foreground border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
-                            }>
-                              {inv.status.replace('_', ' ')}
-                            </Badge>
-                          </td>
-                          <td className="px-8 py-8 text-right">
-                            <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                              <Button 
-                                variant="ghost" 
-                                size="sm" 
-                                onClick={() => {
-                                  const url = inv.documents?.invoice_url;
-                                  if (url) {
-                                    window.open(url, '_blank');
-                                  } else {
-                                    const mockUrl = "https://www.w3.org/WAI/ER/tests/xhtml/testfiles/resources/pdf/dummy.pdf";
-                                    toast.info("Invoice document missing. Opening Demo Preview.", {
-                                      description: "Existing records may lack documents. Use upload for new ones."
-                                    });
-                                    window.open(mockUrl, '_blank');
-                                  }
-                                }}
-                                className="h-8 text-white/40 hover:text-white"
-                              >
-                                <FileText className="w-4 h-4" />
-                              </Button>
 
-                              {inv.status === "pending_verification" && (
-                                <div className="flex gap-2">
-                                  <Button 
-                                    size="sm" 
-                                    onClick={() => handleInvoiceUpdate(inv.id, "approved")}
-                                    disabled={actionLoading === inv.id}
-                                    className="h-8 bg-emerald-500 hover:bg-emerald-600 text-[8px] font-black uppercase"
-                                  >
-                                    Approve
-                                  </Button>
-                                  <Button 
-                                    size="sm" 
-                                    variant="destructive"
-                                    onClick={() => {
-                                      const reason = prompt("Enter rejection reason:");
-                                      if (reason) {
-                                        setRejectionNotes(reason);
-                                        handleInvoiceUpdate(inv.id, "rejected");
-                                      }
-                                    }}
-                                    className="h-8 text-[8px] font-black uppercase"
-                                  >
-                                    Reject
-                                  </Button>
-                                </div>
-                              )}
-                              {inv.status === "funded" && (
-                                <Button 
-                                  size="sm" 
-                                  onClick={() => handleDisburseToMSME(inv.id)}
-                                  disabled={actionLoading === inv.id}
-                                  className="h-8 bg-primary hover:bg-primary/90 text-[8px] font-black uppercase shadow-lg shadow-primary/20"
-                                >
-                                  <ArrowDownLeft className="mr-1 h-3 w-3" /> Disburse Funds
-                                </Button>
-                              )}
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+                <div className="lg:col-span-2 space-y-10">
+                  <Card className="glass-dark border-white/5 overflow-hidden">
+                    <CardHeader className="p-8 border-b border-white/5 bg-white/[0.01]">
+                      <CardTitle className="text-2xl font-black italic text-white">Instrument Metadata</CardTitle>
+                      <CardDescription>Comprehensive trade details for risk assessment.</CardDescription>
+                    </CardHeader>
+                    <CardContent className="p-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-12 gap-y-8">
+                        {[
+                          { label: "Buyer Name", value: selectedInvoice.buyer_name || "Not Specified" },
+                          { label: "Buyer GSTIN", value: selectedInvoice.buyer_gstin || "Not Provided" },
+                          { label: "Face Value", value: formatCurrency(selectedInvoice.amount), highlight: true },
+                          { label: "Tenure", value: `${selectedInvoice.tenure_days} Days` },
+                          { label: "Due Date", value: selectedInvoice.due_date ? new Date(selectedInvoice.due_date).toLocaleDateString() : "Not Set" },
+                          { label: "Discount Rate", value: `${selectedInvoice.discount_rate * 100}%` },
+                          { label: "MSME Issuer", value: selectedInvoice.profiles?.company_name },
+                        ].map((item, i) => (
+                          <div key={i} className="space-y-1.5 pb-4 border-b border-white/5">
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">{item.label}</label>
+                            <span className={`text-sm font-black italic ${item.highlight ? 'text-primary' : 'text-white'}`}>{item.value}</span>
+                          </div>
+                        ))}
+                      </div>
+
+                      <div className="mt-12 space-y-4">
+                         <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">Invoice Document</label>
+                         <div className="relative aspect-[16/6] rounded-2xl border border-white/10 bg-white/5 overflow-hidden group">
+                           <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
+                              <Search className="w-8 h-8 text-white" />
+                           </div>
+                           <iframe 
+                             src={selectedInvoice.documents?.invoice_url} 
+                             className="w-full h-full border-none pointer-events-none grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
+                           />
+                           <div className="absolute bottom-6 right-6 flex gap-3">
+                              <Button 
+                                variant="outline" 
+                                className="glass border-white/10 font-black uppercase tracking-widest text-[9px] h-10 px-4"
+                                onClick={() => window.open(selectedInvoice.documents?.invoice_url, '_blank')}
+                              >
+                                View Full Document
+                              </Button>
+                           </div>
+                         </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="glass-dark border-white/5 bg-primary/[0.01]">
+                    <CardHeader className="p-8 border-b border-white/5">
+                      <CardTitle className="text-xl font-black italic text-white">Verification Panel</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8 space-y-8">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Verified Face Value (INR)</label>
+                          <Input
+                            type="number"
+                            placeholder={selectedInvoice.amount.toString()}
+                            value={tempVerifiedAmount}
+                            onChange={(e) => setTempVerifiedAmount(e.target.value)}
+                            className="bg-white/5 border-white/10 h-14 font-black text-white text-lg focus:bg-white/10 transition-all"
+                          />
+                          <p className="text-[10px] text-muted-foreground font-medium italic">Adjust the approved amount based on document verification.</p>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Rejection Notes (Optional)</label>
+                          <Input
+                            placeholder="Reason for rejection..."
+                            value={rejectionNotes}
+                            onChange={(e) => setRejectionNotes(e.target.value)}
+                            className="bg-white/5 border-white/10 h-14 font-bold focus:bg-white/10 transition-all"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex gap-6 pt-4">
+                        <Button
+                          className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-emerald-500/20"
+                          onClick={() => handleInvoiceUpdate(selectedInvoice.id, "approved", tempVerifiedAmount ? parseFloat(tempVerifiedAmount) : selectedInvoice.amount)}
+                          disabled={actionLoading === selectedInvoice.id}
+                        >
+                          {actionLoading === selectedInvoice.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
+                          Authorize Asset
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          className="flex-1 h-14 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-red-500/20"
+                          onClick={() => handleInvoiceUpdate(selectedInvoice.id, "rejected")}
+                          disabled={actionLoading === selectedInvoice.id}
+                        >
+                          {actionLoading === selectedInvoice.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-5 w-5" />}
+                          Decline Request
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+
+                <div className="space-y-10">
+                  <Card className="glass-dark border-white/5">
+                    <CardHeader className="p-8 border-b border-white/5">
+                      <CardTitle className="text-sm font-black uppercase tracking-widest text-white">Issuer Profile</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-8 space-y-6">
+                      <div className="flex items-center gap-4 pb-6 border-b border-white/5">
+                        <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center font-black text-2xl text-white italic">
+                          {selectedInvoice.profiles?.company_name?.[0]}
+                        </div>
+                        <div>
+                           <h4 className="font-black text-white italic">{selectedInvoice.profiles?.company_name}</h4>
+                           <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Verified MSME</p>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4 pt-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Issuer ID</span>
+                          <span className="text-[10px] font-black text-white italic">#{selectedInvoice.msme_id.split('-')[0]}</span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">Submission</span>
+                          <span className="text-[10px] font-black text-white italic">{new Date(selectedInvoice.created_at).toLocaleString()}</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
+              </div>
+            </div>
+          ) : (
+            <Card className="glass-dark border-white/5 overflow-hidden animate-in fade-in duration-500">
+              <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02] flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+                <div className="space-y-1">
+                  <CardTitle className="text-3xl font-black italic tracking-tighter text-white">Asset Monitoring</CardTitle>
+                  <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Active Invoice Debt Instruments</CardDescription>
+                </div>
+                <div className="relative w-full md:w-80 group">
+                  <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
+                  <Input className="pl-12 bg-white/5 border-white/10 h-12 font-bold focus:bg-white/10 transition-all" placeholder="Filter instruments..." />
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead>
+                      <tr className="border-b border-white/5 text-left bg-white/[0.01]">
+                        <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Instrument ID</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Issuer (MSME)</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Face Value</th>
+                        <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
+                        <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Governance</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-white/5">
+                      {invoices.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="px-8 py-20 text-center">
+                            <div className="space-y-4">
+                              <Briefcase className="w-12 h-12 text-muted-foreground/10 mx-auto" />
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No active assets detected in liquidity pool</p>
                             </div>
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
+                      ) : (
+                        invoices.map((inv) => (
+                          <tr key={inv.id} className="group hover:bg-white/[0.02] transition-colors">
+                            <td className="px-8 py-8 font-black text-white tracking-tight text-lg">#{inv.invoice_number}</td>
+                            <td className="px-8 py-8">
+                              <span className="font-bold text-white/80 italic">{inv.profiles?.company_name || "Unknown MSME"}</span>
+                            </td>
+                            <td className="px-8 py-8 font-black text-primary text-lg">{formatCurrency(inv.amount)}</td>
+                            <td className="px-8 py-8">
+                              <Badge className={
+                                inv.status === "funded" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
+                                inv.status === "approved" ? "bg-primary/10 text-primary border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" : 
+                                inv.status === "pending_verification" ? "bg-blue-500/10 text-blue-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" :
+                                "bg-white/5 text-muted-foreground border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
+                              }>
+                                {inv.status.replace('_', ' ')}
+                              </Badge>
+                            </td>
+                            <td className="px-8 py-8 text-right">
+                              <div className="flex justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Button
+                                  size="sm"
+                                  className="h-10 px-6 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[9px] border border-white/10 shadow-xl"
+                                  onClick={() => {
+                                    setSelectedInvoice(inv);
+                                    setTempVerifiedAmount(inv.amount.toString());
+                                    setRejectionNotes("");
+                                  }}
+                                >
+                                  Inspect Asset
+                                </Button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
 
         {/* --- DISPUTES TAB --- */}
@@ -1349,6 +1478,86 @@ export default function AdminDashboard() {
         </TabsContent>
 
 
+        {/* --- SUPPORT TAB --- */}
+        <TabsContent value="support" className="focus-visible:outline-none">
+          <Card className="glass-dark border-white/5 overflow-hidden">
+            <CardHeader className="p-8 border-b border-white/5 bg-white/[0.02]">
+              <CardTitle className="text-3xl font-black italic text-white">Support Desk Queue</CardTitle>
+              <CardDescription className="text-sm font-bold uppercase tracking-wider text-muted-foreground">General inquiries and operational assistance requests.</CardDescription>
+            </CardHeader>
+            <CardContent className="p-0">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead>
+                    <tr className="border-b border-white/5 text-left bg-white/[0.01]">
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Stakeholder</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Subject & Message</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Priority</th>
+                      <th className="px-8 py-5 text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Status</th>
+                      <th className="px-8 py-5 text-right text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {supportTickets.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="px-8 py-20 text-center">
+                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No active support tickets</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      supportTickets.map((ticket) => (
+                        <tr key={ticket.id} className="group hover:bg-white/[0.02] transition-colors">
+                          <td className="px-8 py-8">
+                            <div className="flex flex-col">
+                              <span className="font-black text-white text-sm">{ticket.profiles?.company_name || ticket.profiles?.full_name}</span>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{ticket.profiles?.role} • {ticket.profiles?.email}</span>
+                            </div>
+                          </td>
+                          <td className="px-8 py-8 max-w-md">
+                            <div className="space-y-1">
+                              <p className="font-black text-white text-sm italic">{ticket.subject}</p>
+                              <p className="text-xs text-muted-foreground line-clamp-2">{ticket.message}</p>
+                            </div>
+                          </td>
+                          <td className="px-8 py-8">
+                            <Badge variant="outline" className={`
+                              text-[9px] font-black uppercase tracking-widest px-2 py-0.5
+                              ${ticket.priority === 'urgent' ? 'bg-red-500/10 text-red-500 border-red-500/20' : 
+                                ticket.priority === 'high' ? 'bg-orange-500/10 text-orange-500 border-orange-500/20' :
+                                'bg-white/5 text-white/40 border-white/10'}
+                            `}>
+                              {ticket.priority}
+                            </Badge>
+                          </td>
+                          <td className="px-8 py-8">
+                            <Badge className={
+                              ticket.status === "resolved" ? "bg-emerald-500/10 text-emerald-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]" :
+                                "bg-blue-500/10 text-blue-500 border-none px-3 py-1 font-black uppercase tracking-widest text-[9px]"
+                            }>
+                              {ticket.status}
+                            </Badge>
+                          </td>
+                          <td className="px-8 py-8 text-right">
+                            {ticket.status === "open" && (
+                              <Button
+                                size="sm"
+                                className="h-10 px-6 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-[9px] shadow-lg shadow-primary/20"
+                                onClick={() => handleResolveTicket(ticket.id)}
+                                disabled={actionLoading === ticket.id}
+                              >
+                                {actionLoading === ticket.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Resolve"}
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
       </Tabs>
     </div>
   );

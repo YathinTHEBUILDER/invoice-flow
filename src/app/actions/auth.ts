@@ -25,7 +25,7 @@ const signInSchema = z.object({
 
 const verifyOtpSchema = z.object({
   email: z.string().email(),
-  token: z.string().length(8, "Token must be 8 digits"),
+  token: z.string().min(6).max(8, "Token must be between 6 and 8 digits"),
   type: z.enum(["signup", "recovery", "email_change"]).default("signup"),
 });
 
@@ -49,13 +49,13 @@ export const signUpAction = actionClient
   .schema(signUpSchema)
   .action(async ({ parsedInput: { email, password, fullName, role, companyName } }) => {
     const ip = await getClientIp();
-    const limit = await rateLimit(`signup:${ip}`, 3, 3600000); // 3 signups per hour per IP
+    const limit = await rateLimit(`signup:${ip}`, 10, 3600000); // 10 signups per hour per IP (relaxed for testing)
 
     if (!limit.success) {
       throw new Error("Too many account creation attempts. Please try again later.");
     }
 
-    const supabase = await createClient();
+     const supabase = await createClient();
     const { error } = await supabase.auth.signUp({
       email,
       password,

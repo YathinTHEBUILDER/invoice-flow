@@ -14,14 +14,11 @@ import {
   CheckCircle2,
   Upload,
   Loader2,
-  Camera,
-  X,
   Plus,
   FileText
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { getInvestorStats, submitInvestorKYCAction } from "@/app/actions/investor";
-import { SelfieCapture } from "@/components/investor/SelfieCapture";
 import { toast } from "sonner";
 
 export default function InvestorKYCPage() {
@@ -29,7 +26,6 @@ export default function InvestorKYCPage() {
   const [profile, setProfile] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [showSelfie, setShowSelfie] = useState(false);
 
   // Form State for Files
   const [documents, setDocuments] = useState<{
@@ -37,13 +33,11 @@ export default function InvestorKYCPage() {
     aadhaar: File | null;
     bankProof: File | null;
     addressProof: File | null;
-    selfie: Blob | null;
   }>({
     pan: null,
     aadhaar: null,
     bankProof: null,
-    addressProof: null,
-    selfie: null
+    addressProof: null
   });
 
   const [previews, setPreviews] = useState<Record<string, string>>({});
@@ -81,17 +75,13 @@ export default function InvestorKYCPage() {
     setPreviews(prev => ({ ...prev, [type]: url }));
   };
 
-  const handleSelfieCapture = (blob: Blob) => {
-    setDocuments(prev => ({ ...prev, selfie: blob }));
-    const url = URL.createObjectURL(blob);
-    setPreviews(prev => ({ ...prev, selfie: url }));
-  };
+
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!documents.pan || !documents.aadhaar || !documents.selfie) {
+    if (!documents.pan || !documents.aadhaar) {
       toast.error("Compliance Error", {
-        description: "PAN Card, Identity Proof, and Face Alignment Capture are mandatory."
+        description: "PAN Card and Identity Proof are mandatory."
       });
       return;
     }
@@ -103,7 +93,6 @@ export default function InvestorKYCPage() {
       if (documents.aadhaar) formData.append("aadhaar", documents.aadhaar);
       if (documents.bankProof) formData.append("bank_proof", documents.bankProof);
       if (documents.addressProof) formData.append("address_proof", documents.addressProof);
-      if (documents.selfie) formData.append("selfie", documents.selfie, "selfie.jpg");
 
       const result = await submitInvestorKYCAction(formData);
       if (result.error) throw new Error(result.error);
@@ -140,7 +129,7 @@ export default function InvestorKYCPage() {
         </div>
         <h1 className="text-6xl font-black tracking-tighter text-white italic uppercase">Institutional Compliance</h1>
         <p className="text-muted-foreground font-medium text-lg italic max-w-2xl mx-auto">
-          Manual vetting of identity documents and face alignment is required to unlock capital deployment features.
+          Manual vetting of identity documents is required to unlock capital deployment features.
         </p>
       </div>
 
@@ -335,46 +324,7 @@ export default function InvestorKYCPage() {
                   </CardContent>
                 </Card>
 
-                <Card className="glass-dark border-white/5 overflow-hidden">
-                  <CardHeader className="p-10 border-b border-white/5">
-                    <CardTitle className="text-2xl font-black italic tracking-tighter text-white uppercase">Identity Capture</CardTitle>
-                    <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Real-time camera verification</CardDescription>
-                  </CardHeader>
-                  <CardContent className="p-10 flex flex-col items-center justify-center space-y-6">
-                    {!previews.selfie ? (
-                      <div 
-                        onClick={() => setShowSelfie(true)}
-                        className="w-full max-w-md aspect-square rounded-[40px] bg-white/5 border border-white/10 border-dashed flex flex-col items-center justify-center space-y-4 hover:bg-white/[0.08] transition-all cursor-pointer group"
-                      >
-                        <div className="p-6 rounded-[25px] bg-primary/10 text-primary group-hover:scale-110 transition-transform">
-                          <Camera className="w-8 h-8" />
-                        </div>
-                        <div className="text-center">
-                          <p className="text-sm font-black text-white italic uppercase tracking-widest">Initialize Camera</p>
-                          <p className="text-[10px] text-muted-foreground uppercase tracking-widest mt-1">Live camera photo mandatory</p>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="relative w-full max-w-sm aspect-square rounded-[40px] overflow-hidden border-2 border-emerald-500/40 shadow-2xl shadow-emerald-500/10">
-                         <img src={previews.selfie} className="w-full h-full object-cover scale-x-[-1]" />
-                         <Button 
-                          onClick={() => {
-                            setDocuments(prev => ({ ...prev, selfie: null }));
-                            setPreviews(prev => ({ ...prev, selfie: "" }));
-                          }}
-                          variant="destructive" 
-                          size="icon" 
-                          className="absolute top-4 right-4 rounded-full z-20"
-                        >
-                          <X className="w-4 h-4" />
-                        </Button>
-                        <div className="absolute bottom-0 inset-x-0 p-4 bg-emerald-500/90 text-white text-center">
-                          <p className="text-[10px] font-black uppercase tracking-[0.2em]">Photo Captured</p>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
+
               </div>
 
               <div className="space-y-8">
@@ -390,12 +340,12 @@ export default function InvestorKYCPage() {
                     <div className="space-y-4">
                       <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
                         <span>Progress</span>
-                        <span>{Object.values(documents).filter(Boolean).length} / 5</span>
+                        <span>{Object.values(documents).filter(Boolean).length} / 4</span>
                       </div>
                       <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
                         <div 
                           className="h-full bg-primary transition-all duration-700" 
-                          style={{ width: `${(Object.values(documents).filter(Boolean).length / 5) * 100}%` }}
+                          style={{ width: `${(Object.values(documents).filter(Boolean).length / 4) * 100}%` }}
                         />
                       </div>
                     </div>
@@ -429,12 +379,6 @@ export default function InvestorKYCPage() {
         )}
       </div>
 
-      {showSelfie && (
-        <SelfieCapture 
-          onCapture={handleSelfieCapture} 
-          onClose={() => setShowSelfie(false)} 
-        />
-      )}
     </div>
   );
 }

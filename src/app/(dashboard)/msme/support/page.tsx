@@ -70,13 +70,13 @@ export default function SupportPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "open":
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[8px]">Open Case</Badge>;
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[10px]">Open Case</Badge>;
       case "in_progress":
-        return <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20 font-black uppercase tracking-widest text-[8px]">In Review</Badge>;
+        return <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20 font-black uppercase tracking-widest text-[10px]">In Review</Badge>;
       case "resolved":
-        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[8px]">Resolved</Badge>;
+        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[10px]">Resolved</Badge>;
       default:
-        return <Badge variant="outline" className="font-black uppercase tracking-widest text-[8px]">{status}</Badge>;
+        return <Badge variant="outline" className="font-black uppercase tracking-widest text-[10px]">{status}</Badge>;
     }
   };
 
@@ -89,7 +89,7 @@ export default function SupportPage() {
         </div>
         <Button 
           onClick={() => setShowTicketModal(true)}
-          className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20"
+          className="h-14 px-8 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/20"
         >
           <Plus className="mr-2 h-5 w-5" /> Raise New Ticket
         </Button>
@@ -141,7 +141,7 @@ export default function SupportPage() {
                     </div>
                     <div className="flex items-center gap-6">
                       {getStatusBadge(ticket.status)}
-                      <Button variant="ghost" size="sm" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                      <Button variant="ghost" size="sm" className="text-white/60 hover:text-white transition-colors">
                         <ChevronRight className="w-4 h-4" />
                       </Button>
                     </div>
@@ -278,14 +278,14 @@ export default function SupportPage() {
                     type="button"
                     variant="ghost" 
                     onClick={() => setShowTicketModal(false)}
-                    className="flex-1 h-14 font-black uppercase tracking-widest text-[10px]"
+                    className="flex-1 h-14 font-black uppercase tracking-widest text-xs text-white/60 hover:text-white"
                     disabled={submitting}
                   >
                     Discard
                   </Button>
                   <Button 
                     type="submit"
-                    className="flex-[2] h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20"
+                    className="flex-[2] h-14 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
                     disabled={submitting}
                   >
                     {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}

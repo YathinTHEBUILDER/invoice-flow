@@ -16,8 +16,6 @@ import {
   Upload,
   Loader2,
   Info,
-  Camera,
-  X,
   FileText,
   UserCheck
 } from "lucide-react";
@@ -42,10 +40,6 @@ export default function KYCPage() {
   const [saving, setSaving] = useState(false);
   const [files, setFiles] = useState<Record<string, File>>({});
   const [previews, setPreviews] = useState<Record<string, string>>({});
-  const [selfie, setSelfie] = useState<File | null>(null);
-  const [selfiePreview, setSelfiePreview] = useState<string | null>(null);
-  
-  const selfieInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchProfile();
@@ -78,20 +72,11 @@ export default function KYCPage() {
     }
   };
 
-  const handleSelfieChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelfie(file);
-      setSelfiePreview(URL.createObjectURL(file));
-    }
-  };
+
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (!selfie && profile?.kyc_status !== 'verified') {
-      toast.error("Please upload a verification selfie");
-      return;
-    }
+    // No selfie required anymore
 
     const missingDocs = REQUIRED_DOCS.filter(doc => !files[doc.id] && profile?.kyc_status !== 'verified');
     if (missingDocs.length > 0 && profile?.kyc_status !== 'verified') {
@@ -122,17 +107,7 @@ export default function KYCPage() {
         documentUrls[id] = filePath;
       }
 
-      // Upload selfie
-      if (selfie) {
-        const selfiePath = `${user.id}/selfie_${Date.now()}.jpg`;
-        const { error: selfieError } = await supabase.storage
-          .from("kyc-documents")
-          .upload(selfiePath, selfie);
-
-        if (selfieError) throw selfieError;
-
-        documentUrls["selfie"] = selfiePath;
-      }
+      // selfie removed
 
       const result = await submitKYCAction(formData, documentUrls);
       if (result.success) {
@@ -393,69 +368,9 @@ export default function KYCPage() {
               </Card>
             </div>
 
-            {/* Right: Selfie & Submit */}
+            {/* Right: Submission Status & Action */}
             <div className="space-y-8">
-              <Card className="glass-dark border-white/5 overflow-hidden">
-                <CardHeader className="p-8 border-b border-white/5 bg-white/[0.01]">
-                  <div className="flex items-center gap-3">
-                    <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                      <Camera className="w-5 h-5" />
-                    </div>
-                    <CardTitle className="text-xl font-black italic">Identity Selfie</CardTitle>
-                  </div>
-                </CardHeader>
-                <CardContent className="p-8 space-y-8">
-                  <div className="relative group">
-                    <div className="aspect-[3/4] w-full max-w-[240px] mx-auto rounded-[120px/160px] border-4 border-dashed border-white/10 overflow-hidden flex flex-col items-center justify-center bg-white/[0.02] transition-all group-hover:border-primary/30">
-                      {selfiePreview ? (
-                        <img src={selfiePreview} alt="Selfie preview" className="w-full h-full object-cover" />
-                      ) : (
-                        <div className="text-center space-y-3 px-6">
-                          <Camera className="w-10 h-10 text-white/10 mx-auto" />
-                          <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-relaxed">
-                            Align face within the frame
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                    {selfiePreview && profile?.kyc_status !== 'verified' && profile?.kyc_status !== 'pending' && (
-                      <Button 
-                        type="button" 
-                        variant="ghost" 
-                        size="icon" 
-                        onClick={() => { setSelfie(null); setSelfiePreview(null); }}
-                        className="absolute -top-2 -right-2 bg-red-500 hover:bg-red-600 text-white rounded-full h-8 w-8 shadow-xl"
-                      >
-                        <X className="w-4 h-4" />
-                      </Button>
-                    )}
-                  </div>
-                  
-                  <input 
-                    type="file" 
-                    accept="image/*" 
-                    capture="user"
-                    ref={selfieInputRef}
-                    onChange={handleSelfieChange}
-                    className="hidden"
-                    disabled={profile?.kyc_status === 'verified' || profile?.kyc_status === 'pending'}
-                  />
-                  
-                  <Button 
-                    type="button"
-                    variant="outline"
-                    disabled={profile?.kyc_status === 'verified' || profile?.kyc_status === 'pending'}
-                    onClick={() => selfieInputRef.current?.click()}
-                    className="w-full h-12 border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-[10px]"
-                  >
-                    {selfie ? "Retake Verification Photo" : "Launch Identity Capture"}
-                  </Button>
 
-                  <p className="text-[10px] text-muted-foreground font-medium italic text-center leading-relaxed">
-                    Ensure your face is clearly visible without glasses or headwear. This image will be used for biometric cross-verification.
-                  </p>
-                </CardContent>
-              </Card>
 
               <div className="p-8 rounded-3xl bg-primary/5 border border-primary/10 space-y-6">
                 <div className="flex items-center gap-3">
@@ -472,12 +387,12 @@ export default function KYCPage() {
                   <Button 
                     type="submit"
                     disabled={saving || (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000))}
-                    className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20"
+                    className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/20"
                   >
                     {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
                     {(profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) 
                       ? "Cooldown Active" 
-                      : "Submit for Compliance Clearance"}
+                      : "Submit"}
                   </Button>
                 ) : (
                   <div className="h-14 flex items-center justify-center bg-white/5 rounded-2xl border border-white/10">

@@ -13,12 +13,14 @@ import {
   AlertCircle,
   CreditCard,
   ExternalLink,
-  Loader2
+  Loader2,
+  X
 } from "lucide-react";
 import { createClient } from "@/lib/client";
 import { formatINR } from "@/lib/utils";
 import { submitRepaymentProofAction } from "@/app/actions/msme";
 import { toast } from "sonner";
+import { useSearchParams } from "next/navigation";
 
 export default function RepaymentsPage() {
   const [repayments, setRepayments] = useState<any[]>([]);
@@ -26,10 +28,19 @@ export default function RepaymentsPage() {
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [selectedRepayment, setSelectedRepayment] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const searchParams = useSearchParams();
+  const repaymentId = searchParams.get("id");
 
   useEffect(() => {
     fetchRepayments();
   }, []);
+
+  useEffect(() => {
+    if (repaymentId && repayments.length > 0) {
+      const found = repayments.find(r => r.id === repaymentId);
+      if (found && found.status !== 'paid') setSelectedRepayment(found);
+    }
+  }, [repaymentId, repayments]);
 
   async function fetchRepayments() {
     const supabase = createClient();
@@ -70,13 +81,13 @@ export default function RepaymentsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "scheduled":
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[8px]">Scheduled</Badge>;
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[10px]">Scheduled</Badge>;
       case "paid":
-        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[8px]">Paid</Badge>;
+        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[10px]">Paid</Badge>;
       case "overdue":
-        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[8px]">Overdue</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[10px]">Overdue</Badge>;
       default:
-        return <Badge variant="outline" className="font-black uppercase tracking-widest text-[8px]">{status}</Badge>;
+        return <Badge variant="outline" className="font-black uppercase tracking-widest text-[10px]">{status}</Badge>;
     }
   };
 
@@ -143,12 +154,16 @@ export default function RepaymentsPage() {
                           {getStatusBadge(item.status)}
                         </div>
                         {item.status !== 'paid' && (
-                          <Button 
-                            onClick={() => setSelectedRepayment(item)}
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[9px] h-10 px-6"
-                          >
-                            Mark as Paid
-                          </Button>
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="sm" 
+                              onClick={() => setSelectedRepayment(item)}
+                              className="h-9 text-xs font-black uppercase text-white hover:bg-white/10"
+                            >
+                              Mark as Paid
+                            </Button>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -226,7 +241,7 @@ export default function RepaymentsPage() {
               <div className="pt-6 border-t border-white/5">
                 <Button 
                   onClick={() => setShowBankDetails(true)}
-                  className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] border border-white/10"
+                  className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-xs border border-white/10"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" /> View Bank Details
                 </Button>
@@ -329,7 +344,7 @@ export default function RepaymentsPage() {
                 onClick={() => setShowBankDetails(false)}
                 className="hover:bg-white/5"
               >
-                <Clock className="w-5 h-5 rotate-45" />
+                <X className="w-5 h-5" />
               </Button>
             </CardHeader>
             <CardContent className="p-8 space-y-6">

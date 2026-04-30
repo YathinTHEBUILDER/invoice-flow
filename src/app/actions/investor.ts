@@ -195,13 +195,11 @@ export async function submitInvestorKYCAction(formData: FormData) {
     const aadhaarFile = formData.get("aadhaar") as File | null;
     const bankFile = formData.get("bank_proof") as File | null;
     const addressFile = formData.get("address_proof") as File | null;
-    const selfieBlob = formData.get("selfie") as Blob | null;
 
     if (panFile) documents.pan = await uploadKYCDocument(supabase, user.id, panFile, "pan");
     if (aadhaarFile) documents.aadhaar = await uploadKYCDocument(supabase, user.id, aadhaarFile, "aadhaar");
     if (bankFile) documents.bank_proof = await uploadKYCDocument(supabase, user.id, bankFile, "bank");
     if (addressFile) documents.address_proof = await uploadKYCDocument(supabase, user.id, addressFile, "address");
-    if (selfieBlob) documents.selfie = await uploadKYCDocument(supabase, user.id, selfieBlob, "selfie");
 
     const { error: kycError } = await supabase
       .from('kyc_requests')

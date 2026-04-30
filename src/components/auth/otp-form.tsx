@@ -70,8 +70,8 @@ export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     const token = otp.join("");
-    if (token.length !== 8) {
-      toast.error("Please enter all 8 digits");
+    if (token.length < 6) {
+      toast.error("Please enter the verification code");
       return;
     }
     executeVerify({ email, token, type });
@@ -95,7 +95,7 @@ export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
             value={digit}
             onChange={(e) => handleChange(index, e.target.value)}
             onKeyDown={(e) => handleKeyDown(index, e)}
-            className="w-9 h-12 sm:w-11 sm:h-14 text-center text-xl sm:text-2xl font-black rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
+            className="w-10 h-14 sm:w-12 sm:h-16 text-center text-xl sm:text-2xl font-black rounded-xl bg-white/5 border border-white/10 focus:border-primary focus:ring-2 focus:ring-primary/20 transition-all outline-none"
           />
         ))}
       </div>

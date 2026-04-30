@@ -494,12 +494,15 @@ export const updateProfileAction = actionClient
  * Approve Invoice Action
  */
 export const approveInvoiceAction = actionClient
-  .schema(z.object({ invoiceId: z.string().uuid() }))
-  .action(async ({ parsedInput: { invoiceId } }) => {
+  .schema(z.object({ 
+    invoiceId: z.string().uuid(),
+    verifiedAmount: z.number().positive().optional()
+  }))
+  .action(async ({ parsedInput: { invoiceId, verifiedAmount } }) => {
     await ensureAdmin();
     const supabase = await createClient();
     
-    // 1. Fetch invoice to check verified_amount
+    // 1. Fetch invoice to check default amount if verifiedAmount not provided
     const { data: currentInv } = await supabase
       .from('invoices')
       .select('amount, verified_amount')
@@ -511,10 +514,8 @@ export const approveInvoiceAction = actionClient
       updated_at: new Date().toISOString() 
     };
 
-    // If admin hasn't explicitly set a verified amount, default to the original face value
-    if (currentInv && (currentInv.verified_amount === null || currentInv.verified_amount === undefined)) {
-      updatePayload.verified_amount = currentInv.amount;
-    }
+    // Use provided verifiedAmount, or default to current verified_amount, or fallback to amount
+    updatePayload.verified_amount = verifiedAmount || currentInv?.verified_amount || currentInv?.amount;
 
     const { error } = await supabase
       .from('invoices')
@@ -525,7 +526,7 @@ export const approveInvoiceAction = actionClient
     
     await logAdminAction('approve_invoice', 'invoice', invoiceId, { 
       status: 'approved',
-      verified_amount: updatePayload.verified_amount || currentInv?.verified_amount 
+      verified_amount: updatePayload.verified_amount
     });
     
     revalidatePath("/admin");
@@ -973,4 +974,68 @@ export const disburseToMSMEAction = actionClient
     revalidatePath("/msme/invoices");
 
     return { success: true, payout: result.payout };
+  });
+/**
+ * Fetch Support Tickets for Admin
+ */
+export async function getSupportTickets() {
+  await ensureAdmin();
+  const supabase = await createClient();
+  
+  const { data, error } = await supabase
+    .from('support_tickets')
+    .select(`
+      *,
+      profiles:user_id (
+        full_name,
+        email,
+        company_name,
+        role
+      )
+    `)
+    .order('created_at', { ascending: false });
+
+  if (error) throw new Error(error.message);
+  return data;
+}
+
+/**
+ * Resolve Support Ticket Action
+ */
+export const resolveSupportTicketAction = actionClient
+  .schema(z.object({ 
+    ticketId: z.string().uuid(),
+    resolution: z.string().min(5, "Resolution required")
+  }))
+  .action(async ({ parsedInput: { ticketId, resolution } }) => {
+    await ensureAdmin();
+    const supabase = await createClient();
+    
+    const { error } = await supabase
+      .from('support_tickets')
+      .update({ 
+        status: 'resolved', 
+        updated_at: new Date().toISOString() 
+      })
+      .eq('id', ticketId);
+
+    if (error) throw new Error(error.message);
+    
+    await logAdminAction('resolve_support_ticket', 'support_ticket', ticketId, { resolution });
+    
+    // Fetch User ID to notify
+    const { data: ticket } = await supabase.from('support_tickets').select('user_id, subject').eq('id', ticketId).single();
+    if (ticket) {
+      await createNotification(
+        ticket.user_id,
+        "Support Ticket Resolved ✅",
+        `Your ticket "${ticket.subject}" has been marked as resolved.`,
+        "success",
+        "/msme/support"
+      );
+    }
+
+    revalidatePath("/admin");
+    revalidatePath("/msme/support");
+    return { success: true };
   });
