@@ -24,10 +24,10 @@ export default function GetStartedPage() {
             <Logo className="scale-125 mb-8" />
           </Link>
           <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-gradient leading-none">
-            Choose your path.
+            Strategic Onboarding.
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-xl">
-            Select the account type that best fits your needs. You can always change this later.
+            Select the stakeholder profile to initialize your secure session on the InvoiceFlow liquidity engine.
           </p>
         </div>
 

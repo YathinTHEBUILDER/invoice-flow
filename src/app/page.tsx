@@ -47,12 +47,12 @@ export default async function LandingPage() {
           </div>
           
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter max-w-6xl text-balance leading-[0.9] text-gradient">
-            Liquidity <br className="hidden md:block" />
-            Redefined.
+            Institutional <br className="hidden md:block" />
+            Invoice Financing.
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground/80 max-w-3xl mx-auto text-balance leading-relaxed font-medium">
-            The high-performance marketplace where verified MSMEs access liquidity with a fixed 1% platform fee, and individual investors discover secure, asset-backed yields.
+            Bridging the working capital gap between creditworthy MSMEs and individual investors. Access liquidity at a fixed 1% platform fee, backed by verified trade receivables.
           </p>
           
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 w-full sm:w-auto">
@@ -74,10 +74,10 @@ export default async function LandingPage() {
           {/* Stats Bar */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 md:gap-16 pt-20 w-full max-w-5xl">
             {[
-              { label: "Target Yields", value: "12-15% ARR", icon: Activity },
-              { label: "Platform Fee", value: "Fixed 1%", icon: LineChart },
-              { label: "Asset-Backed", value: "100% Verified", icon: ShieldCheck },
-              { label: "Origin", value: "Mysuru, KA", icon: Globe },
+              { label: "Investor Yields", value: "12-15% ARR", icon: Activity },
+              { label: "Platform Commission", value: "Fixed 1%", icon: LineChart },
+              { label: "Risk Management", value: "Manual Audit", icon: ShieldCheck },
+              { label: "Asset Backed", value: "100% Trade", icon: Globe },
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center space-y-2 group">
                 <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
@@ -113,22 +113,22 @@ export default async function LandingPage() {
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
-                title: "Fixed 1% Fee",
-                desc: "Transparent and predictable pricing. No hidden charges—we charge a flat 1% platform fee for every invoice funded.",
+                title: "Transparent Pricing",
+                desc: "Predictable financing with no hidden charges. We charge a flat 1% platform fee only upon successful funding of your invoices.",
                 icon: LineChart,
                 color: "text-blue-500",
                 bg: "bg-blue-500/10"
               },
               {
-                title: "MSME Verification",
-                desc: "Every MSME on our platform undergoes a multi-step verification process to ensure asset integrity and stability.",
+                title: "Rigorous Asset Vetting",
+                desc: "Every invoice undergoes a manual audit to verify document authenticity and counterparty creditworthiness before listing.",
                 icon: Shield,
                 color: "text-indigo-500",
                 bg: "bg-indigo-500/10"
               },
               {
-                title: "Targeted Yields",
-                desc: "Individual investors access asset-backed opportunities with projected annualized returns between 12% and 15%.",
+                title: "Institutional Yields",
+                desc: "Investors access high-yield trade receivables, earning projected returns of 12-15% ARR on short-term assets.",
                 icon: Activity,
                 color: "text-emerald-500",
                 bg: "bg-emerald-500/10"
@@ -168,9 +168,9 @@ export default async function LandingPage() {
 
             <div className="space-y-10 relative">
               {[
-                { step: "01", title: "Document Ingestion", desc: "MSMEs upload invoices; our team verifies document integrity and authenticity." },
-                { step: "02", title: "Credit Review", desc: "Corporate buyer profiles are manually evaluated for marketplace stability." },
-                { step: "03", title: "Funding", desc: "Individual investors deploy capital into verified, asset-backed invoices." }
+                { step: "01", title: "Manual Verification", desc: "MSMEs upload receivables; our compliance team manually audits document integrity and counterparty limits." },
+                { step: "02", title: "Marketplace Listing", desc: "Verified assets are listed with transparent tenure and discount rates for investor evaluation." },
+                { step: "03", title: "Strategic Payout", desc: "Upon funding, capital is disbursed to the MSME, with automated settlement at invoice maturity." }
               ].map((item, i) => (
                 <div key={i} className="flex gap-6 group">
                   <div className="text-4xl font-black text-primary/20 group-hover:text-primary transition-colors duration-500 leading-none">{item.step}</div>
@@ -260,9 +260,9 @@ export default async function LandingPage() {
           </div>
           
           <div className="space-y-6">
-            <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">Ready for premium <br />liquidity?</h2>
+            <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">Scale your <br />Working Capital.</h2>
             <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
-              Join the elite marketplace building the future of transparent, asset-backed supply chain financing.
+              Join the institutional marketplace designed for transparent, manual-audit verified supply chain financing.
             </p>
           </div>
           

@@ -15,7 +15,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1 space-y-8">
             <Logo className="scale-110 origin-left" />
             <p className="text-base text-muted-foreground font-medium pr-8 leading-relaxed">
-              The modern infrastructure for premium-grade invoice factoring and supply chain finance.
+              Institutional infrastructure for invoice discounting and strategic supply chain finance.
             </p>
             <div className="flex gap-4">
               {[Globe, Users, Shield].map((Icon, i) => (
