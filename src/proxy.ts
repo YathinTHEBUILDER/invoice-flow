@@ -38,6 +38,7 @@ export async function proxy(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
                      request.nextUrl.pathname.startsWith('/signup') || 
                      request.nextUrl.pathname.startsWith('/get-started') ||
+                     request.nextUrl.pathname.startsWith('/secret-admin-login') ||
                      request.nextUrl.pathname.startsWith('/auth/forgot-password')
 
   const isDashboardRoute = request.nextUrl.pathname.startsWith('/admin') ||
