@@ -4,7 +4,7 @@ export default function AboutPage() {
   return (
     <div className="space-y-16">
       <div className="space-y-6">
-        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-gradient leading-[0.9]">
+        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">
           Democratizing <br />Working Capital.
         </h1>
         <p className="text-xl text-muted-foreground font-medium max-w-3xl leading-relaxed">
@@ -33,8 +33,8 @@ export default function AboutPage() {
         </div>
       </div>
 
-      <div className="glass-dark border-white/5 rounded-3xl p-8 md:p-12 space-y-8">
-        <h2 className="text-3xl font-black tracking-tight">Why InvoiceFlow?</h2>
+      <div className="glass-dark rounded-2xl p-8 md:p-12 space-y-8">
+        <h2 className="text-2xl font-bold tracking-tight text-white">Why InvoiceFlow?</h2>
         <div className="grid sm:grid-cols-2 gap-8">
           <div className="flex gap-4">
             <Shield className="w-6 h-6 text-primary shrink-0" />

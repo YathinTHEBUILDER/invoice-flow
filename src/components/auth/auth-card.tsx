@@ -23,7 +23,7 @@ export function AuthCard({
     <Card 
       onClick={onClick}
       className={cn(
-        "glass-dark border-white/5 hover:border-primary/50 transition-all duration-500 group relative overflow-hidden cursor-pointer",
+        "glass-dark rounded-2xl border border-white/[0.04] hover:border-primary/30 transition-all duration-500 group relative overflow-hidden cursor-pointer",
         selected && "border-primary bg-primary/10 shadow-[0_0_30px_rgba(59,130,246,0.2)]",
         className
       )}
@@ -41,7 +41,7 @@ export function AuthCard({
           <Icon className="h-8 w-8" />
         </div>
         <div className="space-y-2">
-          <h3 className="text-xl font-black tracking-tight">{title}</h3>
+          <h3 className="text-xl font-bold tracking-tight text-white">{title}</h3>
           <p className="text-sm text-muted-foreground leading-relaxed font-medium">{description}</p>
         </div>
       </CardContent>

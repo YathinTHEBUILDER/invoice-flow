@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { 
   IndianRupee, 
   ShieldAlert, 
-  Bell, 
   Settings as SettingsIcon,
   Save,
   Loader2,
@@ -164,44 +163,44 @@ export default function SettingsPage() {
     return (
       <div className="space-y-8 animate-in fade-in duration-700">
         <div className="space-y-1">
-          <h1 className="text-4xl font-black tracking-tight text-white flex items-center gap-3 italic uppercase">
+          <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
             <SettingsIcon className="w-8 h-8 text-primary" /> Investor Settings
           </h1>
-          <p className="text-muted-foreground font-medium text-lg italic">Manage your investment preferences and capital wallet.</p>
+          <p className="text-muted-foreground font-medium text-sm">Manage your investment preferences and capital wallet.</p>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Wallet Overview Card */}
-          <Card className="lg:col-span-2 glass-dark border-white/5 relative overflow-hidden group">
+          <Card className="lg:col-span-2 glass-dark border-white/5 relative overflow-hidden group rounded-2xl">
             <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
               <Wallet className="w-48 h-48 text-white" />
             </div>
             <CardHeader className="border-b border-white/5 p-8 relative z-10">
               <div className="flex justify-between items-center">
                 <div>
-                  <CardTitle className="text-2xl font-black italic uppercase tracking-tight">Fund Management</CardTitle>
-                  <CardDescription className="font-bold uppercase tracking-widest text-[10px] text-muted-foreground italic">Cash control and review</CardDescription>
+                  <CardTitle className="text-2xl font-bold text-white tracking-tight">Fund Management</CardTitle>
+                  <CardDescription className="font-bold uppercase tracking-wider text-[10px] text-muted-foreground">Cash control and review</CardDescription>
                 </div>
-                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 font-black uppercase tracking-widest text-[8px]">Verified Ledger</Badge>
+                <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 font-bold uppercase tracking-wider text-[8px] rounded-full">Verified Ledger</Badge>
               </div>
             </CardHeader>
             <CardContent className="p-8 relative z-10 space-y-8">
               <div className="flex flex-col md:flex-row justify-between gap-8">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Available Cash</p>
-                  <p className="text-5xl font-black text-white italic">{formatINR(investorStats?.walletBalance || 0)}</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Available Cash</p>
+                  <p className="text-4xl font-bold text-white">{formatINR(investorStats?.walletBalance || 0)}</p>
                 </div>
                 <div className="flex items-end pb-1 gap-4">
                   <Button 
                     onClick={() => setIsAddingFunds(true)}
-                    className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
+                    className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wider text-[10px] shadow-2xl shadow-primary/20 rounded-xl"
                   >
                     <Plus className="mr-2 w-5 h-5" /> Add Funds
                   </Button>
                   <Button 
                     onClick={() => setIsWithdrawingFunds(true)}
                     variant="outline"
-                    className="h-14 px-8 border-white/10 hover:bg-white/5 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl"
+                    className="h-14 px-8 border-white/10 hover:bg-white/5 text-white font-bold uppercase tracking-wider text-[10px] rounded-xl"
                   >
                     <IndianRupee className="mr-2 w-5 h-5" /> Withdraw
                   </Button>
@@ -210,20 +209,20 @@ export default function SettingsPage() {
 
               <div className="grid grid-cols-2 md:grid-cols-4 gap-6 pt-8 border-t border-white/5">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Total Invested</p>
-                  <p className="text-lg font-black text-white italic">{formatINR(investorStats?.totalInvested || 0)}</p>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Total Invested</p>
+                  <p className="text-lg font-bold text-white">{formatINR(investorStats?.totalInvested || 0)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Locked Capital</p>
-                  <p className="text-lg font-black text-white italic">{formatINR(investorStats?.lockedAmount || 0)}</p>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Locked Capital</p>
+                  <p className="text-lg font-bold text-white">{formatINR(investorStats?.lockedAmount || 0)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Returns Received</p>
-                  <p className="text-lg font-black text-emerald-400 italic">{formatINR(investorStats?.receivedReturns || 0)}</p>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Returns Received</p>
+                  <p className="text-lg font-bold text-emerald-400">{formatINR(investorStats?.receivedReturns || 0)}</p>
                 </div>
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-white/40 uppercase tracking-widest">Pending Payouts</p>
-                  <p className="text-lg font-black text-blue-400 italic">{formatINR(investorStats?.pendingRepayments || 0)}</p>
+                  <p className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Pending Payouts</p>
+                  <p className="text-lg font-bold text-blue-400">{formatINR(investorStats?.pendingRepayments || 0)}</p>
                 </div>
               </div>
             </CardContent>
@@ -231,16 +230,16 @@ export default function SettingsPage() {
 
           {/* Wallet Actions / Quick Links */}
           <div className="space-y-6">
-            <Card className="glass-dark border-white/5 p-6">
-              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] mb-6 text-white/60">Quick Access</CardTitle>
+            <Card className="glass-dark border-white/5 p-6 rounded-2xl">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider mb-6 text-white/60">Quick Access</CardTitle>
               <div className="space-y-3">
                 <Link href="/investor/wallet" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
                   <History className="w-4 h-4 text-primary group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Full Transaction Ledger</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-white">Full Transaction Ledger</span>
                 </Link>
                 <Link href="/investor/portfolio" className="flex items-center gap-3 p-4 rounded-xl bg-white/5 border border-white/5 hover:bg-white/10 transition-all group">
                   <TrendingUp className="w-4 h-4 text-emerald-500 group-hover:scale-110 transition-transform" />
-                  <span className="text-[10px] font-black uppercase tracking-widest text-white">Yield Performance Analytics</span>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-white">Yield Performance Analytics</span>
                 </Link>
               </div>
             </Card>
@@ -250,7 +249,7 @@ export default function SettingsPage() {
                 <AlertCircle className="w-5 h-5 text-primary shrink-0" />
                 <div className="space-y-1">
                   <p className="text-xs font-bold text-white">Manual Clearing Enforced</p>
-                  <p className="text-[10px] text-muted-foreground italic leading-relaxed">
+                  <p className="text-[10px] text-muted-foreground leading-relaxed">
                     Withdrawals are processed manually within 24-48 hours after security verification.
                   </p>
                 </div>
@@ -258,8 +257,8 @@ export default function SettingsPage() {
             </div>
 
             {/* Recent Activity Summary */}
-            <Card className="glass-dark border-white/5 p-6">
-              <CardTitle className="text-xs font-black uppercase tracking-[0.2em] mb-6 text-white/60 flex items-center gap-2">
+            <Card className="glass-dark border-white/5 p-6 rounded-2xl">
+              <CardTitle className="text-xs font-bold uppercase tracking-wider mb-6 text-white/60 flex items-center gap-2">
                 <History className="w-3 h-3" /> Recent Activity
               </CardTitle>
               <div className="space-y-4">
@@ -272,16 +271,16 @@ export default function SettingsPage() {
                         </div>
                         <div className="space-y-0.5">
                           <p className="text-[10px] font-bold text-white uppercase tracking-tight line-clamp-1">{tx.description}</p>
-                          <p className="text-[8px] text-muted-foreground font-medium uppercase tracking-widest">{new Date(tx.created_at).toLocaleDateString()}</p>
+                          <p className="text-[8px] text-muted-foreground font-medium uppercase tracking-wider">{new Date(tx.created_at).toLocaleDateString()}</p>
                         </div>
                       </div>
-                      <p className={`text-[10px] font-black italic ${tx.amount < 0 ? 'text-white' : 'text-emerald-500'}`}>
+                      <p className={`text-[10px] font-bold ${tx.amount < 0 ? 'text-white' : 'text-emerald-500'}`}>
                         {tx.amount > 0 ? '+' : ''}{formatINR(tx.amount)}
                       </p>
                     </div>
                   ))
                 ) : (
-                  <p className="text-[10px] text-muted-foreground italic text-center py-4">No recent activity.</p>
+                  <p className="text-[10px] text-muted-foreground text-center py-4">No recent activity.</p>
                 )}
               </div>
             </Card>
@@ -291,7 +290,7 @@ export default function SettingsPage() {
         {/* Add Funds Modal Overlay */}
         {isAddingFunds && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <Card className="w-full max-w-md glass-dark border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <Card className="w-full max-w-md glass-dark border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 rounded-2xl">
               <CardHeader className="p-8 border-b border-white/5 relative">
                 <Button 
                   variant="ghost" 
@@ -304,13 +303,13 @@ export default function SettingsPage() {
                 <div className="p-3 rounded-2xl bg-primary/10 text-primary w-fit mb-4">
                   <IndianRupee className="w-6 h-6" />
                 </div>
-                <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Add Cash</CardTitle>
-                <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Increase your available capital</CardDescription>
+                <CardTitle className="text-2xl font-bold text-white tracking-tight">Add Cash</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Increase your available capital</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 <form onSubmit={handleAddFunds} className="space-y-6">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Investment Amount (₹)</label>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Investment Amount (₹)</label>
                     <div className="relative group">
                       <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                       <Input 
@@ -318,12 +317,12 @@ export default function SettingsPage() {
                         value={addAmount}
                         onChange={(e) => setAddAmount(e.target.value)}
                         placeholder="e.g. 1,00,000"
-                        className="pl-12 bg-white/5 border-white/10 h-16 font-black italic text-2xl text-white focus:bg-white/10 transition-all placeholder:text-white/10"
+                        className="pl-12 bg-white/5 border-white/10 h-16 font-bold text-2xl text-white focus:bg-white/10 transition-all placeholder:text-white/10"
                         autoFocus
                       />
                     </div>
                     {addAmount && (
-                      <p className="text-[10px] text-emerald-400 font-bold italic text-right animate-in fade-in">
+                      <p className="text-[10px] text-emerald-400 font-bold text-right animate-in fade-in">
                         ≈ ₹{parseFloat(addAmount).toLocaleString('en-IN')} INR
                       </p>
                     )}
@@ -332,7 +331,7 @@ export default function SettingsPage() {
                   <Button 
                     type="submit"
                     disabled={processing}
-                    className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
+                    className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wider text-[10px] shadow-2xl shadow-primary/20 rounded-xl"
                   >
                     {processing ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -352,7 +351,7 @@ export default function SettingsPage() {
         {/* Withdraw Funds Modal Overlay */}
         {isWithdrawingFunds && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
-            <Card className="w-full max-w-md glass-dark border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300">
+            <Card className="w-full max-w-md glass-dark border-white/10 shadow-2xl overflow-hidden animate-in zoom-in-95 duration-300 rounded-2xl">
               <CardHeader className="p-8 border-b border-white/5 relative">
                 <Button 
                   variant="ghost" 
@@ -365,8 +364,8 @@ export default function SettingsPage() {
                 <div className="p-3 rounded-2xl bg-orange-500/10 text-orange-500 w-fit mb-4">
                   <IndianRupee className="w-6 h-6" />
                 </div>
-                <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Withdraw Capital</CardTitle>
-                <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Transfer cash to bank account</CardDescription>
+                <CardTitle className="text-2xl font-bold text-white tracking-tight">Withdraw Capital</CardTitle>
+                <CardDescription className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Transfer cash to bank account</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 <form onSubmit={handleWithdrawFunds} className="space-y-8">
@@ -375,20 +374,20 @@ export default function SettingsPage() {
                     <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-4">
                       <div className="flex items-center gap-3">
                         <Fingerprint className="w-4 h-4 text-orange-400" />
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/60">Destination Account</span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-white/60">Destination Account</span>
                       </div>
                       <div className="grid grid-cols-2 gap-4">
                         <div className="space-y-1">
-                          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">Account Number</p>
-                          <p className="text-xs font-bold text-white tracking-tighter">•••• {investorStats?.bankDetails?.accountNo?.slice(-4) || "N/A"}</p>
+                          <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">Account Number</p>
+                          <p className="text-xs font-bold text-white">•••• {investorStats?.bankDetails?.accountNo?.slice(-4) || "N/A"}</p>
                         </div>
                         <div className="space-y-1">
-                          <p className="text-[8px] font-black text-muted-foreground uppercase tracking-widest">IFSC Code</p>
+                          <p className="text-[8px] font-bold text-muted-foreground uppercase tracking-wider">IFSC Code</p>
                           <p className="text-xs font-bold text-primary uppercase">{investorStats?.bankDetails?.ifscCode || "N/A"}</p>
                         </div>
                       </div>
                       {!investorStats?.bankDetails?.accountNo && (
-                        <p className="text-[10px] text-red-400 font-bold italic flex items-center gap-2">
+                        <p className="text-[10px] text-red-400 font-bold flex items-center gap-2">
                           <ShieldAlert className="w-3 h-3" /> No bank account linked. Update profile.
                         </p>
                       )}
@@ -396,8 +395,8 @@ export default function SettingsPage() {
 
                     <div className="space-y-3">
                       <div className="flex justify-between items-end">
-                        <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Withdrawal Amount (₹)</label>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Available: <span className="text-white">{formatINR(investorStats?.walletBalance || 0)}</span></p>
+                        <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Withdrawal Amount (₹)</label>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Available: <span className="text-white">{formatINR(investorStats?.walletBalance || 0)}</span></p>
                       </div>
                       <div className="relative group">
                         <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
@@ -406,12 +405,12 @@ export default function SettingsPage() {
                           value={withdrawAmount}
                           onChange={(e) => setWithdrawAmount(e.target.value)}
                           placeholder="e.g. 50,000"
-                          className="pl-12 bg-white/5 border-white/10 h-16 font-black italic text-2xl text-white focus:bg-white/10 transition-all placeholder:text-white/10"
+                          className="pl-12 bg-white/5 border-white/10 h-16 font-bold text-2xl text-white focus:bg-white/10 transition-all placeholder:text-white/10"
                           autoFocus
                         />
                       </div>
                       {withdrawAmount && (
-                        <p className="text-[10px] text-orange-400 font-bold italic text-right animate-in fade-in">
+                        <p className="text-[10px] text-orange-400 font-bold text-right animate-in fade-in">
                           ≈ ₹{parseFloat(withdrawAmount).toLocaleString('en-IN')} INR
                         </p>
                       )}
@@ -421,7 +420,7 @@ export default function SettingsPage() {
                   <Button 
                     type="submit"
                     disabled={processing || !withdrawAmount || parseFloat(withdrawAmount) > (investorStats?.walletBalance || 0) || !investorStats?.bankDetails?.accountNo}
-                    className="w-full h-14 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-orange-500/20 rounded-2xl"
+                    className="w-full h-14 bg-orange-500 hover:bg-orange-600 text-white font-bold uppercase tracking-wider text-[10px] shadow-2xl shadow-orange-500/20 rounded-xl"
                   >
                     {processing ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
@@ -432,7 +431,7 @@ export default function SettingsPage() {
                       </>
                     )}
                   </Button>
-                  <p className="text-[8px] text-muted-foreground text-center uppercase tracking-widest font-bold italic">
+                  <p className="text-[8px] text-muted-foreground text-center uppercase tracking-wider font-bold">
                     Funds will be reserved and transferred within 48 hours.
                   </p>
                 </form>
@@ -449,33 +448,33 @@ export default function SettingsPage() {
   return (
     <div className="space-y-8">
       <div className="space-y-1">
-        <h1 className="text-4xl font-black tracking-tight text-white flex items-center gap-3">
+        <h1 className="text-3xl font-bold tracking-tight text-white flex items-center gap-3">
           <SettingsIcon className="w-8 h-8 text-primary" /> Platform Configuration
         </h1>
-        <p className="text-muted-foreground font-medium text-lg">Manage global settings and business logic parameters.</p>
+        <p className="text-muted-foreground font-medium text-sm">Manage global settings and business logic parameters.</p>
       </div>
 
-      <Card className="glass-dark border-white/5">
+      <Card className="glass-dark border-white/5 rounded-2xl">
         <CardHeader className="border-b border-white/5 p-8">
-          <CardTitle className="text-2xl font-black italic">Financial Parameters</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white tracking-tight">Financial Parameters</CardTitle>
           <CardDescription>Configure core financial ratios and fees.</CardDescription>
         </CardHeader>
         <CardContent className="p-8 space-y-12">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Platform Commission Fee (%)</label>
+              <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Platform Commission Fee (%)</label>
               <div className="flex items-center gap-3">
                 <Input 
                   type="number"
                   step="0.1"
                   value={settings.platform_commission || "1.0"}
                   onChange={(e) => setSettings(prev => ({ ...prev, platform_commission: e.target.value }))}
-                  className="bg-white/5 border-white/10 font-black italic text-xl h-14"
+                  className="bg-white/5 border-white/10 font-bold text-xl h-14"
                 />
                 <Button 
                   onClick={() => handleUpdateSetting('platform_commission', settings.platform_commission)}
                   disabled={saving === 'platform_commission'}
-                  className="h-14 px-6 font-bold"
+                  className="h-14 px-6 font-bold rounded-xl"
                 >
                   {saving === 'platform_commission' ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -487,23 +486,23 @@ export default function SettingsPage() {
                   )}
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground italic">Fixed percentage applied to all invoice values (Official Model).</p>
+              <p className="text-[10px] text-muted-foreground">Fixed percentage applied to all invoice values (Official Model).</p>
             </div>
 
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-white/60 uppercase tracking-widest">Pre-Closure Penalty Fee (%)</label>
+              <label className="text-[10px] font-bold text-white/60 uppercase tracking-wider">Pre-Closure Penalty Fee (%)</label>
               <div className="flex items-center gap-3">
                 <Input 
                   type="number"
                   step="0.1"
                   value={settings.preclosure_penalty || "2.5"}
                   onChange={(e) => setSettings(prev => ({ ...prev, preclosure_penalty: e.target.value }))}
-                  className="bg-white/5 border-white/10 font-black italic text-xl h-14"
+                  className="bg-white/5 border-white/10 font-bold text-xl h-14"
                 />
                 <Button 
                   onClick={() => handleUpdateSetting('preclosure_penalty', settings.preclosure_penalty)}
                   disabled={saving === 'preclosure_penalty'}
-                  className="h-14 px-6 font-bold"
+                  className="h-14 px-6 font-bold rounded-xl"
                 >
                   {saving === 'preclosure_penalty' ? (
                     <Loader2 className="w-4 h-4 animate-spin" />
@@ -515,24 +514,24 @@ export default function SettingsPage() {
                   )}
                 </Button>
               </div>
-              <p className="text-[10px] text-muted-foreground italic">Applied on principal amount for early settlements.</p>
+              <p className="text-[10px] text-muted-foreground">Applied on principal amount for early settlements.</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      <Card className="glass-dark border-white/5">
+      <Card className="glass-dark border-white/5 rounded-2xl">
         <CardHeader className="border-b border-white/5 p-8">
-          <CardTitle className="text-2xl font-black italic">Platform Governance</CardTitle>
+          <CardTitle className="text-2xl font-bold text-white tracking-tight">Platform Governance</CardTitle>
           <CardDescription>Manual oversight and system controls.</CardDescription>
         </CardHeader>
         <CardContent className="p-8">
           <div className="flex items-center justify-between p-6 rounded-xl border border-white/5 bg-white/[0.02]">
             <div className="space-y-1">
               <p className="text-lg font-bold text-white">Manual Verification Protocol</p>
-              <p className="text-sm text-muted-foreground italic font-medium">All KYC and Invoice approvals require explicit administrator authorization.</p>
+              <p className="text-sm text-muted-foreground font-medium">All KYC and Invoice approvals require explicit administrator authorization.</p>
             </div>
-            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 font-bold">
+            <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 px-3 py-1 font-bold rounded-full">
               ENFORCED
             </Badge>
           </div>

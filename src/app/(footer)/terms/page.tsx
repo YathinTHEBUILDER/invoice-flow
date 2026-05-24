@@ -2,7 +2,7 @@ export default function TermsPage() {
   return (
     <div className="space-y-12">
       <div className="space-y-4">
-        <h1 className="text-4xl md:text-6xl font-black tracking-tight">Terms of Service</h1>
+        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">Terms of Service</h1>
         <p className="text-muted-foreground font-medium">Last Updated: April 28, 2026</p>
       </div>
 

@@ -128,7 +128,7 @@ export default function InvestorDashboard() {
       {/* Stats Grid */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {statCards.map((stat, i) => (
-          <Card key={i} className="bg-gradient-to-b from-[#0D1117]/90 to-[#080B10]/95 border border-white/[0.04] hover:border-blue-500/20 rounded-2xl transition-all duration-300 relative flex flex-col justify-center shadow-lg shadow-black/25 group">
+          <Card key={i} className="glass-dark rounded-2xl transition-all duration-300 relative flex flex-col justify-center group hover:border-white/10">
             <CardContent className="p-6 relative z-10">
               <div className="flex justify-between items-start mb-4">
                 <div className="w-10 h-10 rounded-xl bg-white/[0.02] border border-white/10 flex items-center justify-center text-neutral-400 group-hover:text-white transition-colors duration-300">
@@ -150,7 +150,7 @@ export default function InvestorDashboard() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Quick Portfolio Overview */}
-        <Card className="bg-[#0D1117]/60 border-white/5 overflow-hidden flex flex-col min-h-[400px] rounded-2xl">
+        <Card className="glass-dark overflow-hidden flex flex-col min-h-[400px] rounded-2xl">
           <CardHeader className="p-6 border-b border-white/5 bg-white/[0.01]">
             <div className="flex justify-between items-center">
                <div className="space-y-1">
@@ -174,28 +174,28 @@ export default function InvestorDashboard() {
                   </div>
                   <Link href="/investor/marketplace">
                      <Button variant="outline" className="h-9 px-4 border-white/5 bg-white/[0.02] hover:bg-white/5 text-xs text-white font-medium rounded-lg">
-                        Browse Assets
-                     </Button>
-                  </Link>
-               </div>
-            ) : (
-               <div className="w-full space-y-4">
-                  <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
-                     <div className="space-y-1">
-                        <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Active Positions</p>
-                        <p className="text-xl font-bold text-white">{stats.activeAssets} Checked Assets</p>
-                     </div>
-                     <div className="p-3 rounded-lg bg-blue-600/10 text-blue-400">
-                        <ShieldCheck className="w-5 h-5" />
-                     </div>
-                  </div>
-               </div>
-            )}
+                         Browse Assets
+                      </Button>
+                   </Link>
+                </div>
+             ) : (
+                <div className="w-full space-y-4">
+                   <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
+                      <div className="space-y-1">
+                         <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Active Positions</p>
+                         <p className="text-xl font-bold text-white">{stats.activeAssets} Checked Assets</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-blue-600/10 text-blue-400">
+                         <ShieldCheck className="w-5 h-5" />
+                      </div>
+                   </div>
+                </div>
+             )}
           </CardContent>
         </Card>
 
         {/* Financial Visibility / Treasury Feed */}
-        <Card className="bg-[#0D1117]/60 border-white/5 overflow-hidden flex flex-col min-h-[400px] rounded-2xl">
+        <Card className="glass-dark overflow-hidden flex flex-col min-h-[400px] rounded-2xl">
           <CardHeader className="p-6 border-b border-white/5 bg-white/[0.01]">
             <CardTitle className="text-base font-bold text-white tracking-tight">Treasury Feed</CardTitle>
             <CardDescription className="text-xs text-neutral-400">Live financial updates and events</CardDescription>

@@ -47,7 +47,7 @@ export default function ContactPage() {
   return (
     <div className="space-y-16">
       <div className="space-y-6">
-        <h1 className="text-5xl md:text-7xl font-black tracking-tighter text-gradient leading-[0.9]">
+        <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-tight">
           Get in Touch.
         </h1>
         <p className="text-xl text-muted-foreground font-medium max-w-2xl leading-relaxed">
@@ -91,7 +91,7 @@ export default function ContactPage() {
           </div>
         </div>
 
-        <div className="glass-dark border-white/5 rounded-[2.5rem] p-8 md:p-12 space-y-8">
+        <div className="glass-dark rounded-2xl p-8 md:p-12 space-y-8">
           {status === "success" ? (
             <div className="flex flex-col items-center justify-center text-center py-12 space-y-6 animate-in fade-in-50 duration-300">
               <div className="w-20 h-20 rounded-full bg-emerald-500/10 flex items-center justify-center text-emerald-500">

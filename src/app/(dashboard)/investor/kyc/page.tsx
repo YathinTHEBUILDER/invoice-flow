@@ -123,11 +123,11 @@ export default function InvestorKYCPage() {
   return (
     <div className="space-y-12 pb-20">
       <div className="max-w-4xl mx-auto text-center space-y-4">
-        <div className="inline-flex p-4 rounded-3xl bg-primary/10 text-primary mb-4 border border-primary/20">
+        <div className="inline-flex p-4 rounded-2xl bg-primary/10 text-primary mb-4 border border-primary/20">
           <ShieldCheck className="w-10 h-10" />
         </div>
-        <h1 className="text-6xl font-black tracking-tighter text-white italic uppercase">Professional Verification</h1>
-        <p className="text-muted-foreground font-medium text-lg italic max-w-2xl mx-auto">
+        <h1 className="text-4xl font-bold tracking-tight text-white">Professional Verification</h1>
+        <p className="text-muted-foreground font-medium text-base max-w-2xl mx-auto">
           Manual checking of identity documents is required to unlock money investment features.
         </p>
       </div>
@@ -135,12 +135,12 @@ export default function InvestorKYCPage() {
       <div className="max-w-5xl mx-auto">
         {kycStatus === 'verified' ? (
           <div className="animate-in fade-in zoom-in duration-700">
-            <Card className="glass-dark border-white/5 overflow-hidden text-center p-20 space-y-8">
-              <div className="mx-auto w-24 h-24 rounded-[30px] bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-2xl shadow-emerald-500/10">
+            <Card className="glass-dark overflow-hidden text-center p-20 space-y-8 rounded-2xl">
+              <div className="mx-auto w-24 h-24 rounded-2xl bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shadow-2xl shadow-emerald-500/10">
                 <CheckCircle2 className="w-12 h-12 text-emerald-500" />
               </div>
               <div className="space-y-3">
-                <h3 className="text-4xl font-black text-white italic">Identity Authenticated</h3>
+                <h3 className="text-2xl font-bold text-white tracking-tight">Identity Authenticated</h3>
                 <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
                   Your investor credentials have been formally checked. All money investment features and portfolio tools are now fully unlocked.
                 </p>
@@ -148,7 +148,7 @@ export default function InvestorKYCPage() {
               <div className="flex justify-center pt-4">
                 <Button 
                   onClick={() => router.push("/investor")}
-                  className="h-14 px-12 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
+                  className="h-14 px-12 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wider text-[10px] shadow-2xl shadow-primary/20 rounded-xl"
                 >
                   Enter Command Center
                 </Button>
@@ -156,34 +156,34 @@ export default function InvestorKYCPage() {
             </Card>
           </div>
         ) : kycStatus === 'pending' ? (
-          <Card className="glass-dark border-white/5 overflow-hidden text-center p-20 space-y-8 animate-in fade-in zoom-in duration-700">
-            <div className="mx-auto w-24 h-24 rounded-[30px] bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-2xl shadow-blue-500/10 animate-pulse">
+          <Card className="glass-dark overflow-hidden text-center p-20 space-y-8 animate-in fade-in zoom-in duration-700 rounded-2xl">
+            <div className="mx-auto w-24 h-24 rounded-2xl bg-blue-500/10 flex items-center justify-center border border-blue-500/20 shadow-2xl shadow-blue-500/10 animate-pulse">
               <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
             </div>
             <div className="space-y-3">
-              <h3 className="text-4xl font-black text-white italic">Manual Checking in Progress</h3>
+              <h3 className="text-2xl font-bold text-white tracking-tight">Manual Checking in Progress</h3>
               <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
                 Our risk assessment team is manually verifying your documents. This process typically concludes within 24-48 business hours.
               </p>
             </div>
             <div className="pt-4">
-              <Badge variant="outline" className="h-10 px-6 rounded-xl border-white/10 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400">
+              <Badge variant="outline" className="h-10 px-6 rounded-xl border-white/10 text-[10px] font-bold uppercase tracking-wider text-blue-400">
                 Verification Phase: Document Audit
               </Badge>
             </div>
           </Card>
         ) : (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) ? (
-          <Card className="glass-dark border-white/5 overflow-hidden text-center p-20 space-y-8 animate-in fade-in zoom-in duration-700">
-            <div className="mx-auto w-24 h-24 rounded-[30px] bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-2xl shadow-red-500/10">
+          <Card className="glass-dark overflow-hidden text-center p-20 space-y-8 animate-in fade-in zoom-in duration-700 rounded-2xl">
+            <div className="mx-auto w-24 h-24 rounded-2xl bg-red-500/10 flex items-center justify-center border border-red-500/20 shadow-2xl shadow-red-500/10">
               <AlertTriangle className="w-12 h-12 text-red-500" />
             </div>
             <div className="space-y-3">
-              <h3 className="text-4xl font-black text-white italic">Verification Lockout Active</h3>
+              <h3 className="text-2xl font-bold text-white tracking-tight">Verification Lockout Active</h3>
               <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
                 Due to multiple consecutive KYC rejections, your ability to submit credentials has been temporarily restricted for security purposes.
               </p>
               <div className="pt-4 flex flex-col items-center gap-4">
-                <div className="px-8 py-3 bg-red-500/5 border border-red-500/20 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] text-red-500">
+                <div className="px-8 py-3 bg-red-500/5 border border-red-500/20 rounded-xl text-[10px] font-bold uppercase tracking-wider text-red-500">
                   Resubmission Available in: {
                     (() => {
                       const remaining = 8 * 60 * 60 * 1000 - (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime());
@@ -193,7 +193,7 @@ export default function InvestorKYCPage() {
                     })()
                   }
                 </div>
-                <p className="text-xs text-muted-foreground italic">Previous Rejection Remark: {profile.kycNotes || "N/A"}</p>
+                <p className="text-xs text-muted-foreground">Previous Rejection Remark: {profile.kycNotes || "N/A"}</p>
               </div>
             </div>
           </Card>
@@ -201,16 +201,16 @@ export default function InvestorKYCPage() {
           <form onSubmit={handleSubmit} className="space-y-12">
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               <div className="lg:col-span-2 space-y-8">
-                <Card className="glass-dark border-white/5 overflow-hidden">
+                <Card className="glass-dark overflow-hidden rounded-2xl">
                   <CardHeader className="p-10 border-b border-white/5">
-                    <CardTitle className="text-2xl font-black italic tracking-tighter text-white uppercase">Identity Repositories</CardTitle>
+                    <CardTitle className="text-2xl font-bold tracking-tight text-white uppercase">Identity Repositories</CardTitle>
                     <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Upload mandatory institutional documentation</CardDescription>
                   </CardHeader>
                   <CardContent className="p-10 space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
                       {/* PAN Upload */}
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                           <Building2 className="w-3 h-3" /> PAN Card (Required)
                         </label>
                         <div className="relative group">
@@ -224,12 +224,12 @@ export default function InvestorKYCPage() {
                             {previews.pan ? (
                               <div className="flex flex-col items-center">
                                 <FileText className="w-8 h-8 text-emerald-500 mb-1" />
-                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{documents.pan?.name.slice(0, 20)}...</span>
+                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{documents.pan?.name.slice(0, 20)}...</span>
                               </div>
                             ) : (
                               <>
                                 <Upload className="w-6 h-6 text-muted-foreground" />
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Click or Drop File</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Click or Drop File</span>
                               </>
                             )}
                           </div>
@@ -238,7 +238,7 @@ export default function InvestorKYCPage() {
 
                       {/* Aadhaar Upload */}
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                           <FileCheck className="w-3 h-3" /> Identity Proof (Required)
                         </label>
                         <div className="relative group">
@@ -252,12 +252,12 @@ export default function InvestorKYCPage() {
                             {previews.aadhaar ? (
                               <div className="flex flex-col items-center">
                                 <FileText className="w-8 h-8 text-emerald-500 mb-1" />
-                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{documents.aadhaar?.name.slice(0, 20)}...</span>
+                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{documents.aadhaar?.name.slice(0, 20)}...</span>
                               </div>
                             ) : (
                               <>
                                 <Upload className="w-6 h-6 text-muted-foreground" />
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Aadhaar / Passport / DL</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Aadhaar / Passport / DL</span>
                               </>
                             )}
                           </div>
@@ -266,7 +266,7 @@ export default function InvestorKYCPage() {
 
                       {/* Bank Proof */}
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                           <CreditCard className="w-3 h-3" /> Bank Verification
                         </label>
                         <div className="relative group">
@@ -280,12 +280,12 @@ export default function InvestorKYCPage() {
                             {previews.bankProof ? (
                               <div className="flex flex-col items-center">
                                 <FileText className="w-8 h-8 text-emerald-500 mb-1" />
-                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{documents.bankProof?.name.slice(0, 20)}...</span>
+                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{documents.bankProof?.name.slice(0, 20)}...</span>
                               </div>
                             ) : (
                               <>
                                 <Upload className="w-6 h-6 text-muted-foreground" />
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Cancelled Cheque / Statement</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Cancelled Cheque / Statement</span>
                               </>
                             )}
                           </div>
@@ -294,7 +294,7 @@ export default function InvestorKYCPage() {
 
                       {/* Address Proof */}
                       <div className="space-y-4">
-                        <label className="text-[10px] font-black uppercase tracking-widest text-muted-foreground flex items-center gap-2">
+                        <label className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2">
                           <MapPin className="w-3 h-3" /> Address Validation
                         </label>
                         <div className="relative group">
@@ -308,12 +308,12 @@ export default function InvestorKYCPage() {
                             {previews.addressProof ? (
                               <div className="flex flex-col items-center">
                                 <FileText className="w-8 h-8 text-emerald-500 mb-1" />
-                                <span className="text-[10px] font-black text-emerald-500 uppercase tracking-widest">{documents.addressProof?.name.slice(0, 20)}...</span>
+                                <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">{documents.addressProof?.name.slice(0, 20)}...</span>
                               </div>
                             ) : (
                               <>
                                 <Upload className="w-6 h-6 text-muted-foreground" />
-                                <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Utility Bill / Rental Agreement</span>
+                                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Utility Bill / Rental Agreement</span>
                               </>
                             )}
                           </div>
@@ -327,17 +327,17 @@ export default function InvestorKYCPage() {
               </div>
 
               <div className="space-y-8">
-                <Card className="glass-dark border-white/5 overflow-hidden">
+                <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
                   <CardContent className="p-10 space-y-8">
                     <div className="flex items-center gap-3">
                       <div className="p-2 rounded-xl bg-primary/10 text-primary">
                         <ShieldCheck className="w-5 h-5" />
                       </div>
-                      <p className="text-sm font-black text-white italic uppercase tracking-widest">Verification Status</p>
+                      <p className="text-sm font-bold text-white uppercase tracking-widest">Verification Status</p>
                     </div>
                     
                     <div className="space-y-4">
-                      <div className="flex items-center justify-between text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                      <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-widest text-muted-foreground">
                         <span>Progress</span>
                         <span>{Object.values(documents).filter(Boolean).length} / 4</span>
                       </div>
@@ -349,14 +349,14 @@ export default function InvestorKYCPage() {
                       </div>
                     </div>
 
-                    <p className="text-[10px] text-muted-foreground font-medium leading-relaxed italic">
+                    <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                       By submitting these documents, you authorize InvoiceFlow to perform professional-grade manual checking and financial due diligence.
                     </p>
 
                     <Button 
                       type="submit"
                       disabled={saving || (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000))}
-                      className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
+                      className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wider text-[10px] shadow-2xl shadow-primary/20 rounded-xl"
                     >
                       {saving ? (
                         <Loader2 className="w-4 h-4 animate-spin" />
@@ -372,9 +372,9 @@ export default function InvestorKYCPage() {
                   </CardContent>
                 </Card>
 
-                <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4">
-                  <Badge variant="outline" className="text-[8px] font-black uppercase tracking-[0.2em] mb-2">Institutional Security</Badge>
-                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed italic">
+                <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
+                  <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-wider mb-2">Institutional Security</Badge>
+                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                     Every document is encrypted and stored in an isolated vault with zero public ingress. Our physical agents manually verify each claim.
                   </p>
                 </div>

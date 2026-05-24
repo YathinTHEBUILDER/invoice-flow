@@ -175,21 +175,21 @@ export default function InvoicesPage() {
     <div className="space-y-12 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
-          <h2 className="text-5xl font-black tracking-tighter text-white">Invoice Management</h2>
-          <p className="text-muted-foreground font-medium text-lg italic">Submit and track your receivables for financing.</p>
+          <h2 className="text-4xl font-bold tracking-tight text-white">Invoice Management</h2>
+          <p className="text-muted-foreground font-medium text-sm">Submit and track your receivables for financing.</p>
         </div>
         <div className="flex gap-4">
           <Button 
             onClick={() => fetchInvoices()}
             variant="outline"
-            className="h-14 px-6 border-white/10 hover:bg-white/5 text-white font-black uppercase tracking-widest text-xs"
+            className="h-14 px-6 border-white/10 hover:bg-white/5 text-white font-bold uppercase tracking-wider text-xs rounded-xl"
           >
             <Loader2 className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button 
             onClick={() => profile?.kyc_status === 'verified' ? setShowUploadModal(true) : toast.error("KYC Verification Required")}
             disabled={profile?.kyc_status !== 'verified'}
-            className="h-14 px-8 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/20 disabled:opacity-50"
+            className="h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider text-xs shadow-2xl shadow-primary/20 disabled:opacity-50 rounded-xl"
           >
             <Plus className="mr-2 h-5 w-5" /> {profile?.kyc_status === 'verified' ? "Submit New Invoice" : "Verification Required"}
           </Button>
@@ -197,7 +197,7 @@ export default function InvoicesPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-8">
-        <Card className="glass-dark border-white/5 overflow-hidden">
+        <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
           <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between">
             <div className="flex items-center gap-4">
               <div className="relative group">
@@ -213,29 +213,29 @@ export default function InvoicesPage() {
                 <Button 
                   variant="outline" 
                   onClick={() => setStatusFilter("all")}
-                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[10px] px-6 ${statusFilter === 'all' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
+                  className={`h-11 border-white/10 font-bold uppercase tracking-wider text-[10px] px-6 rounded-lg ${statusFilter === 'all' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
                 >
                   All
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setStatusFilter("pending_verification")}
-                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[10px] px-6 ${statusFilter === 'pending_verification' ? 'bg-blue-500/20 border-blue-500/40 text-blue-500' : 'text-white'}`}
+                  className={`h-11 border-white/10 font-bold uppercase tracking-wider text-[10px] px-6 rounded-lg ${statusFilter === 'pending_verification' ? 'bg-blue-500/20 border-blue-500/40 text-blue-500' : 'text-white'}`}
                 >
                   Review
                 </Button>
                 <Button 
                   variant="outline" 
                   onClick={() => setStatusFilter("funded")}
-                  className={`h-11 border-white/10 font-black uppercase tracking-widest text-[10px] px-6 ${statusFilter === 'funded' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
+                  className={`h-11 border-white/10 font-bold uppercase tracking-wider text-[10px] px-6 rounded-lg ${statusFilter === 'funded' ? 'bg-primary/20 border-primary/40 text-primary' : 'text-white'}`}
                 >
                   Funded
                 </Button>
               </div>
             </div>
             <div className="text-right">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Invoices</p>
-              <p className="text-xl font-black text-white">{invoices.length}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Invoices</p>
+              <p className="text-xl font-bold text-white">{invoices.length}</p>
             </div>
           </CardHeader>
           <CardContent className="p-0">
@@ -245,16 +245,16 @@ export default function InvoicesPage() {
               </div>
             ) : invoices.length === 0 ? (
               <div className="text-center py-32 space-y-6">
-                <div className="mx-auto w-20 h-20 rounded-3xl bg-white/[0.02] flex items-center justify-center border border-white/10">
+                <div className="mx-auto w-20 h-20 rounded-2xl bg-white/[0.02] flex items-center justify-center border border-white/10">
                   <FileText className="w-10 h-10 text-white/20" />
                 </div>
                 <div className="space-y-2">
-                  <p className="text-white font-black text-xl italic">No Invoices Found</p>
+                  <p className="text-white font-bold text-xl">No Invoices Found</p>
                   <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">Start your financing journey by uploading your first verifiable invoice.</p>
                 </div>
                 <Button 
                   onClick={() => setShowUploadModal(true)}
-                  variant="outline" className="h-12 px-10 border-white/10 hover:bg-white/5 font-black uppercase tracking-widest text-[10px]"
+                  variant="outline" className="h-12 px-10 border-white/10 hover:bg-white/5 font-bold uppercase tracking-wider text-[10px] rounded-xl"
                 >
                   Submit First Invoice
                 </Button>
@@ -264,11 +264,11 @@ export default function InvoicesPage() {
                 <table className="w-full text-left border-collapse">
                   <thead>
                     <tr className="bg-white/[0.02] border-b border-white/5">
-                      <th className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Invoice Details</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Buyer Information</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Amount</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Due Date</th>
-                      <th className="px-8 py-5 text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Status</th>
+                      <th className="px-8 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Invoice Details</th>
+                      <th className="px-8 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Buyer Information</th>
+                      <th className="px-8 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Amount</th>
+                      <th className="px-8 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Due Date</th>
+                      <th className="px-8 py-5 text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Status</th>
                       <th className="px-8 py-5"></th>
                     </tr>
                   </thead>
@@ -281,7 +281,7 @@ export default function InvoicesPage() {
                               <FileText className="w-5 h-5" />
                             </div>
                             <div>
-                              <p className="text-sm font-black text-white">{invoice.invoice_number}</p>
+                              <p className="text-sm font-bold text-white">{invoice.invoice_number}</p>
                               <p className="text-[10px] font-bold text-muted-foreground uppercase">Uploaded {new Date(invoice.created_at).toLocaleDateString()}</p>
                             </div>
                           </div>
@@ -289,11 +289,11 @@ export default function InvoicesPage() {
                         <td className="px-8 py-6">
                           <div>
                             <p className="text-sm font-bold text-white">{invoice.buyer_name || "N/A"}</p>
-                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{invoice.buyer_gstin || "No GSTIN"}</p>
+                            <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{invoice.buyer_gstin || "No GSTIN"}</p>
                           </div>
                         </td>
                         <td className="px-8 py-6">
-                          <p className="text-sm font-black text-white">{formatINR(invoice.amount)}</p>
+                          <p className="text-sm font-bold text-white">{formatINR(invoice.amount)}</p>
                         </td>
                         <td className="px-8 py-6">
                           <p className="text-sm font-bold text-white">{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "N/A"}</p>
@@ -307,7 +307,7 @@ export default function InvoicesPage() {
                               variant="ghost" 
                               size="sm" 
                               onClick={() => setSelectedInvoice(invoice)}
-                              className="h-9 text-[10px] font-black uppercase text-red-500/80 hover:text-red-500 hover:bg-red-500/10"
+                              className="h-9 text-[10px] font-bold uppercase text-red-500/80 hover:text-red-500 hover:bg-red-500/10 rounded-lg"
                             >
                               Dispute
                             </Button>
@@ -319,7 +319,7 @@ export default function InvoicesPage() {
                                 if (url) window.open(url, '_blank');
                                 else toast.error("Invoice document not available.");
                               }}
-                              className="h-9 text-white/60 hover:text-white"
+                              className="h-9 text-white/60 hover:text-white rounded-lg"
                             >
                               <FileText className="w-4 h-4" />
                             </Button>
@@ -327,7 +327,7 @@ export default function InvoicesPage() {
                               variant="ghost" 
                               size="sm" 
                               onClick={() => router.push(`/msme/investments?id=${invoice.id}`)}
-                              className="h-9 text-white/60 hover:text-white"
+                              className="h-9 text-white/60 hover:text-white rounded-lg"
                             >
                               <ChevronRight className="w-4 h-4" />
                             </Button>
@@ -347,17 +347,17 @@ export default function InvoicesPage() {
       {showUploadModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !uploading && setShowUploadModal(false)} />
-          <Card className="relative w-full max-w-2xl glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+          <Card className="relative w-full max-w-2xl glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300 rounded-2xl">
             <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-2xl font-black italic">Submit Invoice</CardTitle>
+                <CardTitle className="text-2xl font-bold text-white tracking-tight">Submit Invoice</CardTitle>
                 <CardDescription className="text-muted-foreground font-medium">Initialize a financing request with invoice details.</CardDescription>
               </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={() => setShowUploadModal(false)}
-                className="hover:bg-white/5"
+                className="hover:bg-white/5 rounded-lg"
                 disabled={uploading}
               >
                 <X className="w-5 h-5" />
@@ -367,43 +367,43 @@ export default function InvoicesPage() {
               <form onSubmit={handleUpload} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Invoice Number</label>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Invoice Number</label>
                     <Input 
                       name="invoice_number" 
                       required 
-                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
+                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all rounded-xl"
                       placeholder=""
                     />
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Invoice Amount (₹)</label>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Invoice Amount (₹)</label>
                     <Input 
                       name="amount" 
                       type="number" 
                       required 
-                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
+                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all rounded-xl"
                       placeholder=""
                     />
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Buyer Name</label>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Buyer Name</label>
                     <Input 
                       name="buyer_name" 
                       required 
-                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
+                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all rounded-xl"
                       placeholder=""
                     />
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Buyer GSTIN</label>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Buyer GSTIN</label>
                     <Input 
                       name="buyer_gstin" 
                       required 
-                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase"
+                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase rounded-xl"
                       placeholder=""
                     />
                   </div>                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Due Date</label>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Due Date</label>
                     <div className="relative group">
                       <Input 
                         name="due_date" 
@@ -411,20 +411,20 @@ export default function InvoicesPage() {
                         required 
                         value={formData.dueDate}
                         onChange={(e) => setFormData(prev => ({ ...prev, dueDate: e.target.value }))}
-                        className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all pl-12"
+                        className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all pl-12 rounded-xl"
                       />
                       <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-hover:text-primary transition-colors" />
                     </div>
                   </div>
                   <div className="space-y-3">
-                     <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Duration (Days)</label>
+                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Duration (Days)</label>
                     <div className="relative group">
                       <Input 
                         name="tenure_days" 
                         type="number" 
                         value={formData.tenure}
                         readOnly
-                        className="bg-white/5 border-white/10 h-14 font-bold text-white/50 focus:bg-white/10 transition-all pl-12 cursor-not-allowed"
+                        className="bg-white/5 border-white/10 h-14 font-bold text-white/50 focus:bg-white/10 transition-all pl-12 cursor-not-allowed rounded-xl"
                         placeholder="Auto-calculated"
                       />
                       <Clock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-hover:text-primary transition-colors" />
@@ -432,14 +432,14 @@ export default function InvoicesPage() {
                   </div>
 
                   <div className="md:col-span-2 space-y-3">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Upload Invoice Document (PDF/JPG)</label>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Upload Invoice Document (PDF/JPG)</label>
                     <div className="relative group">
                       <Input 
                         name="invoice_file" 
                         type="file" 
                         accept=".pdf,.jpg,.jpeg,.png"
                         required 
-                        className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all pt-3 cursor-pointer file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-black file:bg-primary/10 file:text-primary hover:file:bg-primary/20"
+                        className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all pt-3 cursor-pointer file:mr-4 file:py-1 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 rounded-xl"
                       />
                     </div>
                   </div>
@@ -462,14 +462,14 @@ export default function InvoicesPage() {
                       setShowUploadModal(false);
                       setFormData({ dueDate: "", tenure: "" });
                     }}
-                    className="flex-1 h-14 font-black uppercase tracking-widest text-[10px]"
+                    className="flex-1 h-14 font-bold uppercase tracking-wider text-[10px] rounded-xl"
                     disabled={uploading}
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit"
-                    className="flex-[2] h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20"
+                    className="flex-[2] h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-bold uppercase tracking-wider text-[10px] shadow-xl shadow-primary/20 rounded-xl"
                     disabled={uploading}
                   >
                     {uploading ? (
@@ -491,27 +491,27 @@ export default function InvoicesPage() {
       {selectedInvoice && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => !disputing && setSelectedInvoice(null)} />
-          <Card className="relative w-full max-w-lg glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+          <Card className="relative w-full max-w-lg glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300 rounded-2xl">
             <CardHeader className="p-8 border-b border-white/5">
-              <CardTitle className="text-2xl font-black italic">Raise Dispute</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Contest Invoice #{selectedInvoice.invoice_number}</CardDescription>
+              <CardTitle className="text-2xl font-bold text-white tracking-tight">Raise Dispute</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium uppercase tracking-wider text-[10px]">Contest Invoice #{selectedInvoice.invoice_number}</CardDescription>
             </CardHeader>
             <form onSubmit={handleRaiseDispute}>
               <CardContent className="p-8 space-y-6">
                 <input type="hidden" name="invoice_id" value={selectedInvoice.id} />
                 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Dispute Subject</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Dispute Subject</label>
                   <Input 
                     name="subject"
                     required
                     placeholder="e.g., Buyer payment already received"
-                    className="bg-white/5 border-white/10 h-12 font-bold text-white focus:bg-white/10 transition-all"
+                    className="bg-white/5 border-white/10 h-12 font-bold text-white focus:bg-white/10 transition-all rounded-xl"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Detailed Message</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Detailed Message</label>
                   <textarea 
                     name="message"
                     required
@@ -523,7 +523,7 @@ export default function InvoicesPage() {
 
                 <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex gap-3">
                   <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
-                  <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
+                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                     Formal disputes will suspend all cash operations on this asset until resolved by an administrator.
                   </p>
                 </div>
@@ -533,7 +533,7 @@ export default function InvoicesPage() {
                     type="button"
                     variant="ghost"
                     onClick={() => setSelectedInvoice(null)}
-                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] hover:bg-white/5"
+                    className="flex-1 h-12 font-bold uppercase tracking-wider text-[10px] hover:bg-white/5 rounded-xl"
                     disabled={disputing}
                   >
                     Cancel
@@ -541,7 +541,7 @@ export default function InvoicesPage() {
                   <Button 
                     type="submit"
                     disabled={disputing}
-                    className="flex-1 h-12 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-[10px]"
+                    className="flex-1 h-12 bg-red-500 hover:bg-red-600 text-white font-bold uppercase tracking-wider text-[10px] rounded-xl"
                   >
                     {disputing ? <Loader2 className="w-4 h-4 animate-spin" /> : "Initiate Mediation"}
                   </Button>

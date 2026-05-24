@@ -78,6 +78,12 @@ async function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) {
     return process.env.NEXT_PUBLIC_SITE_URL;
   }
+  if (process.env.NEXT_PUBLIC_VERCEL_URL) {
+    return `https://${process.env.NEXT_PUBLIC_VERCEL_URL}`;
+  }
+  if (process.env.VERCEL_URL) {
+    return `https://${process.env.VERCEL_URL}`;
+  }
   try {
     const headerList = await headers();
     const host = headerList.get("host");
@@ -152,13 +158,15 @@ export const signInAction = actionClient
       throw new Error("Invalid login credentials");
     }
 
-    // Check user metadata role
-    const userRole = data?.user?.user_metadata?.role;
-    if (role && userRole && userRole !== role) {
-      // Immediately sign them out so their session is invalidated
+    // Check user metadata role or default to investor
+    const userRole = data?.user?.user_metadata?.role || "investor";
+    
+    // Strict role validation to prevent cross-portal login
+    if (role && userRole !== role) {
+      // Sign out to prevent session from sticking
       await supabase.auth.signOut();
       const formattedRole = userRole === "msme" ? "MSME" : userRole === "investor" ? "Investor" : "Admin";
-      throw new Error(`This email is registered as an ${formattedRole}`);
+      throw new Error(`Access Denied: This email is registered as an ${formattedRole}`);
     }
 
     revalidatePath("/", "layout");

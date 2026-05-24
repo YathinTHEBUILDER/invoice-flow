@@ -39,17 +39,17 @@ function SignupContent() {
             ) : (
               <LineChart className="w-5 h-5 text-primary" />
             )}
-            <span className="text-sm font-black uppercase tracking-widest">
+            <span className="text-sm font-bold uppercase tracking-widest">
               {role === "msme" ? "MSME Enrollment" : "Investor Registration"}
             </span>
           </div>
 
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-gradient leading-none">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white leading-none">
             Create Account.
           </h1>
         </div>
 
-        <div className="glass-dark border-white/5 p-8 md:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+        <div className="glass-dark p-8 md:p-12 rounded-2xl shadow-2xl relative overflow-hidden group">
           <div className="absolute -top-24 -right-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-1000" />
           
           <AuthForm 

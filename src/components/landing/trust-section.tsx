@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Check, UserCheck, ClipboardCheck, FileCheck2, Landmark, ListTodo } from "lucide-react";
+import { UserCheck, ClipboardCheck, FileCheck2, Landmark, ListTodo } from "lucide-react";
 
 export function TrustSection() {
   const steps = [
@@ -33,47 +33,75 @@ export function TrustSection() {
   ];
 
   return (
-    <section className="w-full max-w-7xl mx-auto px-4 md:px-8 py-20 border-b border-white/[0.03] bg-gradient-to-b from-transparent to-[#080B10]/20">
+    <section className="w-full max-w-7xl mx-auto px-4 md:px-8 py-24 md:py-32 border-b border-white/[0.03] relative overflow-hidden">
       
+      {/* Background Subtle Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/[0.02] to-transparent pointer-events-none" />
+
       {/* Section Header */}
-      <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
-        <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-emerald-500/5 border border-emerald-500/15 text-[10px] font-semibold tracking-wider text-emerald-400 uppercase">
-          Risk Management Standard
-        </span>
-        <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+      <div className="text-center max-w-3xl mx-auto mb-16 space-y-6 relative z-10">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-xs font-semibold tracking-wider text-emerald-400 uppercase backdrop-blur-md">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+            Risk Management Standard
+          </span>
+        </motion.div>
+        
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.1] text-balance"
+        >
           Underwritten for financial credibility
-        </h2>
-        <p className="text-sm text-neutral-400 max-w-xl mx-auto">
+        </motion.h2>
+        
+        <motion.p 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          className="text-base text-neutral-400 max-w-xl mx-auto leading-relaxed"
+        >
           We manually verify every asset on the platform to prevent double-invoicing, disputes, and default exposure.
-        </p>
+        </motion.p>
       </div>
 
       {/* Horizontal checklist layout */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-5">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 relative z-10">
         {steps.map((item, idx) => {
           const Icon = item.icon;
           return (
             <motion.div
               key={idx}
-              initial={{ opacity: 0, scale: 0.98 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              whileInView={{ opacity: 1, y: 0, scale: 1 }}
               viewport={{ once: true }}
-              whileHover={{ y: -6, scale: 1.01, transition: { duration: 0.25, ease: "easeOut" } }}
-              transition={{ duration: 0.5, delay: idx * 0.1 }}
-              className="bg-gradient-to-b from-[#0D1117]/90 to-[#080B10]/95 border border-white/[0.04] hover:border-emerald-500/30 hover:shadow-[0_15px_30px_rgba(0,0,0,0.3),0_0_20px_rgba(16,185,129,0.06)] rounded-2xl p-5 text-left relative overflow-hidden group transition-all duration-300 shadow-lg shadow-black/20"
+              whileHover={{ y: -8, transition: { duration: 0.3, ease: "easeOut" } }}
+              transition={{ duration: 0.6, delay: idx * 0.15 }}
+              className="group relative overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-6 text-left transition-all duration-500 cursor-default hover:shadow-[0_0_40px_rgba(16,185,129,0.15)] hover:border-emerald-500/40"
             >
-              {/* Soft Top Glow Accent */}
-              <div className="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-transparent via-emerald-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+              {/* Dynamic Gradient Background on Hover */}
+              <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/20 to-emerald-500/0 opacity-0 group-hover:opacity-10 transition-opacity duration-500" />
+              
+              {/* Inner Border Shine */}
+              <div className="absolute inset-0 rounded-3xl border border-white/5 group-hover:border-white/10 transition-colors pointer-events-none" />
 
-              <div className="flex items-center gap-3 mb-3">
-                <div className="w-8 h-8 rounded-lg bg-emerald-500/5 border border-emerald-500/15 flex items-center justify-center text-emerald-400 shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300">
-                  <Icon className="w-4 h-4" />
-                </div>
-                <h3 className="text-xs font-bold text-white tracking-tight leading-snug">
-                  {item.title}
-                </h3>
+              <div className="w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br from-emerald-500/20 to-emerald-500/0 border border-emerald-500/20 text-emerald-400 mb-6 shrink-0 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-all duration-500">
+                <Icon className="w-6 h-6" />
               </div>
-              <p className="text-xs text-neutral-400 leading-relaxed font-normal">
+              
+              <h3 className="text-base font-bold text-white tracking-tight mb-3">
+                {item.title}
+              </h3>
+              
+              <p className="text-sm text-neutral-400 leading-relaxed font-medium">
                 {item.desc}
               </p>
             </motion.div>

@@ -9,11 +9,9 @@ import {
   User as UserIcon,
   Mail,
   Building,
-  Shield,
   Save,
   Loader2,
   LogOut,
-  ArrowRight,
   MapPin,
   CreditCard,
   Landmark
@@ -119,17 +117,17 @@ export default function ProfilePage() {
         <div className="absolute inset-0 bg-gradient-to-r from-primary/10 via-transparent to-transparent blur-3xl -z-10" />
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-8">
           <div className="flex items-center gap-6">
-            <div className="h-24 w-24 rounded-3xl bg-gradient-to-br from-primary to-purple-600 p-1 shadow-2xl shadow-primary/20">
-              <div className="h-full w-full rounded-[20px] bg-black flex items-center justify-center text-4xl font-black text-white">
+            <div className="h-24 w-24 rounded-2xl bg-gradient-to-br from-primary to-purple-600 p-1 shadow-xl shadow-primary/20">
+              <div className="h-full w-full rounded-xl bg-black flex items-center justify-center text-4xl font-bold text-white">
                 {initials}
               </div>
             </div>
             <div className="space-y-1">
-              <h1 className="text-4xl font-black tracking-tighter text-white">
+              <h1 className="text-3xl font-bold tracking-tight text-white">
                 {fullName || user?.email?.split('@')[0]}
               </h1>
               <div className="flex items-center gap-3">
-                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-black uppercase tracking-widest text-[10px] px-3 py-1">
+                <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 font-bold uppercase tracking-wider text-[10px] px-3 py-1 rounded-full">
                   {role}
                 </Badge>
                 <span className="text-muted-foreground text-sm font-medium flex items-center gap-1.5">
@@ -143,7 +141,7 @@ export default function ProfilePage() {
             <form action={signOutAction}>
               <Button 
                 variant="destructive" 
-                className="h-12 px-8 font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-red-500/20"
+                className="h-12 px-8 font-bold uppercase tracking-wider text-[10px] shadow-xl shadow-red-500/20 rounded-xl"
               >
                 <LogOut className="mr-2 h-4 w-4" /> Sign Out
               </Button>
@@ -154,38 +152,38 @@ export default function ProfilePage() {
 
       <div className="max-w-4xl mx-auto space-y-12">
         {/* Card 1: Identity Management */}
-        <Card className="glass-dark border-white/5 overflow-hidden">
+        <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
           <CardHeader className="bg-white/[0.02] border-b border-white/5 p-8">
             <div className="flex items-center gap-3 mb-1">
               <div className="p-2 rounded-lg bg-primary/10 text-primary">
                 <UserIcon className="w-5 h-5" />
               </div>
-              <CardTitle className="text-2xl font-black italic">Identity Management</CardTitle>
+              <CardTitle className="text-2xl font-bold text-white tracking-tight">Identity Management</CardTitle>
             </div>
             <CardDescription>Configure your administrative profile details.</CardDescription>
           </CardHeader>
           <CardContent className="p-8 space-y-8">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Administrative Name</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Administrative Name</label>
                 <div className="relative group">
                   <UserIcon className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <Input 
                     value={fullName}
                     onChange={(e) => setFullName(e.target.value)}
-                    className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
+                    className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all rounded-lg"
                     placeholder="Enter your full name"
                   />
                 </div>
               </div>
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Registered Email</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Registered Email</label>
                 <div className="relative group">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20" />
                   <Input 
                     value={user?.email || ""}
                     disabled
-                    className="pl-12 bg-white/5 border-white/5 h-14 font-bold text-white/40 select-none cursor-not-allowed"
+                    className="pl-12 bg-white/5 border-white/5 h-14 font-bold text-white/40 select-none cursor-not-allowed rounded-lg"
                   />
                 </div>
               </div>
@@ -195,45 +193,45 @@ export default function ProfilePage() {
 
         {/* Card 2: Business Entity Details (Only for MSMEs) */}
         {role === "msme" && (
-          <Card className="glass-dark border-white/5 overflow-hidden">
+          <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 p-8">
               <div className="flex items-center gap-3 mb-1">
                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
                   <Building className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-2xl font-black italic">Business Entity Details</CardTitle>
+                <CardTitle className="text-2xl font-bold text-white tracking-tight">Business Entity Details</CardTitle>
               </div>
               <CardDescription>Calibrate entity name, GSTIN, and corporate office address.</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Affiliated Entity</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Affiliated Entity</label>
                   <div className="relative group">
                     <Building className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input 
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
-                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
+                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all rounded-lg"
                       placeholder="Company Name"
                     />
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">GSTIN</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">GSTIN</label>
                   <div className="relative group">
                     <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input 
                       value={gstin}
                       onChange={(e) => setGstin(e.target.value)}
-                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase"
+                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase rounded-lg"
                       placeholder="GSTIN"
                     />
                   </div>
                 </div>
               </div>
               <div className="space-y-3">
-                <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Company Office Address</label>
+                <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Company Office Address</label>
                 <div className="relative group">
                   <MapPin className="absolute left-4 top-[22px] w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                   <textarea 
@@ -250,38 +248,38 @@ export default function ProfilePage() {
 
         {/* Card 3: Settlement Bank Account (MSME & Investor) */}
         {role !== "admin" && role !== "" && (
-          <Card className="glass-dark border-white/5 overflow-hidden">
+          <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 p-8">
               <div className="flex items-center gap-3 mb-1">
                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
                   <Landmark className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-2xl font-black italic">Settlement Bank Account</CardTitle>
+                <CardTitle className="text-2xl font-bold text-white tracking-tight">Settlement Bank Account</CardTitle>
               </div>
               <CardDescription>Verify your payout destination for withdrawals and repayments.</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Bank Account Number</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Bank Account Number</label>
                   <div className="relative group">
                     <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input 
                       value={bankAccountNo}
                       onChange={(e) => setBankAccountNo(e.target.value)}
-                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all"
+                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all rounded-lg"
                       placeholder="Bank Account Number"
                     />
                   </div>
                 </div>
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">IFSC Code</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">IFSC Code</label>
                   <div className="relative group">
                     <Landmark className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input 
                       value={ifscCode}
                       onChange={(e) => setIfscCode(e.target.value)}
-                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase"
+                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase rounded-lg"
                       placeholder="IFSC Code"
                     />
                   </div>
@@ -293,26 +291,26 @@ export default function ProfilePage() {
 
         {/* Card 4: Tax and Compliance Identifiers (MSME & Investor) */}
         {role !== "admin" && role !== "" && (
-          <Card className="glass-dark border-white/5 overflow-hidden">
+          <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
             <CardHeader className="bg-white/[0.02] border-b border-white/5 p-8">
               <div className="flex items-center gap-3 mb-1">
                 <div className="p-2 rounded-lg bg-primary/10 text-primary">
                   <CreditCard className="w-5 h-5" />
                 </div>
-                <CardTitle className="text-2xl font-black italic">Tax & Verification Identifiers</CardTitle>
+                <CardTitle className="text-2xl font-bold text-white tracking-tight">Tax & Verification Identifiers</CardTitle>
               </div>
               <CardDescription>Configure corporate tax registration codes.</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">PAN / Tax ID</label>
+                  <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">PAN / Tax ID</label>
                   <div className="relative group">
                     <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input 
                       value={pan}
                       onChange={(e) => setPan(e.target.value)}
-                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase"
+                      className="pl-12 bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all uppercase rounded-lg"
                       placeholder="PAN Number"
                     />
                   </div>
@@ -327,7 +325,7 @@ export default function ProfilePage() {
           <Button 
             onClick={handleUpdateProfile}
             disabled={saving}
-            className="w-full md:w-auto h-12 px-10 font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20"
+            className="w-full md:w-auto h-12 px-10 font-bold uppercase tracking-wider text-[10px] shadow-lg shadow-primary/10 rounded-xl"
           >
             {saving ? (
               <Loader2 className="w-4 h-4 animate-spin" />

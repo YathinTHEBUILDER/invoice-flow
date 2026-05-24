@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { Zap, ShieldCheck, Landmark, BarChart3, HelpCircle } from "lucide-react";
+import { Zap, ShieldCheck, Landmark, BarChart3 } from "lucide-react";
 
 export function MSMESection() {
   const benefits = [
@@ -9,80 +9,109 @@ export function MSMESection() {
       title: "Fast Working Capital",
       desc: "Convert outstanding invoice assets into immediate cash in under 48 hours to handle operational expenses.",
       icon: Zap,
-      accent: "text-blue-400 bg-blue-500/5 border-blue-500/15",
-      glow: "hover:border-blue-500/30 hover:shadow-[0_15px_35px_rgba(0,0,0,0.3),0_0_30px_rgba(59,130,246,0.08)]"
+      accent: "from-blue-500/20 to-blue-500/0 text-blue-400 border-blue-500/20",
+      glow: "hover:border-blue-500/40 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)]"
     },
     {
       title: "Transparent Pricing",
       desc: "No onboarding costs or maintenance margins. Pay a flat 1.0% transaction fee only upon settlement.",
       icon: Landmark,
-      accent: "text-indigo-400 bg-indigo-500/5 border-indigo-500/15",
-      glow: "hover:border-indigo-500/30 hover:shadow-[0_15px_35px_rgba(0,0,0,0.3),0_0_30px_rgba(99,102,241,0.08)]"
+      accent: "from-indigo-500/20 to-indigo-500/0 text-indigo-400 border-indigo-500/20",
+      glow: "hover:border-indigo-500/40 hover:shadow-[0_0_40px_rgba(99,102,241,0.15)]"
     },
     {
       title: "Verified Buyer Review",
       desc: "Funding approval is based on the credit profile of investment-grade corporate buyers, requiring zero property collateral.",
       icon: ShieldCheck,
-      accent: "text-emerald-400 bg-emerald-500/5 border-emerald-500/15",
-      glow: "hover:border-emerald-500/30 hover:shadow-[0_15px_35px_rgba(0,0,0,0.3),0_0_30px_rgba(16,185,129,0.08)]"
+      accent: "from-emerald-500/20 to-emerald-500/0 text-emerald-400 border-emerald-500/20",
+      glow: "hover:border-emerald-500/40 hover:shadow-[0_0_40px_rgba(16,185,129,0.15)]"
     },
     {
       title: "Better Cash Flow Planning",
-      desc: "Confidently take on larger purchase orders, secure raw materials, and manage payroll without waiting 90 days for client clearance.",
+      desc: "Confidently take on larger purchase orders, secure raw materials, and manage payroll without waiting 90 days.",
       icon: BarChart3,
-      accent: "text-cyan-400 bg-cyan-500/5 border-cyan-500/15",
-      glow: "hover:border-cyan-500/30 hover:shadow-[0_15px_35px_rgba(0,0,0,0.3),0_0_30px_rgba(6,182,212,0.08)]"
+      accent: "from-cyan-500/20 to-cyan-500/0 text-cyan-400 border-cyan-500/20",
+      glow: "hover:border-cyan-500/40 hover:shadow-[0_0_40px_rgba(6,182,212,0.15)]"
     }
   ];
 
   return (
-    <section id="msme-benefits" className="w-full max-w-7xl mx-auto px-4 md:px-8 py-20 border-b border-white/[0.03]">
-      <div className="grid lg:grid-cols-12 gap-12 items-center">
+    <section id="msme-benefits" className="w-full max-w-7xl mx-auto px-4 md:px-8 py-24 md:py-32 relative">
+      {/* Background Subtle Gradient */}
+      <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-900/[0.02] to-transparent pointer-events-none" />
+
+      <div className="grid lg:grid-cols-12 gap-12 lg:gap-16 items-center relative z-10">
         
         {/* Left column: Header copy */}
-        <div className="lg:col-span-5 text-left space-y-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-500/5 border border-blue-500/15 text-[10px] font-semibold tracking-wider text-blue-400 uppercase">
-            For Indian MSMEs
-          </span>
-          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white leading-[1.1] text-balance">
-            Finance B2B business growth on your own terms
-          </h2>
-          <p className="text-sm text-neutral-400 leading-relaxed max-w-md">
+        <div className="lg:col-span-5 text-left space-y-8">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+          >
+            <span className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-xs font-semibold tracking-wider text-blue-400 uppercase backdrop-blur-md">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-500 animate-pulse" />
+              For Indian MSMEs
+            </span>
+          </motion.div>
+          
+          <motion.h2 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.1 }}
+            className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.1] text-balance"
+          >
+            Finance B2B growth on your terms
+          </motion.h2>
+          
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            className="text-base text-neutral-400 leading-relaxed max-w-md"
+          >
             InvoiceFlow helps suppliers bypass bank delays. Unlock capital locked in high credit-grade corporate receivables and grow without equity dilution or physical collateral.
-          </p>
+          </motion.p>
         </div>
 
         {/* Right column: 2x2 grid of benefits cards */}
-        <div className="lg:col-span-7 grid sm:grid-cols-2 gap-5">
+        <div className="lg:col-span-7 grid sm:grid-cols-2 gap-6 relative">
           {benefits.map((item, idx) => {
             const Icon = item.icon;
             return (
               <motion.div
                 key={idx}
-                initial={{ opacity: 0, y: 15 }}
-                whileInView={{ opacity: 1, y: 0 }}
+                initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                whileInView={{ opacity: 1, y: 0, scale: 1 }}
                 viewport={{ once: true }}
-                whileHover={{ y: -6, scale: 1.01, transition: { duration: 0.25, ease: "easeOut" } }}
-                transition={{ duration: 0.5, delay: idx * 0.1 }}
-                className={`bg-[#0D1117]/85 border border-white/[0.04] rounded-2xl p-6 text-left transition-all duration-300 relative group overflow-hidden shadow-lg shadow-black/25 ${item.glow}`}
+                whileHover={{ y: -8, transition: { duration: 0.3, ease: "easeOut" } }}
+                transition={{ duration: 0.6, delay: idx * 0.15 }}
+                className={`group relative overflow-hidden bg-black/40 backdrop-blur-xl border border-white/10 rounded-3xl p-8 text-left transition-all duration-500 cursor-default ${item.glow}`}
               >
-                {/* Soft top-right border shine */}
-                <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/[0.01] blur-xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                {/* Dynamic Gradient Background on Hover */}
+                <div className={`absolute inset-0 bg-gradient-to-br opacity-0 group-hover:opacity-10 transition-opacity duration-500 ${item.accent.split(' ')[0]}`} />
+                
+                {/* Inner Border Shine */}
+                <div className="absolute inset-0 rounded-3xl border border-white/5 group-hover:border-white/10 transition-colors pointer-events-none" />
 
-                <div className={`w-10 h-10 rounded-lg flex items-center justify-center border ${item.accent} mb-4 shrink-0 shadow-inner group-hover:scale-105 transition-transform duration-300`}>
-                  <Icon className="w-5 h-5" />
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center bg-gradient-to-br ${item.accent} border mb-6 shrink-0 shadow-inner group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                  <Icon className="w-6 h-6" />
                 </div>
-                <h3 className="text-sm font-bold text-white tracking-tight mb-2 flex items-center gap-1.5">
+                
+                <h3 className="text-lg font-bold text-white tracking-tight mb-3 flex items-center gap-2">
                   {item.title}
                 </h3>
-                <p className="text-[12px] md:text-xs text-neutral-400 leading-relaxed font-normal">
+                
+                <p className="text-sm text-neutral-400 leading-relaxed font-medium">
                   {item.desc}
                 </p>
               </motion.div>
             );
           })}
         </div>
-        
       </div>
     </section>
   );

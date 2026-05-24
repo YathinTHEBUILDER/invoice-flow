@@ -124,19 +124,19 @@ export default function InvestmentsPage() {
     <div className="space-y-12 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
-          <h2 className="text-5xl font-black tracking-tighter text-white">Investment Interactions</h2>
-          <p className="text-muted-foreground font-medium text-lg italic">Manage funded assets, repayment obligations, and investor relations.</p>
+          <h2 className="text-4xl font-bold tracking-tight text-white">Investment Interactions</h2>
+          <p className="text-muted-foreground font-medium text-sm">Manage funded assets, repayment obligations, and investor relations.</p>
         </div>
       </div>
 
       <div className="grid grid-cols-1 gap-8">
         {fundedInvoices.length === 0 ? (
-          <Card className="glass-dark border-white/5 p-20 text-center space-y-6">
-            <div className="mx-auto w-24 h-24 rounded-3xl bg-white/[0.02] flex items-center justify-center border border-white/10">
+          <Card className="glass-dark border-white/5 p-20 text-center space-y-6 rounded-2xl">
+            <div className="mx-auto w-24 h-24 rounded-2xl bg-white/[0.02] flex items-center justify-center border border-white/10">
               <Zap className="w-12 h-12 text-white/10" />
             </div>
             <div className="space-y-2">
-              <p className="text-2xl font-black text-white italic">No Active Investments</p>
+              <p className="text-2xl font-bold text-white">No Active Investments</p>
               <p className="text-muted-foreground font-medium max-w-sm mx-auto">Once your invoices are funded by investors, they will appear here for management.</p>
             </div>
           </Card>
@@ -147,32 +147,32 @@ export default function InvestmentsPage() {
               const progress = invoice.amount > 0 ? ((Number(invoice.amount) - outstanding) / Number(invoice.amount)) * 100 : 0;
               
               return (
-                <Card key={invoice.id} className="glass-dark border-white/5 hover:border-primary/20 transition-all duration-500 overflow-hidden group">
+                <Card key={invoice.id} className="glass-dark border-white/5 hover:border-primary/20 transition-all duration-500 overflow-hidden group rounded-2xl">
                   <div className="p-8 space-y-6">
                     <div className="flex justify-between items-start">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-primary uppercase tracking-widest">Active Funding</p>
-                        <h3 className="text-2xl font-black text-white italic">#{invoice.invoice_number}</h3>
+                        <p className="text-[10px] font-bold text-primary uppercase tracking-wider">Active Funding</p>
+                        <h3 className="text-2xl font-bold text-white">#{invoice.invoice_number}</h3>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase">{invoice.buyer_name}</p>
                       </div>
-                      <Badge className={`${invoice.status === 'funded' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'} font-black uppercase tracking-widest text-[8px] h-6`}>
+                      <Badge className={`${invoice.status === 'funded' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-blue-500/10 text-blue-500 border-blue-500/20'} font-bold uppercase tracking-wider text-[8px] h-6 rounded-full`}>
                         {invoice.status === 'funded' ? 'Fully Funded' : 'Partially Funded'}
                       </Badge>
                     </div>
 
                     <div className="grid grid-cols-2 gap-6">
                       <div>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Amount</p>
-                        <p className="text-lg font-black text-white">{formatINR(invoice.amount)}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Amount</p>
+                        <p className="text-lg font-bold text-white">{formatINR(invoice.amount)}</p>
                       </div>
                       <div>
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Outstanding</p>
-                        <p className="text-lg font-black text-orange-500">{formatINR(outstanding)}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Outstanding</p>
+                        <p className="text-lg font-bold text-orange-500">{formatINR(outstanding)}</p>
                       </div>
                     </div>
 
                     <div className="space-y-2">
-                      <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                      <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider">
                         <span className="text-muted-foreground">Repayment Progress</span>
                         <span className="text-white">{Math.round(progress)}%</span>
                       </div>
@@ -182,7 +182,7 @@ export default function InvestmentsPage() {
                     <div className="pt-6 border-t border-white/5 flex gap-3">
                       <Button 
                         onClick={() => setSelectedInvoice(invoice)}
-                        className="flex-1 h-10 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[9px] border border-white/10"
+                        className="flex-1 h-10 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-[9px] border border-white/10 rounded-xl"
                       >
                         Manage interaction
                       </Button>
@@ -210,13 +210,13 @@ export default function InvestmentsPage() {
       {selectedInvoice && !showDispute && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/90 backdrop-blur-md" onClick={() => setSelectedInvoice(null)} />
-          <Card className="relative w-full max-w-4xl glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden max-h-[90vh] flex flex-col">
+          <Card className="relative w-full max-w-4xl glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300 overflow-hidden max-h-[90vh] flex flex-col rounded-2xl">
             <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between shrink-0">
               <div className="space-y-1">
-                <CardTitle className="text-3xl font-black italic">Invoice #{selectedInvoice.invoice_number}</CardTitle>
-                <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Managing Investment Obligations</CardDescription>
+                <CardTitle className="text-3xl font-bold text-white tracking-tight">Invoice #{selectedInvoice.invoice_number}</CardTitle>
+                <CardDescription className="text-muted-foreground font-medium uppercase tracking-wider text-[10px]">Managing Investment Obligations</CardDescription>
               </div>
-              <Button variant="ghost" size="icon" onClick={() => setSelectedInvoice(null)} className="hover:bg-white/5 text-muted-foreground">
+              <Button variant="ghost" size="icon" onClick={() => setSelectedInvoice(null)} className="hover:bg-white/5 text-muted-foreground rounded-full">
                 <X className="w-6 h-6" />
               </Button>
             </CardHeader>
@@ -226,7 +226,7 @@ export default function InvestmentsPage() {
                 <button
                   key={tab}
                   onClick={() => setActiveTab(tab as any)}
-                  className={`px-8 py-4 text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === tab ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-muted-foreground hover:text-white hover:bg-white/[0.02]'}`}
+                  className={`px-8 py-4 text-[10px] font-bold uppercase tracking-wider transition-all ${activeTab === tab ? 'text-primary border-b-2 border-primary bg-primary/5' : 'text-muted-foreground hover:text-white hover:bg-white/[0.02]'}`}
                 >
                   {tab}
                 </button>
@@ -239,49 +239,49 @@ export default function InvestmentsPage() {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
                     <div className="space-y-6">
                       <div className="space-y-2">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Participating Investor(s)</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Participating Investor(s)</p>
                         {selectedInvoice.investments && selectedInvoice.investments.length > 0 ? (
                           <div className="space-y-3">
                             {selectedInvoice.investments.map((inv: any, idx: number) => (
                               <div key={idx} className="bg-white/5 p-3 rounded-xl border border-white/5">
-                                <p className="text-sm font-black text-white italic">{inv.profiles?.company_name || inv.profiles?.full_name}</p>
-                                <p className="text-[9px] font-bold text-primary uppercase tracking-tighter">Participation: {formatINR(inv.amount)}</p>
+                                <p className="text-sm font-bold text-white">{inv.profiles?.company_name || inv.profiles?.full_name}</p>
+                                <p className="text-[9px] font-bold text-primary uppercase tracking-wider">Participation: {formatINR(inv.amount)}</p>
                               </div>
                             ))}
                           </div>
                         ) : (
-                          <p className="text-lg font-black text-white italic">Institutional Treasury</p>
+                          <p className="text-lg font-bold text-white">Institutional Treasury</p>
                         )}
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Money Invested</p>
-                        <p className="text-lg font-black text-emerald-500 italic">{formatINR(selectedInvoice.funded_amount || selectedInvoice.amount)}</p>
+                        <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Money Invested</p>
+                        <p className="text-lg font-bold text-emerald-500">{formatINR(selectedInvoice.funded_amount || selectedInvoice.amount)}</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-lg font-black text-white">{formatDate(selectedInvoice.due_date)}</p>
+                        <p className="text-lg font-bold text-white">{formatDate(selectedInvoice.due_date)}</p>
                       </div>
                     </div>
 
-                    <div className="md:col-span-2 bg-white/[0.02] border border-white/5 rounded-3xl p-8 space-y-6">
+                    <div className="md:col-span-2 bg-white/[0.02] border border-white/5 rounded-2xl p-8 space-y-6">
                       <div className="flex items-center gap-3">
                         <ShieldCheck className="w-5 h-5 text-primary" />
-                        <p className="text-xs font-black text-white uppercase tracking-widest">Funding Agreement Details</p>
+                        <p className="text-xs font-bold text-white uppercase tracking-wider">Funding Agreement Details</p>
                       </div>
                       <div className="grid grid-cols-2 gap-8">
                         <div>
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Financing Rate</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Financing Rate</p>
                           <p className="text-sm font-bold text-white">{(selectedInvoice.discount_rate * 100).toFixed(2)}% Flat</p>
                         </div>
                         <div>
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Platform Fee</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Platform Fee</p>
                           <p className="text-sm font-bold text-white">1.5% Processing</p>
                         </div>
                         <div>
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Repayment Mode</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Repayment Mode</p>
                           <p className="text-sm font-bold text-white">Manual RTGS/NEFT</p>
                         </div>
                         <div>
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Legal Status</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Legal Status</p>
                           <p className="text-sm font-bold text-emerald-500">Execution Complete</p>
                         </div>
                       </div>
@@ -289,34 +289,34 @@ export default function InvestmentsPage() {
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <Card className="bg-orange-500/5 border-orange-500/10 p-8 space-y-4">
+                    <Card className="bg-orange-500/5 border-orange-500/10 p-8 space-y-4 rounded-2xl">
                       <div className="flex items-center gap-3">
                         <Clock className="w-5 h-5 text-orange-500" />
-                        <p className="text-xs font-black text-white uppercase tracking-widest">Repayment Action</p>
+                        <p className="text-xs font-bold text-white uppercase tracking-wider">Repayment Action</p>
                       </div>
-                      <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
+                      <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                         Initiate a manual repayment for the outstanding balance. Provide UTR for verification.
                       </p>
                       <Button 
                         onClick={() => setActiveTab('schedule')}
-                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-[10px] h-12"
+                        className="w-full bg-orange-500 hover:bg-orange-600 text-white font-bold uppercase tracking-wider text-[10px] h-12 rounded-xl"
                       >
                         Make Repayment
                       </Button>
                     </Card>
 
-                    <Card className="bg-primary/5 border-primary/10 p-8 space-y-4">
+                    <Card className="bg-primary/5 border-primary/10 p-8 space-y-4 rounded-2xl">
                       <div className="flex items-center gap-3">
                         <Zap className="w-5 h-5 text-primary" />
-                        <p className="text-xs font-black text-white uppercase tracking-widest">Pre-closure Request</p>
+                        <p className="text-xs font-bold text-white uppercase tracking-wider">Pre-closure Request</p>
                       </div>
-                      <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
+                      <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                         Settle your obligations before the due date. A 2% pre-closure fee applies.
                       </p>
                       <Button 
                         variant="outline"
                         onClick={() => setShowPreClosure(true)}
-                        className="w-full border-primary/20 hover:bg-primary/10 text-primary font-black uppercase tracking-widest text-[10px] h-12"
+                        className="w-full border-primary/20 hover:bg-primary/10 text-primary font-bold uppercase tracking-wider text-[10px] h-12 rounded-xl"
                       >
                         Request Pre-closure
                       </Button>
@@ -328,17 +328,17 @@ export default function InvestmentsPage() {
               {activeTab === 'schedule' && (
                 <div className="space-y-6">
                   <div className="flex justify-between items-center px-4">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Scheduled Repayments</p>
-                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-widest border-white/10 text-muted-foreground">Standard 1-Tranche Repayment</Badge>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Scheduled Repayments</p>
+                    <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-wider border-white/10 text-muted-foreground rounded-full">Standard 1-Tranche Repayment</Badge>
                   </div>
-                  <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden">
+                  <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden">
                     <table className="w-full text-left border-collapse">
                       <thead>
                         <tr className="border-b border-white/5 bg-white/[0.01]">
-                          <th className="p-6 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Due Date</th>
-                          <th className="p-6 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Amount Due</th>
-                          <th className="p-6 text-[9px] font-black text-muted-foreground uppercase tracking-widest">Status</th>
-                          <th className="p-6 text-right text-[9px] font-black text-muted-foreground uppercase tracking-widest">Action</th>
+                          <th className="p-6 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Due Date</th>
+                          <th className="p-6 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Amount Due</th>
+                          <th className="p-6 text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Status</th>
+                          <th className="p-6 text-right text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Action</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-white/5">
@@ -348,9 +348,9 @@ export default function InvestmentsPage() {
                               <p className="text-sm font-bold text-white">{formatDate(r.due_date)}</p>
                               <p className="text-[9px] text-muted-foreground">Standard Schedule</p>
                             </td>
-                            <td className="p-6 font-black text-white text-sm">{formatINR(r.amount_due)}</td>
+                            <td className="p-6 font-bold text-white text-sm">{formatINR(r.amount_due)}</td>
                             <td className="p-6">
-                              <Badge className={`uppercase tracking-widest text-[10px] font-black ${r.status === 'paid' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
+                              <Badge className={`uppercase tracking-wider text-[10px] font-bold rounded-full ${r.status === 'paid' ? 'bg-emerald-500/10 text-emerald-500' : 'bg-orange-500/10 text-orange-500'}`}>
                                 {r.status}
                               </Badge>
                             </td>
@@ -369,7 +369,7 @@ export default function InvestmentsPage() {
                                     type="hidden" 
                                     value={r.amount_due}
                                   />
-                                  <Button type="submit" disabled={isSubmitting} className="h-10 px-6 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px]">
+                                  <Button type="submit" disabled={isSubmitting} className="h-10 px-6 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wider text-[10px] rounded-lg">
                                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify Payment"}
                                   </Button>
                                 </form>
@@ -382,7 +382,7 @@ export default function InvestmentsPage() {
                   </div>
                   <div className="p-6 bg-white/[0.02] border border-white/5 rounded-2xl flex items-center gap-4">
                     <Info className="w-5 h-5 text-muted-foreground" />
-                    <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
+                    <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                       Manual repayments require platform verification. Please ensure the UTR matches your bank statement for instant processing.
                     </p>
                   </div>
@@ -392,16 +392,16 @@ export default function InvestmentsPage() {
               {activeTab === 'history' && (
                 <div className="space-y-6">
                    <div className="flex justify-between items-center px-4">
-                    <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Transaction Ledger</p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Transaction Ledger</p>
                   </div>
-                  <div className="bg-white/[0.02] border border-white/5 rounded-3xl overflow-hidden divide-y divide-white/5">
+                  <div className="bg-white/[0.02] border border-white/5 rounded-2xl overflow-hidden divide-y divide-white/5">
                     {(() => {
                       const repaymentsArr = Array.isArray(selectedInvoice.repayments) ? selectedInvoice.repayments : (selectedInvoice.repayments ? [selectedInvoice.repayments] : []);
                       const paidRepayments = repaymentsArr.filter((r: any) => r.status === 'paid');
                       
                       if (paidRepayments.length === 0) {
                         return (
-                          <div className="p-20 text-center text-muted-foreground text-[10px] font-black uppercase tracking-widest italic">
+                          <div className="p-20 text-center text-muted-foreground text-[10px] font-bold uppercase tracking-wider">
                             No transactions recorded yet.
                           </div>
                         );
@@ -414,12 +414,12 @@ export default function InvestmentsPage() {
                               <History className="w-5 h-5" />
                             </div>
                             <div>
-                              <p className="text-sm font-black text-white">Full Repayment Payment</p>
+                              <p className="text-sm font-bold text-white">Full Repayment Payment</p>
                               <p className="text-[9px] text-muted-foreground uppercase">Ref: {r.payment_reference || "N/A"}</p>
                             </div>
                           </div>
                           <div className="text-right">
-                            <p className="text-sm font-black text-emerald-500">+{formatINR(r.amount_paid)}</p>
+                            <p className="text-sm font-bold text-emerald-500">+{formatINR(r.amount_paid)}</p>
                             <p className="text-[9px] text-muted-foreground uppercase">{formatDate(r.payment_date)}</p>
                           </div>
                         </div>
@@ -433,14 +433,14 @@ export default function InvestmentsPage() {
             <div className="p-8 border-t border-white/5 bg-white/[0.01] shrink-0">
                <div className="flex justify-between items-center">
                 <div>
-                  <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Total Liability Cleared</p>
-                  <p className="text-lg font-black text-white">
+                  <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider">Total Liability Cleared</p>
+                  <p className="text-lg font-bold text-white">
                     {formatINR((Array.isArray(selectedInvoice.repayments) ? selectedInvoice.repayments : (selectedInvoice.repayments ? [selectedInvoice.repayments] : [])).filter((r: any) => r.status === 'paid').reduce((sum: number, r: any) => sum + Number(r.amount_paid), 0) || 0)}
                   </p>
                 </div>
                 <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/10">
                   <ShieldCheck className="w-4 h-4 text-primary" />
-                   <p className="text-[10px] font-black text-white uppercase tracking-widest italic">Professional Grade Security</p>
+                   <p className="text-[10px] font-bold text-white uppercase tracking-wider">Professional Grade Security</p>
                 </div>
               </div>
             </div>
@@ -452,10 +452,10 @@ export default function InvestmentsPage() {
       {showPreClosure && selectedInvoice && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setShowPreClosure(false)} />
-          <Card className="relative w-full max-w-lg glass-dark border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500 p-10 space-y-10">
+          <Card className="relative w-full max-w-lg glass-dark border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500 p-10 space-y-10 rounded-2xl">
             <div className="space-y-2">
-              <h3 className="text-3xl font-black text-white italic">Pre-closure Payment</h3>
-              <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Invoice #{selectedInvoice.invoice_number}</p>
+              <h3 className="text-3xl font-bold text-white">Pre-closure Payment</h3>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Invoice #{selectedInvoice.invoice_number}</p>
             </div>
 
             <div className="space-y-6">
@@ -464,16 +464,16 @@ export default function InvestmentsPage() {
                 return (
                   <div className="space-y-4">
                     <div className="flex justify-between items-center py-4 border-b border-white/5">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Outstanding Principal</span>
-                      <span className="text-lg font-black text-white">{formatINR(details.outstandingPrincipal)}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Outstanding Principal</span>
+                      <span className="text-lg font-bold text-white">{formatINR(details.outstandingPrincipal)}</span>
                     </div>
                     <div className="flex justify-between items-center py-4 border-b border-white/5">
-                      <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Pre-closure Fee (2%)</span>
-                      <span className="text-lg font-black text-orange-500">+{formatINR(details.preClosureFee)}</span>
+                      <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Pre-closure Fee (2%)</span>
+                      <span className="text-lg font-bold text-orange-500">+{formatINR(details.preClosureFee)}</span>
                     </div>
                     <div className="flex justify-between items-center py-6">
-                       <span className="text-xs font-black text-white uppercase tracking-widest">Total Payment Amount</span>
-                      <span className="text-3xl font-black text-emerald-500">{formatINR(details.totalSettlement)}</span>
+                       <span className="text-xs font-bold text-white uppercase tracking-wider">Total Payment Amount</span>
+                      <span className="text-3xl font-bold text-emerald-500">{formatINR(details.totalSettlement)}</span>
                     </div>
                   </div>
                 );
@@ -482,7 +482,7 @@ export default function InvestmentsPage() {
 
             <div className="p-6 bg-primary/5 border border-primary/10 rounded-2xl flex gap-4">
               <AlertCircle className="w-6 h-6 text-primary shrink-0" />
-              <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
+              <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                  By confirming, you request the platform to generate a final payment invoice. This action is irreversible once approved by the treasury.
               </p>
             </div>
@@ -491,12 +491,12 @@ export default function InvestmentsPage() {
               <Button 
                 variant="ghost" 
                 onClick={() => setShowPreClosure(false)}
-                className="flex-1 h-14 font-black uppercase tracking-widest text-[11px]"
+                className="flex-1 h-14 font-bold uppercase tracking-wider text-[11px] rounded-xl"
               >
                 Cancel
               </Button>
               <Button 
-                className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[11px]"
+                className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wider text-[11px] rounded-xl"
                 disabled={isSubmitting}
                 onClick={async () => {
                   setIsSubmitting(true);
@@ -523,18 +523,18 @@ export default function InvestmentsPage() {
       {showDispute && selectedInvoice && (
         <div className="fixed inset-0 z-[110] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setShowDispute(false)} />
-          <Card className="relative w-full max-w-lg glass-dark border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500 p-10">
+          <Card className="relative w-full max-w-lg glass-dark border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500 p-10 rounded-2xl">
             <form onSubmit={handleDispute} className="space-y-8">
               <div className="space-y-2">
-                <h3 className="text-3xl font-black text-white italic">Raise Dispute</h3>
-                <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Invoice #{selectedInvoice.invoice_number}</p>
+                <h3 className="text-3xl font-bold text-white">Raise Dispute</h3>
+                <p className="text-[10px] text-muted-foreground uppercase tracking-wider font-bold">Invoice #{selectedInvoice.invoice_number}</p>
               </div>
 
               <input type="hidden" name="invoice_id" value={selectedInvoice.id} />
 
               <div className="space-y-4">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Dispute Reason</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Dispute Reason</label>
                   <select 
                     name="subject"
                     required
@@ -557,7 +557,7 @@ export default function InvestmentsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Detailed Explanation</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Detailed Explanation</label>
                   <textarea 
                     name="message"
                     required
@@ -573,14 +573,14 @@ export default function InvestmentsPage() {
                   type="button"
                   variant="ghost" 
                   onClick={() => setShowDispute(false)}
-                  className="flex-1 h-14 font-black uppercase tracking-widest text-[11px]"
+                  className="flex-1 h-14 font-bold uppercase tracking-wider text-[11px] rounded-xl"
                 >
                   Cancel
                 </Button>
                 <Button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex-1 h-14 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-[11px]"
+                  className="flex-1 h-14 bg-red-500 hover:bg-red-600 text-white font-bold uppercase tracking-wider text-[11px] rounded-xl"
                 >
                   {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Raise Dispute"}
                 </Button>

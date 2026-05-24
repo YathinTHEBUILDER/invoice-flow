@@ -23,7 +23,7 @@ export default function GetStartedPage() {
           <Link href="/">
             <Logo className="scale-125 mb-8" />
           </Link>
-          <h1 className="text-4xl md:text-6xl font-black tracking-tighter text-gradient leading-none">
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-none">
             Smart Setup.
           </h1>
           <p className="text-lg md:text-xl text-muted-foreground font-medium max-w-xl">

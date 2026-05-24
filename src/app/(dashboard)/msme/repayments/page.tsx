@@ -81,13 +81,13 @@ export default function RepaymentsPage() {
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "scheduled":
-        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[10px]">Scheduled</Badge>;
+        return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-bold uppercase tracking-wider text-[10px] rounded-full">Scheduled</Badge>;
       case "paid":
-        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[10px]">Paid</Badge>;
+        return <Badge variant="outline" className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-bold uppercase tracking-wider text-[10px] rounded-full">Paid</Badge>;
       case "overdue":
-        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[10px]">Overdue</Badge>;
+        return <Badge variant="outline" className="bg-red-500/10 text-red-500 border-red-500/20 font-bold uppercase tracking-wider text-[10px] rounded-full">Overdue</Badge>;
       default:
-        return <Badge variant="outline" className="font-black uppercase tracking-widest text-[10px]">{status}</Badge>;
+        return <Badge variant="outline" className="font-bold uppercase tracking-wider text-[10px] rounded-full">{status}</Badge>;
     }
   };
 
@@ -98,19 +98,19 @@ export default function RepaymentsPage() {
     <div className="space-y-12 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
-          <h2 className="text-5xl font-black tracking-tighter text-white">Repayments</h2>
-          <p className="text-muted-foreground font-medium text-lg italic">Track upcoming obligations and payment history.</p>
+          <h2 className="text-4xl font-bold tracking-tight text-white">Repayments</h2>
+          <p className="text-muted-foreground font-medium text-sm">Track upcoming obligations and payment history.</p>
         </div>
         <div className="flex gap-4">
-          <Card className="glass-dark border-white/5 px-6 py-3 flex items-center gap-4">
+          <Card className="glass-dark border-white/5 px-6 py-3 flex items-center gap-4 rounded-xl">
             <div>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Outstanding</p>
-              <p className="text-xl font-black text-white">{formatINR(upcomingDues.reduce((sum, r) => sum + Number(r.amount_due), 0))}</p>
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Total Outstanding</p>
+              <p className="text-xl font-bold text-white">{formatINR(upcomingDues.reduce((sum, r) => sum + Number(r.amount_due), 0))}</p>
             </div>
             <div className="h-10 w-[1px] bg-white/5" />
             <div>
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Next Due</p>
-              <p className="text-xl font-black text-orange-500">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Next Due</p>
+              <p className="text-xl font-bold text-orange-500">
                 {upcomingDues.length > 0 ? new Date(upcomingDues[0].due_date).toLocaleDateString() : "None"}
               </p>
             </div>
@@ -120,9 +120,9 @@ export default function RepaymentsPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="lg:col-span-2 space-y-8">
-          <Card className="glass-dark border-white/5 overflow-hidden">
+          <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
             <CardHeader className="p-8 border-b border-white/5">
-              <CardTitle className="text-2xl font-black italic">Upcoming Obligations</CardTitle>
+              <CardTitle className="text-2xl font-bold text-white tracking-tight">Upcoming Obligations</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
@@ -143,13 +143,13 @@ export default function RepaymentsPage() {
                           <Calendar className="w-6 h-6" />
                         </div>
                         <div>
-                          <p className="text-sm font-black text-white">Invoice {item.invoices.invoice_number}</p>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Due on {new Date(item.due_date).toLocaleDateString()}</p>
+                          <p className="text-sm font-bold text-white">Invoice {item.invoices.invoice_number}</p>
+                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Due on {new Date(item.due_date).toLocaleDateString()}</p>
                         </div>
                       </div>
                       <div className="flex flex-col md:flex-row items-end md:items-center gap-6">
                         <div className="text-right">
-                          <p className="text-lg font-black text-white">{formatINR(item.amount_due)}</p>
+                          <p className="text-lg font-bold text-white">{formatINR(item.amount_due)}</p>
                           {getStatusBadge(item.status)}
                         </div>
                         {item.status !== 'paid' && (
@@ -158,7 +158,7 @@ export default function RepaymentsPage() {
                               variant="ghost" 
                               size="sm" 
                               onClick={() => setSelectedRepayment(item)}
-                              className="h-9 text-xs font-black uppercase text-white hover:bg-white/10"
+                              className="h-9 text-xs font-bold uppercase text-white hover:bg-white/10 rounded-lg"
                             >
                               Mark as Paid
                             </Button>
@@ -172,9 +172,9 @@ export default function RepaymentsPage() {
             </CardContent>
           </Card>
  
-          <Card className="glass-dark border-white/5 overflow-hidden">
+          <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
             <CardHeader className="p-8 border-b border-white/5">
-              <CardTitle className="text-2xl font-black italic">Payment History</CardTitle>
+              <CardTitle className="text-2xl font-bold text-white tracking-tight">Payment History</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
@@ -194,12 +194,12 @@ export default function RepaymentsPage() {
                           <CheckCircle2 className="w-5 h-5" />
                         </div>
                         <div>
-                          <p className="text-sm font-black text-white">Invoice {item.invoices.invoice_number}</p>
+                          <p className="text-sm font-bold text-white">Invoice {item.invoices.invoice_number}</p>
                           <p className="text-[10px] font-bold text-muted-foreground uppercase">Paid on {new Date(item.payment_date).toLocaleDateString()}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-black text-white">{formatINR(item.amount_paid)}</p>
+                        <p className="text-sm font-bold text-white">{formatINR(item.amount_paid)}</p>
                         <p className="text-[10px] font-bold text-muted-foreground uppercase mt-1">Ref: {item.payment_reference || "N/A"}</p>
                       </div>
                     </div>
@@ -211,27 +211,27 @@ export default function RepaymentsPage() {
         </div>
 
         <div className="space-y-8">
-          <Card className="glass-dark border-white/5 overflow-hidden">
+          <Card className="glass-dark border-white/5 overflow-hidden rounded-2xl">
             <CardHeader className="p-8 border-b border-white/5">
-              <CardTitle className="text-2xl font-black italic">How to Repay</CardTitle>
+              <CardTitle className="text-2xl font-bold text-white tracking-tight">How to Repay</CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-8">
               <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 space-y-4">
                 <div className="flex items-center gap-3">
                   <CreditCard className="w-5 h-5 text-primary" />
-                  <p className="text-xs font-black text-white uppercase tracking-widest">Manual Bank Transfer</p>
+                  <p className="text-xs font-bold text-white uppercase tracking-wider">Manual Bank Transfer</p>
                 </div>
-                <p className="text-[10px] text-muted-foreground font-medium leading-relaxed italic">
+                <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                   Repayments must be made directly to the platform's escrow account via NEFT/RTGS. No automatic debits are currently supported.
                 </p>
               </div>
 
               <div className="space-y-4">
-                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   <span>Late Payment Penalty</span>
                   <span className="text-red-500">2.5% Monthly</span>
                 </div>
-                <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
                   <span>Pre-closure Benefit</span>
                   <span className="text-emerald-500">Interest Rebate</span>
                 </div>
@@ -240,7 +240,7 @@ export default function RepaymentsPage() {
               <div className="pt-6 border-t border-white/5">
                 <Button 
                   onClick={() => setShowBankDetails(true)}
-                  className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-xs border border-white/10"
+                  className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-xs border border-white/10 rounded-xl"
                 >
                   <ExternalLink className="mr-2 h-4 w-4" /> View Bank Details
                 </Button>
@@ -248,14 +248,14 @@ export default function RepaymentsPage() {
             </CardContent>
           </Card>
 
-          <Card className="glass-dark border-white/5 p-8 space-y-4">
+          <Card className="glass-dark border-white/5 p-8 space-y-4 rounded-2xl">
             <div className="flex items-center gap-3">
               <div className="p-2 rounded-xl bg-orange-500/10 text-orange-500">
                 <AlertCircle className="w-5 h-5" />
               </div>
-              <p className="text-xs font-black text-white uppercase tracking-widest">Late Fee Notice</p>
+              <p className="text-xs font-bold text-white uppercase tracking-wider">Late Fee Notice</p>
             </div>
-            <p className="text-[10px] text-muted-foreground font-medium leading-relaxed italic">
+            <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
               All payments must be completed by 4 PM on the due date. Payments received after the cut-off will be processed on the next business day and may incur penalties.
             </p>
           </Card>
@@ -266,17 +266,17 @@ export default function RepaymentsPage() {
       {selectedRepayment && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedRepayment(null)} />
-          <Card className="relative w-full max-w-md glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+          <Card className="relative w-full max-w-md glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300 rounded-2xl">
             <CardHeader className="p-8 border-b border-white/5">
-              <CardTitle className="text-2xl font-black italic">Submit Payment Proof</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Verify payment for Invoice #{selectedRepayment.invoices.invoice_number}</CardDescription>
+              <CardTitle className="text-2xl font-bold text-white tracking-tight">Submit Payment Proof</CardTitle>
+              <CardDescription className="text-muted-foreground font-medium uppercase tracking-wider text-[10px]">Verify payment for Invoice #{selectedRepayment.invoices.invoice_number}</CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmitProof}>
               <CardContent className="p-8 space-y-6">
                 <input type="hidden" name="repayment_id" value={selectedRepayment.id} />
                 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Transaction UTR / Reference ID</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Transaction UTR / Reference ID</label>
                   <input 
                     name="utr"
                     required
@@ -286,7 +286,7 @@ export default function RepaymentsPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Amount Paid (INR)</label>
+                  <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">Amount Paid (INR)</label>
                   <input 
                     name="amount_paid"
                     type="number"
@@ -299,7 +299,7 @@ export default function RepaymentsPage() {
 
                 <div className="p-4 rounded-xl bg-orange-500/5 border border-orange-500/10 flex gap-3">
                   <AlertCircle className="w-5 h-5 text-orange-500 shrink-0" />
-                  <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
+                  <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                     False submissions or incorrect UTRs may lead to account suspension and additional penalties.
                   </p>
                 </div>
@@ -309,14 +309,14 @@ export default function RepaymentsPage() {
                     type="button"
                     variant="ghost"
                     onClick={() => setSelectedRepayment(null)}
-                    className="flex-1 h-12 font-black uppercase tracking-widest text-[10px] hover:bg-white/5"
+                    className="flex-1 h-12 font-bold uppercase tracking-wider text-[10px] hover:bg-white/5 rounded-xl"
                   >
                     Cancel
                   </Button>
                   <Button 
                     type="submit"
                     disabled={isSubmitting}
-                    className="flex-1 h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px]"
+                    className="flex-1 h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wider text-[10px] rounded-xl"
                   >
                     {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify Payment"}
                   </Button>
@@ -331,17 +331,17 @@ export default function RepaymentsPage() {
       {showBankDetails && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
           <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setShowBankDetails(false)} />
-          <Card className="relative w-full max-w-md glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
+          <Card className="relative w-full max-w-md glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300 rounded-2xl">
             <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-2xl font-black italic">Payment Account</CardTitle>
+                <CardTitle className="text-2xl font-bold text-white tracking-tight">Payment Account</CardTitle>
                 <CardDescription className="text-muted-foreground font-medium">NEFT / RTGS Transfer Details</CardDescription>
               </div>
               <Button 
                 variant="ghost" 
                 size="icon" 
                 onClick={() => setShowBankDetails(false)}
-                className="hover:bg-white/5"
+                className="hover:bg-white/5 rounded-lg"
               >
                 <X className="w-5 h-5" />
               </Button>
@@ -356,19 +356,19 @@ export default function RepaymentsPage() {
                   { label: "Account Type", value: "CURRENT" },
                 ].map((item, i) => (
                   <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">
-                    <span className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{item.label}</span>
-                    <span className="text-xs font-black text-white">{item.value}</span>
+                    <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{item.label}</span>
+                    <span className="text-xs font-bold text-white">{item.value}</span>
                   </div>
                 ))}
               </div>
               <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
-                <p className="text-[10px] text-muted-foreground font-bold leading-relaxed italic text-center">
+                <p className="text-[10px] text-muted-foreground font-bold leading-relaxed text-center">
                   Please mention your Invoice ID in the transaction remarks for faster payment processing.
                 </p>
               </div>
               <Button 
                 onClick={() => setShowBankDetails(false)}
-                className="w-full h-12 bg-primary text-primary-foreground font-black uppercase tracking-widest text-[10px]"
+                className="w-full h-12 bg-primary text-primary-foreground font-bold uppercase tracking-wider text-[10px] rounded-xl"
               >
                 Done
               </Button>

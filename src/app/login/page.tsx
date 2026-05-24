@@ -39,7 +39,7 @@ export default function LoginPage() {
             <Logo className="scale-110 mb-4" />
           </Link>
           
-          <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-gradient leading-none">
+          <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white leading-none">
             Welcome Back.
           </h1>
 
@@ -50,7 +50,7 @@ export default function LoginPage() {
                 key={r.id}
                 onClick={() => setRole(r.id)}
                 className={cn(
-                  "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all duration-300",
+                  "flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest transition-all duration-300",
                   role === r.id 
                     ? "bg-primary text-primary-foreground shadow-lg" 
                     : "text-muted-foreground hover:text-foreground hover:bg-white/5"
@@ -63,7 +63,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="glass-dark border-white/5 p-8 md:p-12 rounded-[2.5rem] shadow-2xl relative overflow-hidden group">
+        <div className="glass-dark p-8 md:p-12 rounded-2xl shadow-2xl relative overflow-hidden group">
           <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-primary/10 blur-[100px] rounded-full group-hover:bg-primary/20 transition-all duration-1000" />
           
           <AuthForm 
