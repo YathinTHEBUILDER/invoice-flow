@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +16,7 @@ import {
   Send,
   Loader2,
   ChevronRight,
+  ChevronDown,
   LifeBuoy
 } from "lucide-react";
 import { createSupportTicketAction } from "@/app/actions/msme";
@@ -26,6 +28,8 @@ export default function SupportPage() {
   const [loading, setLoading] = useState(true);
   const [showTicketModal, setShowTicketModal] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [expandedCategory, setExpandedCategory] = useState<number | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState("invoice");
 
   useEffect(() => {
     fetchTickets();
@@ -88,7 +92,10 @@ export default function SupportPage() {
           <p className="text-muted-foreground font-medium text-sm">Raise concerns and track dispute resolutions.</p>
         </div>
         <Button 
-          onClick={() => setShowTicketModal(true)}
+          onClick={() => {
+            setSelectedCategory("invoice");
+            setShowTicketModal(true);
+          }}
           className="h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider text-xs shadow-2xl shadow-primary/20 rounded-xl"
         >
           <Plus className="mr-2 h-5 w-5" /> Raise New Ticket
@@ -175,10 +182,64 @@ export default function SupportPage() {
               <CardTitle className="text-xl font-bold text-white tracking-tight">Quick Categories</CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-4">
-              {["Invoice Rejection", "Repayment Issues", "KYC Verification", "Payment Delay"].map((cat, i) => (
-                <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 group cursor-pointer hover:bg-white/10 transition-all">
-                  <span className="text-[10px] font-bold text-white uppercase tracking-wider">{cat}</span>
-                  <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+              {[
+                {
+                  title: "Invoice Rejection",
+                  desc: "If your invoice was rejected by the buyer or verification desk, check the rejection reason in your Invoice Management tab or upload a corrected document.",
+                  category: "invoice"
+                },
+                {
+                  title: "Repayment Issues",
+                  desc: "For issues related to escrow bank transfers, repayment delays, or account clearance, please raise an urgent repayment ticket.",
+                  category: "repayment"
+                },
+                {
+                  title: "KYC Verification",
+                  desc: "KYC verification usually takes 24-48 business hours. Ensure your GSTIN and business registry papers match your company profile details.",
+                  category: "kyc"
+                },
+                {
+                  title: "Payment Delay",
+                  desc: "If payout is delayed beyond 48 hours after full funding, it could be due to banking settlement hours. Open a ticket to check escrow status.",
+                  category: "invoice"
+                }
+              ].map((cat, i) => (
+                <div key={i} className="space-y-2">
+                  <div 
+                    onClick={() => setExpandedCategory(expandedCategory === i ? null : i)}
+                    className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 group cursor-pointer hover:bg-white/10 transition-all"
+                  >
+                    <span className="text-[10px] font-bold text-white uppercase tracking-wider">{cat.title}</span>
+                    {expandedCategory === i ? (
+                      <ChevronDown className="w-3.5 h-3.5 text-white transition-transform" />
+                    ) : (
+                      <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
+                    )}
+                  </div>
+                  <AnimatePresence initial={false}>
+                    {expandedCategory === i && (
+                      <motion.div
+                        initial={{ height: 0, opacity: 0 }}
+                        animate={{ height: "auto", opacity: 1 }}
+                        exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.2, ease: "easeInOut" }}
+                        className="overflow-hidden"
+                      >
+                        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 space-y-4 mt-2">
+                          <p className="text-[11px] text-muted-foreground leading-relaxed font-medium">{cat.desc}</p>
+                          <Button 
+                            onClick={() => {
+                              setSelectedCategory(cat.category);
+                              setShowTicketModal(true);
+                            }}
+                            className="w-full bg-white/5 hover:bg-white/10 text-white font-bold uppercase tracking-wider text-[9px] h-10 rounded-lg border border-white/10 transition-all"
+                          >
+                            Open Ticket
+                          </Button>
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
                 </div>
               ))}
             </CardContent>
@@ -224,6 +285,8 @@ export default function SupportPage() {
                       <select 
                         name="category" 
                         required 
+                        value={selectedCategory}
+                        onChange={(e) => setSelectedCategory(e.target.value)}
                         className="w-full bg-white/5 border border-white/10 h-14 rounded-xl px-4 font-bold text-white focus:bg-white/10 transition-all appearance-none outline-none pr-10"
                         style={{
                           backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='rgba(255,255,255,0.4)'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
