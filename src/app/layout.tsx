@@ -18,9 +18,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="dark">
-      <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased flex flex-col`}>
+    <html lang="en" className="dark" suppressHydrationWarning>
+      <body suppressHydrationWarning className={`${inter.className} min-h-screen bg-background text-foreground antialiased flex flex-col`}>
         <script
+          suppressHydrationWarning
           dangerouslySetInnerHTML={{
             __html: `document.addEventListener('contextmenu', (e) => e.preventDefault());`
           }}

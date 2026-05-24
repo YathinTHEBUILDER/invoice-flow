@@ -57,7 +57,7 @@ export default function SecretAdminLoginPage() {
           
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-primary backdrop-blur-xl">
             <ShieldAlert className="w-3.5 h-3.5" />
-            <span>Secure Admin Terminal</span>
+            <span>Secure Admin Portal</span>
           </div>
 
           <h1 className="text-3xl font-black tracking-tighter text-gradient leading-none">

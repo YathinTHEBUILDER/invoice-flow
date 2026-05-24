@@ -187,7 +187,7 @@ export default function InvestorPortfolio() {
            <h4 className="text-xl font-black text-white italic uppercase tracking-tighter">Asset Security Protocol</h4>
         </div>
         <p className="text-sm font-medium text-muted-foreground italic leading-relaxed max-w-4xl">
-          All assets in your portfolio are backed by verified receivables and secondary corporate guarantees. Repayments are monitored in real-time by our institutional treasury operations. Overdue positions are immediately transitioned to our legal recovery terminal.
+          All assets in your portfolio are backed by verified receivables and secondary corporate guarantees. Repayments are monitored in real-time by our institutional treasury operations. Overdue positions are immediately transitioned to our legal recovery portal.
         </p>
       </div>
     </div>

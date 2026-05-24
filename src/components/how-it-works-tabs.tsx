@@ -64,60 +64,57 @@ export function HowItWorksTabs() {
   const activeSteps = activeTab === "msme" ? msmeSteps : investorSteps;
 
   return (
-    <div className="space-y-10">
-      <div className="space-y-6">
-        <div className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">
-          The Engine
+    <div className="space-y-12">
+      <div className="space-y-6 text-left">
+        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-xs font-semibold tracking-wide text-primary">
+          <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
+          The Flow
         </div>
-        <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.95]">
-          Precision <br />
-          Money Flow.
+        <h2 className="text-4xl md:text-6xl font-bold tracking-tight leading-none text-white">
+          Precision receivables.
         </h2>
-        <p className="text-xl text-muted-foreground font-medium max-w-lg">
-          Our platform manages the entire invoice lifecycle, from thorough credit review to secure payment.
+        <p className="text-lg text-neutral-400 leading-relaxed">
+          A seamless flow managing every invoice lifecycle from verification to automatic settlement.
         </p>
       </div>
 
-      {/* Tabs */}
-      <div className="flex border-b border-white/5 w-full max-w-md">
+      {/* Segmented Control Tabs */}
+      <div className="flex bg-white/5 border border-white/10 rounded-full p-1 max-w-xs">
         <button
           onClick={() => setActiveTab("msme")}
-          className={`flex-1 pb-4 text-sm font-black uppercase tracking-widest transition-all relative ${
+          className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-all rounded-full ${
             activeTab === "msme"
-              ? "text-primary font-black"
+              ? "bg-primary text-primary-foreground shadow-md"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
           For MSMEs
-          {activeTab === "msme" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-          )}
         </button>
         <button
           onClick={() => setActiveTab("investor")}
-          className={`flex-1 pb-4 text-sm font-black uppercase tracking-widest transition-all relative ${
+          className={`flex-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-all rounded-full ${
             activeTab === "investor"
-              ? "text-primary font-black"
+              ? "bg-primary text-primary-foreground shadow-md"
               : "text-muted-foreground hover:text-foreground"
           }`}
         >
           For Investors
-          {activeTab === "investor" && (
-            <div className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary rounded-full" />
-          )}
         </button>
       </div>
 
-      {/* Steps List */}
-      <div className="space-y-10 relative min-h-[340px]">
+      {/* Vertical Steps Timeline */}
+      <div className="relative border-l border-white/5 pl-8 ml-3 space-y-10">
         {activeSteps.map((item) => (
-          <div key={item.step} className="flex gap-6 group animate-in fade-in duration-500">
-            <div className="text-4xl font-black text-primary/20 group-hover:text-primary transition-colors duration-500 leading-none shrink-0">
-              {item.step}
+          <div key={item.step} className="relative group/step text-left">
+            {/* Timeline Bullet */}
+            <div className="absolute -left-[41px] top-1.5 w-6 h-6 rounded-full bg-black border border-white/10 flex items-center justify-center group-hover/step:border-primary/50 transition-all duration-300">
+              <span className="w-1.5 h-1.5 rounded-full bg-muted-foreground group-hover/step:bg-primary transition-colors" />
             </div>
-            <div className="space-y-2">
-              <h3 className="text-2xl font-bold tracking-tight">{item.title}</h3>
-              <p className="text-muted-foreground font-medium leading-relaxed">
+            
+            <div className="space-y-1.5">
+              <span className="text-xs font-semibold tracking-wider text-primary">Step {item.step}</span>
+              <h3 className="text-lg font-bold tracking-tight text-white">{item.title}</h3>
+              <p className="text-neutral-400 leading-relaxed text-sm">
                 {item.desc}
               </p>
             </div>

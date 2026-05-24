@@ -28,7 +28,7 @@ const FAQ_DATA: Faq[] = [
   {
     persona: "Investor",
     question: "How is my capital protected?",
-    answer: "All assets are 100% secured by verified invoices. We do not invest in unsecured debt. Our 0.12% historical default rate reflects our thorough manual review."
+    answer: "All assets are 100% secured by verified invoices. We do not invest in unsecured debt. Our exceptionally low default rate reflects our thorough manual review."
   },
   {
     persona: "Investor",

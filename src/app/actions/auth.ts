@@ -72,6 +72,24 @@ async function getClientIp() {
   return headerList.get("x-forwarded-for") || "unknown";
 }
 
+// --- HELPER: GET SITE URL ---
+async function getSiteUrl() {
+  if (process.env.NEXT_PUBLIC_SITE_URL) {
+    return process.env.NEXT_PUBLIC_SITE_URL;
+  }
+  try {
+    const headerList = await headers();
+    const host = headerList.get("host");
+    const proto = headerList.get("x-forwarded-proto") || (host?.includes("localhost") ? "http" : "https");
+    if (host) {
+      return `${proto}://${host}`;
+    }
+  } catch (e) {
+    // Ignore
+  }
+  return "http://localhost:3000";
+}
+
 // --- ACTIONS ---
 
 export const signUpAction = actionClient
@@ -193,9 +211,10 @@ export const forgotPasswordAction = actionClient
       throw new Error("Too many password reset requests. Please try again later.");
     }
 
+    const siteUrl = await getSiteUrl();
     const supabase = await createClient();
     const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/auth/reset-password`,
+      redirectTo: `${siteUrl}/auth/callback?next=/auth/reset-password`,
     });
 
     // We return success even if the email doesn't exist to prevent enumeration
@@ -222,11 +241,12 @@ export const resetPasswordAction = actionClient
 export const updateEmailAction = actionClient
   .schema(z.object({ newEmail: z.string().email() }))
   .action(async ({ parsedInput: { newEmail } }) => {
+    const siteUrl = await getSiteUrl();
     const supabase = await createClient();
     const { error } = await supabase.auth.updateUser({
       email: newEmail,
     }, {
-      emailRedirectTo: `${process.env.NEXT_PUBLIC_SITE_URL}/auth/callback?next=/settings`,
+      emailRedirectTo: `${siteUrl}/auth/callback?next=/settings`,
     });
 
     if (error) throw new Error(error.message);

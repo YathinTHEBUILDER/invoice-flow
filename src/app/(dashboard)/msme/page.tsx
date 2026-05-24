@@ -25,25 +25,25 @@ export default async function MsmeDashboard() {
   }
 
   return (
-    <div className="space-y-12">
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
+    <div className="space-y-10">
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
         <div className="space-y-1">
-          <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white italic underline decoration-primary/20 decoration-4 underline-offset-[12px]">
-            Operations <span className="text-primary italic">Terminal</span>
+          <h2 className="text-3xl md:text-4xl font-bold tracking-tight text-white">
+            Operations Portal
           </h2>
-          <p className="text-muted-foreground font-medium text-sm md:text-lg italic mt-6">Enterprise cash overview and asset monitoring interface.</p>
+          <p className="text-sm text-neutral-400 mt-1">Enterprise cash overview and asset monitoring interface.</p>
         </div>
-        <div className="flex gap-4">
+        <div className="flex gap-3">
           <Link href="/msme/support">
-            <Button variant="outline" className="h-14 px-6 border-white/10 text-white font-black uppercase tracking-widest text-[10px]">
+            <Button variant="outline" className="h-10 px-5 border-white/5 bg-white/[0.02] hover:bg-white/5 text-white font-medium text-xs rounded-xl transition-all">
               Support
             </Button>
           </Link>
           <Link href={stats.kycStatus === 'verified' ? "/msme/invoices" : "/msme/kyc"}>
             <Button 
-              className="h-14 px-8 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20"
+              className="h-10 px-6 bg-blue-600 hover:bg-blue-500 text-white font-medium text-xs rounded-xl shadow-lg shadow-blue-600/10 transition-all"
             >
-              <Plus className="mr-2 h-5 w-5" /> 
+              <Plus className="mr-2 h-4 w-4" /> 
               {stats.kycStatus === 'verified' ? "Raise New Funding" : "Verify KYC to Start"}
             </Button>
           </Link>
@@ -52,25 +52,24 @@ export default async function MsmeDashboard() {
 
       <IntelligentFeed insights={stats.insights || []} />
 
-       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
         {[
-          { label: "Active Requests", value: stats.underReview, sub: "Pending Review", icon: Clock, color: "text-blue-500", bg: "bg-blue-500/10", border: "hover:border-blue-500/30" },
-          { label: "Funded Assets", value: formatINR(stats.totalFundedAmount), sub: `${stats.funded} Invoices`, icon: CheckCircle2, color: "text-emerald-500", bg: "bg-emerald-500/10", border: "hover:border-emerald-500/30" },
-          { label: "Upcoming Dues", value: formatINR(stats.totalOutstanding), sub: `${stats.pendingRepayments} Payments`, icon: History, color: "text-orange-500", bg: "bg-orange-500/10", border: "hover:border-orange-500/30" },
-          { label: "Total Submitted", value: stats.totalSubmitted, sub: "All-time invoices", icon: ArrowUpRight, color: "text-purple-500", bg: "bg-purple-500/10", border: "hover:border-purple-500/30" },
+          { label: "Active Requests", value: stats.underReview, sub: "Pending Review", icon: Clock },
+          { label: "Funded Assets", value: formatINR(stats.totalFundedAmount), sub: `${stats.funded} Invoices`, icon: CheckCircle2 },
+          { label: "Upcoming Dues", value: formatINR(stats.totalOutstanding), sub: `${stats.pendingRepayments} Payments`, icon: History },
+          { label: "Total Submitted", value: stats.totalSubmitted, sub: "All-time invoices", icon: ArrowUpRight },
         ].map((stat, i) => (
-          <Card key={i} className={`glass-dark border-white/5 overflow-hidden group ${stat.border} transition-all duration-500 relative flex flex-col justify-center`}>
-            <div className={`absolute top-0 right-0 w-32 h-32 ${stat.bg} blur-[60px] -mr-16 -mt-16 opacity-0 group-hover:opacity-100 transition-opacity duration-700`} />
-            <CardContent className="p-8 relative z-10">
-              <div className="flex justify-between items-start mb-6">
-                <div className={`p-4 rounded-2xl ${stat.bg} ${stat.color} group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-xl shadow-black/20`}>
-                  <stat.icon className="w-6 h-6" />
+          <Card key={i} className="bg-gradient-to-b from-[#0D1117]/90 to-[#080B10]/95 border border-white/[0.04] hover:border-blue-500/20 rounded-2xl transition-all duration-300 relative flex flex-col justify-center shadow-lg shadow-black/25 group">
+            <CardContent className="p-6 relative z-10">
+              <div className="flex justify-between items-start mb-4">
+                <div className="w-10 h-10 rounded-xl bg-white/[0.02] border border-white/10 flex items-center justify-center text-neutral-400 group-hover:text-white transition-colors duration-300">
+                  <stat.icon className="w-5 h-5" />
                 </div>
               </div>
               <div className="space-y-1">
-                <p className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">{stat.label}</p>
-                <h3 className="text-3xl font-black text-white italic">{stat.value}</h3>
-                <p className="text-xs font-bold text-muted-foreground italic uppercase tracking-tighter">{stat.sub}</p>
+                <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">{stat.label}</p>
+                <h3 className="text-2xl font-bold text-white tracking-tight">{stat.value}</h3>
+                <p className="text-xs text-neutral-400">{stat.sub}</p>
               </div>
             </CardContent>
           </Card>
@@ -81,49 +80,49 @@ export default async function MsmeDashboard() {
         <div className="lg:col-span-2 space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-between px-2">
-              <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] italic">Cash Timeline</h3>
-              <Badge variant="outline" className="border-white/10 text-[9px] font-black uppercase">Real-time Dues</Badge>
+              <h3 className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Cash Timeline</h3>
+              <Badge variant="outline" className="border-white/5 text-[10px] font-medium text-neutral-400">Real-time Dues</Badge>
             </div>
             <RepaymentTimeline repayments={stats.repayments || []} />
           </div>
 
-          <Card className="glass-dark border-white/5 overflow-hidden">
-            <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between">
+          <Card className="bg-[#0D1117]/60 border-white/5 overflow-hidden">
+            <CardHeader className="p-6 border-b border-white/5 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-2xl font-black italic">Recent Activity</CardTitle>
-                <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">Latest asset status transitions</p>
+                <CardTitle className="text-lg font-bold text-white tracking-tight">Recent Activity</CardTitle>
+                <p className="text-xs text-neutral-400 font-medium mt-1">Latest asset status transitions</p>
               </div>
               <Link href="/msme/invoices">
-                <Button variant="ghost" className="text-[10px] font-black uppercase tracking-widest hover:bg-white/5">Operational History</Button>
+                <Button variant="ghost" className="text-xs font-semibold text-neutral-400 hover:text-white transition-colors h-9 px-3 rounded-lg">Operational History</Button>
               </Link>
             </CardHeader>
             <CardContent className="p-0">
               {recentInvoices.length === 0 ? (
-                <div className="text-center py-32 space-y-6">
-                  <div className="mx-auto w-20 h-20 rounded-3xl bg-white/[0.02] flex items-center justify-center border border-white/10">
-                    <Plus className="w-10 h-10 text-white/20" />
+                <div className="text-center py-20 space-y-4">
+                  <div className="mx-auto w-12 h-12 rounded-xl bg-white/[0.02] flex items-center justify-center border border-white/10">
+                    <Plus className="w-5 h-5 text-neutral-500" />
                   </div>
-                  <div className="space-y-2">
-                    <p className="text-white font-black text-xl italic">Pool is Empty</p>
-                    <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">Upload an invoice to initiate your first funding request.</p>
+                  <div className="space-y-1">
+                    <p className="text-white font-semibold text-sm">Pool is Empty</p>
+                    <p className="text-neutral-400 font-normal text-xs max-w-xs mx-auto">Upload an invoice to initiate your first funding request.</p>
                   </div>
                 </div>
               ) : (
                 <div className="divide-y divide-white/5">
                   {recentInvoices.map((invoice) => (
-                    <div key={invoice.id} className="p-6 flex items-center justify-between hover:bg-white/[0.01] transition-colors group">
-                      <div className="flex items-center gap-4">
-                        <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-muted-foreground group-hover:bg-primary/10 group-hover:text-primary transition-colors">
-                          <ArrowUpRight className="w-5 h-5" />
+                    <div key={invoice.id} className="p-5 flex items-center justify-between hover:bg-white/[0.01] transition-colors group">
+                      <div className="flex items-center gap-3">
+                        <div className="w-9 h-9 rounded-lg bg-white/5 flex items-center justify-center text-neutral-400 group-hover:bg-blue-600/10 group-hover:text-blue-400 transition-colors">
+                          <ArrowUpRight className="w-4 h-4" />
                         </div>
                         <div>
-                          <p className="text-sm font-black text-white italic">#{invoice.invoice_number}</p>
-                          <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{invoice.buyer_name}</p>
+                          <p className="text-sm font-semibold text-white">#{invoice.invoice_number}</p>
+                          <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">{invoice.buyer_name}</p>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-sm font-black text-white italic">{formatINR(invoice.amount)}</p>
-                        <Badge variant="outline" className="text-[8px] font-black uppercase mt-1 border-white/10">
+                        <p className="text-sm font-semibold text-white">{formatINR(invoice.amount)}</p>
+                        <Badge variant="outline" className="text-[9px] font-medium mt-1 border-white/5">
                           {invoice.status.replace('_', ' ')}
                         </Badge>
                       </div>
@@ -136,59 +135,59 @@ export default async function MsmeDashboard() {
         </div>
 
         <div className="space-y-8">
-           <Card className="glass-dark border-white/5 overflow-hidden h-fit relative">
-            <div className="absolute top-0 right-0 w-24 h-24 bg-primary/5 blur-3xl -mr-12 -mt-12" />
-            <CardHeader className="p-8 border-b border-white/5 bg-white/[0.01]">
+           <Card className="bg-[#0D1117]/60 border-white/5 overflow-hidden h-fit relative">
+            <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/5 blur-3xl -mr-12 -mt-12" />
+            <CardHeader className="p-6 border-b border-white/5 bg-white/[0.01]">
               <div className="flex items-center gap-3">
-                <div className="p-2 rounded-lg bg-primary/10 text-primary">
-                  <ShieldCheck className="w-5 h-5" />
+                <div className="p-2 rounded-lg bg-blue-600/10 text-blue-400">
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
-                <CardTitle className="text-xl font-black italic uppercase tracking-tighter">Credit Health</CardTitle>
+                <CardTitle className="text-base font-bold text-white tracking-tight">Credit Health</CardTitle>
               </div>
-              <p className="text-xs text-muted-foreground font-bold uppercase tracking-widest mt-2">Utilization Analytics</p>
+              <p className="text-xs text-neutral-400 font-medium mt-1">Utilization Analytics</p>
             </CardHeader>
-            <CardContent className="p-8">
+            <CardContent className="p-6">
               <CreditHealthDial 
                 utilization={stats.totalFundedAmount} 
                 limit={stats.platformLimit} 
                 kycStatus={stats.kycStatus} 
               />
               
-              <Link href="/msme/repayments" className="block mt-8">
-                <Button className="w-full h-12 bg-white/5 hover:bg-white/10 text-white font-black uppercase tracking-widest text-[10px] border border-white/10">
+              <Link href="/msme/repayments" className="block mt-6">
+                <Button className="w-full h-10 bg-white/[0.02] border border-white/5 hover:bg-white/5 text-white font-medium text-xs rounded-xl transition-all">
                   Optimize Dues
                 </Button>
               </Link>
             </CardContent>
           </Card>
 
-               <Card className="glass-dark border-white/5 overflow-hidden">
-                <CardHeader className="p-8 border-b border-white/5">
-                  <CardTitle className="text-xl font-black italic">Buyer Concentration</CardTitle>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">Buyer Exposure</p>
+               <Card className="bg-[#0D1117]/60 border-white/5 overflow-hidden">
+                <CardHeader className="p-6 border-b border-white/5">
+                  <CardTitle className="text-base font-bold text-white tracking-tight">Buyer Concentration</CardTitle>
+                  <p className="text-xs text-neutral-400 font-medium mt-1">Buyer Exposure</p>
                 </CardHeader>
-                <CardContent className="p-8">
+                <CardContent className="p-6">
                   <BuyerConcentration analytics={stats.buyerAnalytics || []} />
                 </CardContent>
               </Card>
 
-              <Card className="glass-dark border-white/5 overflow-hidden">
-                <CardHeader className="p-8 border-b border-white/5">
-                  <CardTitle className="text-xl font-black italic">Quick Actions</CardTitle>
+              <Card className="bg-[#0D1117]/60 border-white/5 overflow-hidden">
+                <CardHeader className="p-6 border-b border-white/5">
+                  <CardTitle className="text-base font-bold text-white tracking-tight">Quick Actions</CardTitle>
                 </CardHeader>
-                <CardContent className="p-4 space-y-2">
+                <CardContent className="p-3 space-y-1">
                   <Link href="/msme/invoices">
-                    <Button variant="ghost" className="w-full justify-start text-[10px] font-black uppercase tracking-widest hover:bg-white/5">
+                    <Button variant="ghost" className="w-full justify-start text-xs font-semibold text-neutral-400 hover:text-white hover:bg-white/5 h-9 px-3 rounded-lg">
                       <Plus className="mr-2 h-4 w-4" /> New Invoice
                     </Button>
                   </Link>
                   <Link href="/msme/support">
-                    <Button variant="ghost" className="w-full justify-start text-[10px] font-black uppercase tracking-widest hover:bg-white/5">
+                    <Button variant="ghost" className="w-full justify-start text-xs font-semibold text-neutral-400 hover:text-white hover:bg-white/5 h-9 px-3 rounded-lg">
                       <AlertCircle className="mr-2 h-4 w-4" /> Open Ticket
                     </Button>
                   </Link>
                   <Link href="/profile">
-                    <Button variant="ghost" className="w-full justify-start text-[10px] font-black uppercase tracking-widest hover:bg-white/5">
+                    <Button variant="ghost" className="w-full justify-start text-xs font-semibold text-neutral-400 hover:text-white hover:bg-white/5 h-9 px-3 rounded-lg">
                       <Users className="mr-2 h-4 w-4" /> Profile
                     </Button>
                   </Link>

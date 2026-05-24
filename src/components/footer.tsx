@@ -1,63 +1,63 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
-import { 
-  Globe, 
-  Users, 
-  Shield, 
-  Lock 
-} from "lucide-react";
+import { Globe, Users, Shield, Lock } from "lucide-react";
 
 export function Footer() {
   return (
-    <footer className="w-full bg-background border-t border-white/5 relative z-10">
-      <div className="max-w-7xl mx-auto px-4 md:px-8 py-24">
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-20">
-          <div className="col-span-2 md:col-span-1 space-y-8">
-            <Logo className="scale-110 origin-left" />
-            <p className="text-base text-muted-foreground font-medium pr-8 leading-relaxed">
-              Professional platform for invoice financing and smart supply chain finance.
+    <footer className="w-full bg-[#05070A] border-t border-white/[0.03] relative z-10">
+      <div className="max-w-7xl mx-auto px-4 md:px-8 py-16 md:py-20">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-12 md:gap-16">
+          
+          {/* Brand Col */}
+          <div className="col-span-2 md:col-span-1 space-y-5 text-left">
+            <Logo className="scale-100 origin-left" />
+            <p className="text-xs text-neutral-400 leading-relaxed pr-4 font-normal">
+              A professional receivables marketplace for invoice financing and smart supply chain finance.
             </p>
-            <div className="flex gap-4">
-              {[Globe, Users, Shield].map((Icon, i) => (
-                <div key={i} className="p-2 rounded-lg bg-white/5 border border-white/5 hover:border-primary/50 transition-colors cursor-pointer">
-                  <Icon className="w-5 h-5 text-muted-foreground" />
-                </div>
-              ))}
-            </div>
           </div>
-          <div>
-            <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Solutions</h4>
-            <ul className="space-y-5 text-base font-bold text-muted-foreground">
-              <li><Link href="/signup?role=msme" className="hover:text-primary transition-colors">For MSMEs</Link></li>
-              <li><Link href="/signup?role=investor" className="hover:text-primary transition-colors">For Investors</Link></li>
+          
+          {/* Solutions Col */}
+          <div className="text-left">
+            <h4 className="font-semibold text-[10px] uppercase tracking-widest mb-5 text-neutral-500">Solutions</h4>
+            <ul className="space-y-3 text-xs text-neutral-400 font-medium">
+              <li><Link href="/signup?role=msme" className="hover:text-white transition-colors duration-200">For MSMEs</Link></li>
+              <li><Link href="/signup?role=investor" className="hover:text-white transition-colors duration-200">For Investors</Link></li>
             </ul>
           </div>
-          <div>
-            <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Company</h4>
-            <ul className="space-y-5 text-base font-bold text-muted-foreground">
-              <li><Link href="/about" className="hover:text-foreground transition-colors">About Us</Link></li>
-              <li><Link href="/transparency" className="hover:text-foreground transition-colors">Transparency</Link></li>
-              <li><Link href="/contact" className="hover:text-foreground transition-colors">Contact</Link></li>
+          
+          {/* Company Col */}
+          <div className="text-left">
+            <h4 className="font-semibold text-[10px] uppercase tracking-widest mb-5 text-neutral-500">Company</h4>
+            <ul className="space-y-3 text-xs text-neutral-400 font-medium">
+              <li><Link href="/about" className="hover:text-white transition-colors duration-200">About Us</Link></li>
+              <li><Link href="/transparency" className="hover:text-white transition-colors duration-200">Transparency</Link></li>
+              <li><Link href="/contact" className="hover:text-white transition-colors duration-200">Contact</Link></li>
             </ul>
           </div>
-          <div>
-            <h4 className="font-black text-sm uppercase tracking-widest mb-8 text-foreground">Legal</h4>
-            <ul className="space-y-5 text-base font-bold text-muted-foreground">
-              <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-              <li><Link href="/compliance" className="hover:text-foreground transition-colors">Verification</Link></li>
+          
+          {/* Legal Col */}
+          <div className="text-left">
+            <h4 className="font-semibold text-[10px] uppercase tracking-widest mb-5 text-neutral-500">Legal</h4>
+            <ul className="space-y-3 text-xs text-neutral-400 font-medium">
+              <li><Link href="/privacy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="hover:text-white transition-colors duration-200">Terms of Service</Link></li>
+              <li><Link href="/compliance" className="hover:text-white transition-colors duration-200">Verification Integrity</Link></li>
             </ul>
           </div>
+          
         </div>
-        <div className="border-t border-white/5 mt-24 pt-12 flex flex-col md:flex-row items-center justify-between gap-6 text-sm font-bold text-muted-foreground uppercase tracking-widest">
+
+        {/* Bottom Col */}
+        <div className="border-t border-white/[0.03] mt-12 pt-6 flex flex-col md:flex-row items-center justify-between gap-4 text-[10px] font-semibold text-neutral-500 uppercase tracking-widest">
           <p>© {new Date().getFullYear()} InvoiceFlow India. All rights reserved.</p>
-          <p className="flex items-center gap-2">
+          <p className="flex items-center gap-1.5 font-medium tracking-wide">
             Secured by
-            <span className="text-foreground flex items-center gap-1">
-              <Lock className="w-3 h-3" /> Vercel Cloud
+            <span className="text-neutral-300 flex items-center gap-1 font-bold">
+              <Lock className="w-3 h-3 text-neutral-400" /> Vercel Cloud
             </span>
           </p>
         </div>
+
       </div>
     </footer>
   );

@@ -161,7 +161,7 @@ export default function AdminDashboard() {
       if (errorMessage.includes("Unauthorized") || errorMessage.includes("Admin access required")) {
         router.push("/");
       } else {
-        toast.error(`Terminal Sync Error: ${errorMessage}`);
+        toast.error(`Portal Sync Error: ${errorMessage}`);
       }
     } finally {
       setLoading(false);
@@ -365,6 +365,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const resolveDocUrl = (urlOrPath: string, role?: string) => {
+    if (!urlOrPath) return "";
+    if (urlOrPath.startsWith("http://") || urlOrPath.startsWith("https://")) {
+      return urlOrPath;
+    }
+    const bucket = role === "msme" ? "kyc-documents" : "kyc_documents";
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://sovrlgzsgkjqrwdgkmwi.supabase.co";
+    return `${supabaseUrl}/storage/v1/object/public/${bucket}/${urlOrPath}`;
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[600px]">
@@ -380,7 +390,7 @@ export default function AdminDashboard() {
           <XCircle className="w-12 h-12" />
         </div>
         <div className="space-y-2">
-          <h2 className="text-2xl font-black text-white italic">Terminal Connection Failure</h2>
+          <h2 className="text-2xl font-black text-white italic">Portal Connection Failure</h2>
           <p className="text-muted-foreground text-sm font-medium">
             We encountered a protocol error while synchronising with the cash engine. 
             {error && <span className="block mt-2 text-red-400/80 font-mono text-[10px] uppercase tracking-tighter">{error}</span>}
@@ -404,7 +414,7 @@ export default function AdminDashboard() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
           <h1 className="text-5xl font-black tracking-tighter text-white">
-            Operations <span className="text-primary italic">Terminal</span>
+            Operations <span className="text-primary italic">Portal</span>
           </h1>
           <p className="text-muted-foreground font-medium text-lg max-w-2xl text-balance">
             Manual administrative control and oversight for the InvoiceFlow cash platform.
@@ -591,29 +601,33 @@ export default function AdminDashboard() {
                       <CardDescription>Inspect high-resolution business registrations and tax identifiers.</CardDescription>
                     </CardHeader>
                     <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-                      {Object.entries(selectedRequest.documents || {}).map(([key, url]: [string, any]) => (
-                        <div key={key} className="space-y-4">
-                          <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">{key.replace('_', ' ')}</label>
-                          <a
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="group relative block aspect-video rounded-2xl border border-white/10 bg-white/5 overflow-hidden hover:border-primary/30 transition-all shadow-2xl"
-                          >
-                            <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                              <Search className="w-8 h-8 text-white" />
-                            </div>
-                            {url.split('?')[0].toLowerCase().endsWith('.pdf') ? (
-                              <div className="w-full h-full flex flex-col items-center justify-center space-y-3">
-                                <FileText className="w-12 h-12 text-primary/40" />
-                                <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">PDF Document</span>
+                      {Object.entries(selectedRequest.documents || {}).map(([key, url]: [string, any]) => {
+                        const resolvedUrl = resolveDocUrl(url, selectedRequest.profiles?.role);
+                        const isPdf = resolvedUrl.split('?')[0].toLowerCase().endsWith('.pdf');
+                        return (
+                          <div key={key} className="space-y-4">
+                            <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">{key.replace('_', ' ')}</label>
+                            <a
+                              href={resolvedUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="group relative block aspect-video rounded-2xl border border-white/10 bg-white/5 overflow-hidden hover:border-primary/30 transition-all shadow-2xl"
+                            >
+                              <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity z-10">
+                                <Search className="w-8 h-8 text-white" />
                               </div>
-                            ) : (
-                              <img src={url} alt={key} className="w-full h-full object-cover" />
-                            )}
-                          </a>
-                        </div>
-                      ))}
+                              {isPdf ? (
+                                <iframe
+                                  src={resolvedUrl}
+                                  className="w-full h-full border-none pointer-events-none"
+                                />
+                              ) : (
+                                <img src={resolvedUrl} alt={key} className="w-full h-full object-cover" />
+                              )}
+                            </a>
+                          </div>
+                        );
+                      })}
                     </CardContent>
                   </Card>
 

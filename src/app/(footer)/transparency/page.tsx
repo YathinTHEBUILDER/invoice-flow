@@ -1,6 +1,17 @@
 import { Activity, BarChart3, PieChart, Shield } from "lucide-react";
+import { createClient } from "@/lib/server";
+import { formatPercent } from "@/lib/utils";
 
-export default function TransparencyPage() {
+export default async function TransparencyPage() {
+  const supabase = await createClient();
+  const { data: repayments } = await supabase
+    .from("repayments")
+    .select("status");
+
+  const repaymentList = repayments || [];
+  const totalRepayments = repaymentList.length;
+  const overdueRepayments = repaymentList.filter(r => r.status === "overdue").length;
+  const defaultRateDecimal = totalRepayments > 0 ? overdueRepayments / totalRepayments : 0;
   return (
     <div className="space-y-16">
       <div className="space-y-6">
@@ -67,7 +78,7 @@ export default function TransparencyPage() {
           <div className="glass-dark border-white/10 rounded-[3rem] p-12 aspect-square flex flex-col items-center justify-center text-center space-y-8">
             <PieChart className="w-32 h-32 text-primary/40" />
             <div className="space-y-2">
-              <div className="text-5xl font-black">0.12%</div>
+              <div className="text-5xl font-black">{formatPercent(defaultRateDecimal)}</div>
               <div className="text-xs font-black uppercase tracking-widest text-muted-foreground">Historical Default Rate</div>
             </div>
           </div>

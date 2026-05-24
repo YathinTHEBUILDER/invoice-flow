@@ -123,7 +123,7 @@ export default async function DashboardLayout({
         <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-8">
           {currentNav.map((group, idx) => (
             <div key={idx} className="space-y-3">
-              <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground/50">
+              <h3 className="px-4 text-[10px] font-bold uppercase tracking-wider text-neutral-500">
                 {group.group}
               </h3>
               <div className="space-y-1">
@@ -131,10 +131,10 @@ export default async function DashboardLayout({
                   <Link 
                     key={itemIdx}
                     href={item.href}
-                    className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-bold text-muted-foreground hover:text-white hover:bg-white/5 transition-all group"
+                    className="flex items-center justify-between px-4 py-2.5 rounded-xl text-sm font-medium text-neutral-400 hover:text-white hover:bg-white/5 transition-all group"
                   >
                     <div className="flex items-center gap-3">
-                      <item.icon className="w-4 h-4 group-hover:text-primary transition-colors" />
+                      <item.icon className="w-4 h-4 group-hover:text-blue-500 transition-colors" />
                       {item.label}
                     </div>
                     <ChevronRight className="w-3 h-3 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
@@ -150,12 +150,12 @@ export default async function DashboardLayout({
             href="/profile"
             className="flex items-center gap-3 p-3 rounded-2xl hover:bg-white/5 transition-all group"
           >
-            <div className="h-10 w-10 rounded-xl bg-primary/10 border border-primary/20 flex items-center justify-center text-primary font-black">
+            <div className="h-10 w-10 rounded-xl bg-blue-600/10 border border-blue-500/20 flex items-center justify-center text-blue-400 font-bold">
               {initials}
             </div>
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-black text-white truncate">{user.email?.split('@')[0] || user.user_metadata?.full_name || "User"}</p>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">{role}</p>
+              <p className="text-sm font-bold text-white truncate">{user.email?.split('@')[0] || user.user_metadata?.full_name || "User"}</p>
+              <p className="text-[10px] font-medium text-neutral-400 uppercase tracking-wider">{role}</p>
             </div>
           </Link>
         </div>
@@ -168,8 +168,8 @@ export default async function DashboardLayout({
             <div className="md:hidden">
               <Logo />
             </div>
-            <div className="hidden md:flex items-center gap-2 text-xs font-bold text-muted-foreground uppercase tracking-widest">
-              <span className="text-primary/50">InvoiceFlow</span>
+            <div className="hidden md:flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-widest">
+              <span className="text-neutral-500">InvoiceFlow</span>
               <ChevronRight className="w-3 h-3" />
               <span className="text-white capitalize">{role}</span>
             </div>
@@ -178,7 +178,7 @@ export default async function DashboardLayout({
           <div className="flex items-center gap-4">
             <NotificationBell />
             <Link href="/profile">
-              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary/20 to-purple-500/20 border border-white/10 flex items-center justify-center text-white font-black text-xs hover:scale-110 transition-transform">
+              <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-600/20 to-indigo-600/20 border border-white/10 flex items-center justify-center text-white font-bold text-xs hover:scale-110 transition-transform">
                 {initials}
               </div>
             </Link>
