@@ -10,8 +10,10 @@ import { formatINR, formatIndianNumber, formatDate } from "@/lib/utils";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
+import { useRouter } from "next/navigation";
 
 export default function InvestorWalletPage() {
+  const router = useRouter();
   const [stats, setStats] = useState<any>(null);
   const [transactions, setTransactions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -109,6 +111,21 @@ export default function InvestorWalletPage() {
       toast.error("Critical System Error", { description: "Failed to process the withdrawal." });
     } finally {
       setProcessing(false);
+    }
+  };
+
+  const checkKycAndOpen = (action: "add" | "withdraw") => {
+    if (stats?.kycStatus !== "verified") {
+      toast.error("Verification Required", {
+        description: "Please complete KYC verification to perform wallet operations."
+      });
+      router.push("/investor/kyc");
+      return;
+    }
+    if (action === "add") {
+      setIsAddingFunds(true);
+    } else {
+      setIsWithdrawingFunds(true);
     }
   };
 
@@ -293,13 +310,13 @@ export default function InvestorWalletPage() {
         </div>
         <div className="flex gap-4">
           <Button 
-            onClick={() => setIsAddingFunds(true)}
+            onClick={() => checkKycAndOpen('add')}
             className="h-14 px-10 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl transition-all hover:scale-105 active:scale-95"
           >
             <Plus className="mr-2 h-5 w-5" /> Add Cash
           </Button>
           <Button 
-            onClick={() => setIsWithdrawingFunds(true)}
+            onClick={() => checkKycAndOpen('withdraw')}
             variant="outline" 
             className="h-14 px-10 border-white/10 hover:bg-white/5 text-white font-black uppercase tracking-widest text-[10px] rounded-2xl transition-all hover:scale-105 active:scale-95"
           >
@@ -307,6 +324,27 @@ export default function InvestorWalletPage() {
           </Button>
         </div>
       </div>
+
+      {/* KYC Lock Message */}
+      {stats?.kycStatus !== 'verified' && (
+        <div className="p-8 rounded-[30px] bg-orange-500/5 border border-orange-500/20 flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="flex items-center gap-6">
+            <div className="p-4 rounded-2xl bg-orange-500/10 text-orange-500">
+              <AlertCircle className="w-8 h-8" />
+            </div>
+            <div className="space-y-1">
+              <h4 className="text-xl font-black text-white italic">Verification Lock Active</h4>
+              <p className="text-sm font-medium text-muted-foreground italic">Your wallet operations are restricted until professional checking is complete.</p>
+            </div>
+          </div>
+          <Button 
+            onClick={() => router.push("/investor/kyc")}
+            className="h-12 px-8 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-[10px] rounded-xl shadow-2xl shadow-orange-500/20"
+          >
+            Finalize KYC Now
+          </Button>
+        </div>
+      )}
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         {/* Main Balance Card */}

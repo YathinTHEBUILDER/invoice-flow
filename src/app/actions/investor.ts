@@ -308,9 +308,13 @@ export const addFundsAction = actionClient
     // 1. Fetch current balance
     const { data: profile } = await supabase
       .from('profiles')
-      .select('wallet_balance')
+      .select('wallet_balance, kyc_status')
       .eq('id', user.id)
       .single();
+
+    if (profile?.kyc_status !== 'verified') {
+      throw new Error("KYC verification required to add funds.");
+    }
 
     const newBalance = Number(profile?.wallet_balance || 0) + amount;
 
