@@ -50,6 +50,7 @@ const signUpSchema = z.object({
 const signInSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(1, "Password is required"),
+  role: z.string().optional(),
 });
 
 const verifyOtpSchema = z.object({
@@ -128,7 +129,7 @@ export const signUpAction = actionClient
 
 export const signInAction = actionClient
   .schema(signInSchema)
-  .action(async ({ parsedInput: { email, password } }) => {
+  .action(async ({ parsedInput: { email, password, role } }) => {
     const ip = await getClientIp();
     // Use both IP and Email to prevent targeted brute force
     const limitIp = await rateLimit(`signin:ip:${ip}`, 10, 60000); // 10 attempts per min per IP
@@ -139,7 +140,7 @@ export const signInAction = actionClient
     }
 
     const supabase = await createClient();
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password,
     });
@@ -148,9 +149,16 @@ export const signInAction = actionClient
       if (error.message.toLowerCase().includes("email not confirmed")) {
         return { unverified: true, email };
       }
-      // Return a generic error to prevent user enumeration if needed, 
-      // but Supabase usually returns "Invalid login credentials" anyway.
       throw new Error("Invalid login credentials");
+    }
+
+    // Check user metadata role
+    const userRole = data?.user?.user_metadata?.role;
+    if (role && userRole && userRole !== role) {
+      // Immediately sign them out so their session is invalidated
+      await supabase.auth.signOut();
+      const formattedRole = userRole === "msme" ? "MSME" : userRole === "investor" ? "Investor" : "Admin";
+      throw new Error(`This email is registered as an ${formattedRole}`);
     }
 
     revalidatePath("/", "layout");
