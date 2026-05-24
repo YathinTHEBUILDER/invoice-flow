@@ -40,6 +40,14 @@ export default function InvoicesPage() {
     dueDate: "",
     tenure: ""
   });
+  const [autoInvoiceNumber, setAutoInvoiceNumber] = useState("");
+
+  const openUploadModal = () => {
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    setAutoInvoiceNumber(`INV-${dateStr}-${rand}`);
+    setShowUploadModal(true);
+  };
 
   useEffect(() => {
     if (formData.dueDate) {
@@ -187,7 +195,7 @@ export default function InvoicesPage() {
             <Loader2 className={`w-5 h-5 ${loading ? 'animate-spin' : ''}`} />
           </Button>
           <Button 
-            onClick={() => profile?.kyc_status === 'verified' ? setShowUploadModal(true) : toast.error("KYC Verification Required")}
+            onClick={() => profile?.kyc_status === 'verified' ? openUploadModal() : toast.error("KYC Verification Required")}
             disabled={profile?.kyc_status !== 'verified'}
             className="h-14 px-8 bg-primary hover:bg-primary/90 text-white font-bold uppercase tracking-wider text-xs shadow-2xl shadow-primary/20 disabled:opacity-50 rounded-xl"
           >
@@ -253,7 +261,7 @@ export default function InvoicesPage() {
                   <p className="text-muted-foreground font-medium text-sm max-w-xs mx-auto">Start your financing journey by uploading your first verifiable invoice.</p>
                 </div>
                 <Button 
-                  onClick={() => setShowUploadModal(true)}
+                  onClick={() => openUploadModal()}
                   variant="outline" className="h-12 px-10 border-white/10 hover:bg-white/5 font-bold uppercase tracking-wider text-[10px] rounded-xl"
                 >
                   Submit First Invoice
@@ -367,11 +375,13 @@ export default function InvoicesPage() {
               <form onSubmit={handleUpload} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
-                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Invoice Number</label>
+                    <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Invoice Number (Auto-Assigned)</label>
                     <Input 
                       name="invoice_number" 
                       required 
-                      className="bg-white/5 border-white/10 h-14 font-bold text-white focus:bg-white/10 transition-all rounded-xl"
+                      value={autoInvoiceNumber}
+                      readOnly
+                      className="bg-white/5 border-white/10 h-14 font-bold text-white/50 focus:bg-white/10 transition-all cursor-not-allowed rounded-xl"
                       placeholder=""
                     />
                   </div>

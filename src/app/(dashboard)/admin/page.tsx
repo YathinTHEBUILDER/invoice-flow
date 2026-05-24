@@ -883,25 +883,53 @@ export default function AdminDashboard() {
                       </div>
 
                       <div className="mt-12 space-y-4">
-                         <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">Invoice Document</label>
-                         <div className="relative aspect-[16/6] rounded-2xl border border-white/10 bg-white/5 overflow-hidden group">
-                           <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity z-10 pointer-events-none">
-                              <Search className="w-8 h-8 text-white" />
-                           </div>
-                           <iframe 
-                             src={selectedInvoice.documents?.invoice_url} 
-                             className="w-full h-full border-none pointer-events-none grayscale opacity-40 group-hover:grayscale-0 group-hover:opacity-100 transition-all"
-                           />
-                           <div className="absolute bottom-6 right-6 flex gap-3">
-                              <Button 
-                                variant="outline" 
-                                className="glass border-white/10 font-black uppercase tracking-widest text-[9px] h-10 px-4"
-                                onClick={() => window.open(selectedInvoice.documents?.invoice_url, '_blank')}
+                        <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">Invoice Document</label>
+                        <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 flex flex-col sm:flex-row items-center justify-between gap-6 hover:border-white/20 transition-all">
+                          <div className="flex items-center gap-4 w-full sm:w-auto">
+                            <div className="p-3.5 rounded-xl bg-primary/10 text-primary">
+                              <FileText className="w-6 h-6" />
+                            </div>
+                            <div className="flex flex-col min-w-0">
+                              <span className="text-xs font-black text-white uppercase tracking-wider">Invoice PDF / Image</span>
+                              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest truncate max-w-[200px] sm:max-w-[300px]">
+                                {selectedInvoice.invoice_number ? `Invoice #${selectedInvoice.invoice_number}` : 'Attached Receivable Document'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="flex gap-4 w-full sm:w-auto shrink-0">
+                            <a
+                              href={selectedInvoice.documents?.invoice_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 sm:flex-initial"
+                            >
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full h-12 px-6 bg-white/5 border-white/10 hover:bg-white/10 hover:border-primary/30 font-black uppercase tracking-widest text-[9px] transition-all"
                               >
-                                View Full Document
+                                <Eye className="mr-2 h-4 w-4" />
+                                View Document
                               </Button>
-                           </div>
-                         </div>
+                            </a>
+                            <a
+                              href={selectedInvoice.documents?.invoice_url}
+                              download
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 sm:flex-initial"
+                            >
+                              <Button
+                                type="button"
+                                variant="outline"
+                                className="w-full h-12 px-6 bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-emerald-400 font-black uppercase tracking-widest text-[9px] transition-all"
+                              >
+                                <Download className="mr-2 h-4 w-4" />
+                                Download
+                              </Button>
+                            </a>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
                   </Card>

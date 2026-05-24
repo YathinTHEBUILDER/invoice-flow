@@ -26,7 +26,12 @@ export async function uploadInvoiceAction(formData: FormData) {
     return { error: "KYC approval required before uploading invoices." };
   }
 
-  const invoiceNumber = formData.get("invoice_number") as string;
+  let invoiceNumber = formData.get("invoice_number") as string;
+  if (!invoiceNumber || invoiceNumber.trim() === "") {
+    const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
+    const rand = Math.floor(1000 + Math.random() * 9000);
+    invoiceNumber = `INV-${dateStr}-${rand}`;
+  }
   const amount = parseFloat(formData.get("amount") as string);
   const buyerName = formData.get("buyer_name") as string;
   const buyerGstin = formData.get("buyer_gstin") as string;
