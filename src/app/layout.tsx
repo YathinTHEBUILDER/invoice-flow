@@ -20,6 +20,11 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className={`${inter.className} min-h-screen bg-background text-foreground antialiased flex flex-col`}>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `document.addEventListener('contextmenu', (e) => e.preventDefault());`
+          }}
+        />
         <main className="flex-1 flex flex-col">
           {children}
         </main>
