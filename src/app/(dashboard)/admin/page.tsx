@@ -23,7 +23,9 @@ import {
   ShieldCheck,
   Briefcase,
   FileText,
-  ArrowDownLeft
+  ArrowDownLeft,
+  Eye,
+  Download
 } from "lucide-react";
 import { formatCurrency } from "@/lib/utils";
 import {
@@ -600,31 +602,55 @@ export default function AdminDashboard() {
                       <CardTitle className="text-2xl font-black italic">Submitted Repositories</CardTitle>
                       <CardDescription>Inspect high-resolution business registrations and tax identifiers.</CardDescription>
                     </CardHeader>
-                    <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+                    <CardContent className="p-8 grid grid-cols-1 md:grid-cols-2 gap-6">
                       {Object.entries(selectedRequest.documents || {}).map(([key, url]: [string, any]) => {
                         const resolvedUrl = resolveDocUrl(url, selectedRequest.profiles?.role);
                         const isPdf = resolvedUrl.split('?')[0].toLowerCase().endsWith('.pdf');
+                        const docLabel = key.replace(/_/g, ' ').replace(/\b\w/g, (c: string) => c.toUpperCase());
                         return (
-                          <div key={key} className="space-y-4">
-                            <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em] block">{key.replace('_', ' ')}</label>
-                            <a
-                              href={resolvedUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="group relative block aspect-video rounded-2xl border border-white/10 bg-white/5 overflow-hidden hover:border-primary/30 transition-all shadow-2xl"
-                            >
-                              <div className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity z-10">
-                                <Search className="w-8 h-8 text-white" />
+                          <div key={key} className="rounded-2xl border border-white/10 bg-white/[0.02] p-6 space-y-5 hover:border-white/20 transition-all">
+                            <div className="flex items-center gap-4">
+                              <div className={`p-3 rounded-xl ${isPdf ? 'bg-red-500/10 text-red-400' : 'bg-blue-500/10 text-blue-400'}`}>
+                                <FileText className="w-5 h-5" />
                               </div>
-                              {isPdf ? (
-                                <iframe
-                                  src={resolvedUrl}
-                                  className="w-full h-full border-none pointer-events-none"
-                                />
-                              ) : (
-                                <img src={resolvedUrl} alt={key} className="w-full h-full object-cover" />
-                              )}
-                            </a>
+                              <div className="flex flex-col min-w-0">
+                                <span className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">{docLabel}</span>
+                                <span className="text-xs font-bold text-white/60 truncate">{isPdf ? 'PDF Document' : 'Image File'}</span>
+                              </div>
+                            </div>
+                            <div className="flex gap-3">
+                              <a
+                                href={resolvedUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1"
+                              >
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full h-11 bg-white/5 border-white/10 hover:bg-white/10 hover:border-primary/30 font-black uppercase tracking-widest text-[9px] transition-all"
+                                >
+                                  <Eye className="mr-2 h-4 w-4" />
+                                  View
+                                </Button>
+                              </a>
+                              <a
+                                href={resolvedUrl}
+                                download
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1"
+                              >
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  className="w-full h-11 bg-emerald-500/5 border-emerald-500/20 hover:bg-emerald-500/10 hover:border-emerald-500/40 text-emerald-400 font-black uppercase tracking-widest text-[9px] transition-all"
+                                >
+                                  <Download className="mr-2 h-4 w-4" />
+                                  Download
+                                </Button>
+                              </a>
+                            </div>
                           </div>
                         );
                       })}
