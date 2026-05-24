@@ -440,3 +440,22 @@ export const withdrawFundsAction = actionClient
 
     return { success: true, newBalance: newProfile?.wallet_balance, withdrawalId };
   });
+
+/**
+ * Fetch Current Investor Profile
+ */
+export async function getInvestorProfile() {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return null;
+
+  const { data } = await supabase
+    .from('profiles')
+    .select('full_name, email')
+    .eq('id', user.id)
+    .single();
+
+  return data;
+}
