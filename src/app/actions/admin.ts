@@ -623,6 +623,14 @@ export const resolveDisputeAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
+    // 1. Fetch dispute details before resolving to send notifications
+    const { data: dispute } = await supabase
+      .from('disputes')
+      .select('raised_by, invoice_id, subject, invoices(invoice_number)')
+      .eq('id', disputeId)
+      .single();
+
+    // 2. Resolve Dispute
     const { error } = await supabase
       .from('disputes')
       .update({ 
@@ -636,7 +644,50 @@ export const resolveDisputeAction = actionClient
     
     await logAdminAction('resolve_dispute', 'dispute', disputeId, { resolution });
     
+    // 3. Notify Creator
+    if (dispute) {
+      const disp = dispute as any;
+      const invNum = disp.invoices?.invoice_number || (Array.isArray(disp.invoices) ? disp.invoices[0]?.invoice_number : 'Asset');
+
+      await createNotification(
+        disp.raised_by,
+        "Dispute Resolved ⚖️",
+        `The dispute on Invoice #${invNum} has been resolved: "${disp.subject}"`,
+        "success",
+        "/msme/invoices"
+      );
+
+      // 4. Notify funded investors
+      if (disp.invoice_id) {
+        const { data: investments } = await supabase
+          .from('investments')
+          .select('investor_id')
+          .eq('invoice_id', disp.invoice_id);
+
+        if (investments) {
+          for (const inv of investments) {
+            await createNotification(
+              inv.investor_id,
+              "Invoice Dispute Resolved ✅",
+              `The dispute on your invested Invoice #${invNum} has been fully resolved.`,
+              "success",
+              "/investor/portfolio"
+            );
+          }
+        }
+      }
+    }
+
+    // 5. Revalidate all related dashboards so it updates globally in real-time
     revalidatePath("/admin");
+    revalidatePath("/msme");
+    revalidatePath("/msme/invoices");
+    revalidatePath("/msme/support");
+    revalidatePath("/msme/repayments");
+    revalidatePath("/investor");
+    revalidatePath("/investor/portfolio");
+    revalidatePath("/investor/wallet");
+
     return { success: true };
   });
 
@@ -730,6 +781,13 @@ export const verifySettlementAction = actionClient
     await logAdminAction('verify_settlement', 'repayment', repaymentId, { status });
     
     revalidatePath("/admin");
+    revalidatePath("/msme");
+    revalidatePath("/msme/repayments");
+    revalidatePath("/msme/invoices");
+    revalidatePath("/investor");
+    revalidatePath("/investor/portfolio");
+    revalidatePath("/investor/wallet");
+    
     return { success: true };
   });
 
@@ -965,7 +1023,11 @@ export const approvePreClosureAction = actionClient
     await logAdminAction('approve_preclosure', 'pre_closure_request', requestId, { status: 'approved' });
     
     revalidatePath("/admin");
-    revalidatePath("/msme/investments");
+    revalidatePath("/msme");
+    revalidatePath("/msme/repayments");
+    revalidatePath("/msme/invoices");
+    revalidatePath("/investor");
+    revalidatePath("/investor/portfolio");
     return { success: true };
   });
 
@@ -1048,19 +1110,29 @@ export const resolveSupportTicketAction = actionClient
     
     await logAdminAction('resolve_support_ticket', 'support_ticket', ticketId, { resolution });
     
-    // Fetch User ID to notify
-    const { data: ticket } = await supabase.from('support_tickets').select('user_id, subject').eq('id', ticketId).single();
+    // Fetch User ID and profile role to notify
+    const { data: ticket } = await supabase
+      .from('support_tickets')
+      .select('user_id, subject, profiles:user_id(role)')
+      .eq('id', ticketId)
+      .single();
+
     if (ticket) {
+      const isInvestor = (ticket.profiles as any)?.role === 'investor';
+      const redirectUrl = isInvestor ? '/investor' : '/msme/support';
+      
       await createNotification(
         ticket.user_id,
         "Support Ticket Resolved ✅",
         `Your ticket "${ticket.subject}" has been marked as resolved.`,
         "success",
-        "/msme/support"
+        redirectUrl
       );
     }
 
     revalidatePath("/admin");
+    revalidatePath("/msme");
     revalidatePath("/msme/support");
+    revalidatePath("/investor");
     return { success: true };
   });
