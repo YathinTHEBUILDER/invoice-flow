@@ -8,7 +8,7 @@ export default function TransparencyPage() {
           True <br />Transparency.
         </h1>
         <p className="text-xl text-muted-foreground font-medium max-w-3xl leading-relaxed">
-          At InvoiceFlow, transparency isn't just a buzzword—it's the core of our financial model. We provide real-time visibility into marketplace performance and risk metrics.
+          At InvoiceFlow, transparency isn't just a buzzword—it's the core of our financial model. We provide live updates on marketplace performance and risk metrics.
         </p>
       </div>
 
@@ -16,7 +16,7 @@ export default function TransparencyPage() {
         {[
           {
             title: "Real-Time Ledger",
-            desc: "Every transaction is recorded on our immutable ledger, accessible to participants in real-time.",
+            desc: "Every transaction is recorded on our permanent record, accessible to participants live.",
             icon: Activity
           },
           {
@@ -26,7 +26,7 @@ export default function TransparencyPage() {
           },
           {
             title: "Expert Credit Review",
-            desc: "Full disclosure of our manual credit assessment methodology and risk management protocols.",
+            desc: "Full disclosure of our manual credit assessment methodology and risk control protocols.",
             icon: Shield
           }
         ].map((item, i) => (
@@ -44,7 +44,7 @@ export default function TransparencyPage() {
 
       <div className="grid lg:grid-cols-2 gap-12 items-center">
         <div className="space-y-8">
-          <h2 className="text-4xl font-black tracking-tight leading-none">Risk Management <br />Framework</h2>
+          <h2 className="text-4xl font-black tracking-tight leading-none">Risk Control <br />Framework</h2>
           <p className="text-muted-foreground leading-relaxed">
             Our manual credit assessment process involves a deep-dive analysis of corporate buyers and MSME assets. This ensures that only high-quality, verified opportunities reach our individual investors.
           </p>
@@ -52,7 +52,7 @@ export default function TransparencyPage() {
             {[
               "Manual bank statement verification",
               "Corporate buyer credit history audit",
-              "GST verification and manual reconciliation",
+              "GST and manual verification",
               "Verified historical payment performance"
             ].map((check, i) => (
               <li key={i} className="flex items-center gap-3 font-bold text-sm text-foreground">

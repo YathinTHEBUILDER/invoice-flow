@@ -7,8 +7,8 @@ import { ShieldAlert, ChevronLeft } from "lucide-react";
 
 export default function ResetPasswordPage() {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-screen w-full hero-gradient pointer-events-none -z-10 opacity-40" />
+    <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 relative">
+      <div className="fixed inset-0 w-full h-full hero-gradient pointer-events-none -z-10 opacity-40" />
       
       <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="flex flex-col items-center text-center space-y-6">

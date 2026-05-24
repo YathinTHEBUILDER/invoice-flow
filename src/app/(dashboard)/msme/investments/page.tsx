@@ -114,9 +114,8 @@ export default function InvestmentsPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-widest">Loading Investment Ecosystem...</p>
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -255,7 +254,7 @@ export default function InvestmentsPage() {
                         )}
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Capital Deployed</p>
+                        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Total Money Invested</p>
                         <p className="text-lg font-black text-emerald-500 italic">{formatINR(selectedInvoice.funded_amount || selectedInvoice.amount)}</p>
                       </div>
                       <div className="space-y-1">
@@ -270,7 +269,7 @@ export default function InvestmentsPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-8">
                         <div>
-                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Discounting Rate</p>
+                          <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-1">Financing Rate</p>
                           <p className="text-sm font-bold text-white">{(selectedInvoice.discount_rate * 100).toFixed(2)}% Flat</p>
                         </div>
                         <div>
@@ -371,7 +370,7 @@ export default function InvestmentsPage() {
                                     value={r.amount_due}
                                   />
                                   <Button type="submit" disabled={isSubmitting} className="h-10 px-6 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px]">
-                                    {isSubmitting ? <Loader2 className="w-3 h-3 animate-spin" /> : "Verify Settlement"}
+                                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify Payment"}
                                   </Button>
                                 </form>
                               )}
@@ -415,7 +414,7 @@ export default function InvestmentsPage() {
                               <History className="w-5 h-5" />
                             </div>
                             <div>
-                              <p className="text-sm font-black text-white">Full Repayment Settlement</p>
+                              <p className="text-sm font-black text-white">Full Repayment Payment</p>
                               <p className="text-[9px] text-muted-foreground uppercase">Ref: {r.payment_reference || "N/A"}</p>
                             </div>
                           </div>
@@ -441,7 +440,7 @@ export default function InvestmentsPage() {
                 </div>
                 <div className="flex items-center gap-3 bg-white/5 px-6 py-3 rounded-2xl border border-white/10">
                   <ShieldCheck className="w-4 h-4 text-primary" />
-                  <p className="text-[10px] font-black text-white uppercase tracking-widest italic">Institutional Grade Security</p>
+                   <p className="text-[10px] font-black text-white uppercase tracking-widest italic">Professional Grade Security</p>
                 </div>
               </div>
             </div>
@@ -455,7 +454,7 @@ export default function InvestmentsPage() {
           <div className="absolute inset-0 bg-black/95 backdrop-blur-xl" onClick={() => setShowPreClosure(false)} />
           <Card className="relative w-full max-w-lg glass-dark border-white/10 shadow-2xl animate-in fade-in zoom-in-95 duration-500 p-10 space-y-10">
             <div className="space-y-2">
-              <h3 className="text-3xl font-black text-white italic">Pre-closure Settlement</h3>
+              <h3 className="text-3xl font-black text-white italic">Pre-closure Payment</h3>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest font-black">Invoice #{selectedInvoice.invoice_number}</p>
             </div>
 
@@ -473,7 +472,7 @@ export default function InvestmentsPage() {
                       <span className="text-lg font-black text-orange-500">+{formatINR(details.preClosureFee)}</span>
                     </div>
                     <div className="flex justify-between items-center py-6">
-                      <span className="text-xs font-black text-white uppercase tracking-widest">Total Settlement Amount</span>
+                       <span className="text-xs font-black text-white uppercase tracking-widest">Total Payment Amount</span>
                       <span className="text-3xl font-black text-emerald-500">{formatINR(details.totalSettlement)}</span>
                     </div>
                   </div>
@@ -484,7 +483,7 @@ export default function InvestmentsPage() {
             <div className="p-6 bg-primary/5 border border-primary/10 rounded-2xl flex gap-4">
               <AlertCircle className="w-6 h-6 text-primary shrink-0" />
               <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
-                By confirming, you request the platform to generate a final settlement invoice. This action is irreversible once approved by the treasury.
+                 By confirming, you request the platform to generate a final payment invoice. This action is irreversible once approved by the treasury.
               </p>
             </div>
 
@@ -513,7 +512,7 @@ export default function InvestmentsPage() {
                   setIsSubmitting(false);
                 }}
               >
-                {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Confirm Settlement"}
+                {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Payment"}
               </Button>
             </div>
           </Card>
@@ -551,7 +550,7 @@ export default function InvestmentsPage() {
                     <option value="" disabled className="bg-zinc-900">Select reason</option>
                     <option value="Repayment Discrepancy" className="bg-zinc-900">Repayment Discrepancy</option>
                     <option value="Funding Amount Mismatch" className="bg-zinc-900">Funding Amount Mismatch</option>
-                    <option value="Delayed Disbursement" className="bg-zinc-900">Delayed Disbursement</option>
+                    <option value="Delayed Disbursement" className="bg-zinc-900">Delayed Payment</option>
                     <option value="Agreement Conflict" className="bg-zinc-900">Agreement Conflict</option>
                     <option value="Other" className="bg-zinc-900">Other</option>
                   </select>
@@ -583,7 +582,7 @@ export default function InvestmentsPage() {
                   disabled={isSubmitting}
                   className="flex-1 h-14 bg-red-500 hover:bg-red-600 text-white font-black uppercase tracking-widest text-[11px]"
                 >
-                  {isSubmitting ? <Loader2 className="w-5 h-5 animate-spin" /> : "Raise Dispute"}
+                  {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Raise Dispute"}
                 </Button>
               </div>
             </form>

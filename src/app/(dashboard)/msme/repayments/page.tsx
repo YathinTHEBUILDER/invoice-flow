@@ -126,9 +126,8 @@ export default function RepaymentsPage() {
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                  <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Syncing Repayment Schedule...</p>
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               ) : upcomingDues.length === 0 ? (
                 <div className="text-center py-20 space-y-4">
@@ -172,15 +171,15 @@ export default function RepaymentsPage() {
               )}
             </CardContent>
           </Card>
-
+ 
           <Card className="glass-dark border-white/5 overflow-hidden">
             <CardHeader className="p-8 border-b border-white/5">
               <CardTitle className="text-2xl font-black italic">Payment History</CardTitle>
             </CardHeader>
             <CardContent className="p-0">
               {loading ? (
-                <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                  <Loader2 className="w-10 h-10 animate-spin text-primary" />
+                <div className="flex items-center justify-center py-20">
+                  <Loader2 className="w-6 h-6 animate-spin text-primary" />
                 </div>
               ) : pastPayments.length === 0 ? (
                 <div className="text-center py-20">
@@ -270,7 +269,7 @@ export default function RepaymentsPage() {
           <Card className="relative w-full max-w-md glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
             <CardHeader className="p-8 border-b border-white/5">
               <CardTitle className="text-2xl font-black italic">Submit Payment Proof</CardTitle>
-              <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Verify settlement for Invoice #{selectedRepayment.invoices.invoice_number}</CardDescription>
+              <CardDescription className="text-muted-foreground font-medium uppercase tracking-widest text-[10px]">Verify payment for Invoice #{selectedRepayment.invoices.invoice_number}</CardDescription>
             </CardHeader>
             <form onSubmit={handleSubmitProof}>
               <CardContent className="p-8 space-y-6">
@@ -319,7 +318,7 @@ export default function RepaymentsPage() {
                     disabled={isSubmitting}
                     className="flex-1 h-12 bg-emerald-500 hover:bg-emerald-600 text-white font-black uppercase tracking-widest text-[10px]"
                   >
-                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify Settlement"}
+                    {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Verify Payment"}
                   </Button>
                 </div>
               </CardContent>
@@ -335,7 +334,7 @@ export default function RepaymentsPage() {
           <Card className="relative w-full max-w-md glass-dark border-white/10 shadow-2xl animate-in zoom-in-95 duration-300">
             <CardHeader className="p-8 border-b border-white/5 flex flex-row items-center justify-between">
               <div>
-                <CardTitle className="text-2xl font-black italic">Settlement Account</CardTitle>
+                <CardTitle className="text-2xl font-black italic">Payment Account</CardTitle>
                 <CardDescription className="text-muted-foreground font-medium">NEFT / RTGS Transfer Details</CardDescription>
               </div>
               <Button 
@@ -364,7 +363,7 @@ export default function RepaymentsPage() {
               </div>
               <div className="p-4 rounded-xl bg-primary/5 border border-primary/10">
                 <p className="text-[10px] text-muted-foreground font-bold leading-relaxed italic text-center">
-                  Please mention your Invoice ID in the transaction remarks for faster settlement processing.
+                  Please mention your Invoice ID in the transaction remarks for faster payment processing.
                 </p>
               </div>
               <Button 

@@ -106,7 +106,7 @@ export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
           disabled={isVerifying || otp.some(d => d === "")}
           className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-sm shadow-[0_0_30px_rgba(59,130,246,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
         >
-          {isVerifying ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Verify Account"}
+          {isVerifying ? <Loader2 className="h-4 w-4 animate-spin" /> : "Verify Account"}
         </Button>
 
         <button
@@ -116,11 +116,13 @@ export function OtpForm({ email, type = 'signup', onSuccess }: OtpFormProps) {
           className="w-full flex items-center justify-center gap-2 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors py-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
           {isResending ? (
-            <Loader2 className="h-3 w-3 animate-spin" />
+            <Loader2 className="h-4 w-4 animate-spin" />
           ) : (
-            <RefreshCw className="h-3 w-3" />
+            <>
+              <RefreshCw className="h-3 w-3" />
+              {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend Code"}
+            </>
           )}
-          {resendTimer > 0 ? `Resend in ${resendTimer}s` : "Resend Code"}
         </button>
       </div>
     </form>

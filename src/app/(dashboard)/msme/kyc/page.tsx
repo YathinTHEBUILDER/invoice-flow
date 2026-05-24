@@ -111,7 +111,7 @@ export default function KYCPage() {
 
       const result = await submitKYCAction(formData, documentUrls);
       if (result.success) {
-        toast.success("Compliance documents submitted for manual vetting.");
+        toast.success("Verification documents submitted for manual checking.");
         fetchProfile();
       } else {
         toast.error(result.error || "Submission failed");
@@ -137,11 +137,11 @@ export default function KYCPage() {
 
     switch (status) {
       case "pending":
-        return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20 font-black uppercase tracking-widest text-[10px] px-4 py-1">Manual Vetting in Progress</Badge>;
+        return <Badge className="bg-orange-500/10 text-orange-500 border-orange-500/20 font-black uppercase tracking-widest text-[10px] px-4 py-1">Manual Checking in Progress</Badge>;
       case "verified":
         return <Badge className="bg-emerald-500/10 text-emerald-500 border-emerald-500/20 font-black uppercase tracking-widest text-[10px] px-4 py-1">Business Verified</Badge>;
       case "rejected":
-        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[10px] px-4 py-1">Vetting Failed - Resubmission Required</Badge>;
+        return <Badge className="bg-red-500/10 text-red-500 border-red-500/20 font-black uppercase tracking-widest text-[10px] px-4 py-1">Checking Failed - Resubmission Required</Badge>;
       default:
         return <Badge className="bg-white/5 text-muted-foreground border-white/10 font-black uppercase tracking-widest text-[10px] px-4 py-1">Not Started</Badge>;
     }
@@ -149,9 +149,8 @@ export default function KYCPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
-        <Loader2 className="w-10 h-10 animate-spin text-primary" />
-        <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Accessing Compliance Terminal...</p>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -160,7 +159,7 @@ export default function KYCPage() {
     <div className="space-y-12 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
-          <h2 className="text-5xl font-black tracking-tighter text-white">Compliance Gateway</h2>
+          <h2 className="text-5xl font-black tracking-tighter text-white">Verification Gateway</h2>
           <p className="text-muted-foreground font-medium text-lg italic">Complete verification to unlock financing operations.</p>
         </div>
         <div>
@@ -176,9 +175,9 @@ export default function KYCPage() {
                 <ShieldCheck className="w-12 h-12 text-emerald-500" />
               </div>
               <div className="space-y-3">
-                <h3 className="text-4xl font-black text-white italic">Compliance Cleared</h3>
+                <h3 className="text-4xl font-black text-white italic">Verification Cleared</h3>
                 <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
-                  Your business entity has been formally vetted and approved. All financing operations, invoice discounting, and liquidity deployment features are now fully unlocked.
+                  Your business entity has been formally checked and approved. All financing operations, invoice financing, and cash investment features are now fully unlocked.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
@@ -211,7 +210,7 @@ export default function KYCPage() {
                     <div className="pl-9 space-y-2">
                       <p className="text-sm text-muted-foreground font-medium leading-relaxed">
                         Due to multiple consecutive KYC rejections, a security cooldown has been applied to your account. 
-                        You will be able to resubmit for manual vetting in <span className="text-white font-bold">{
+                        You will be able to resubmit for manual checking in <span className="text-white font-bold">{
                           (() => {
                             const remaining = 8 * 60 * 60 * 1000 - (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime());
                             const hours = Math.floor(remaining / (1000 * 60 * 60));
@@ -389,10 +388,16 @@ export default function KYCPage() {
                     disabled={saving || (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000))}
                     className="w-full h-14 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-2xl shadow-primary/20"
                   >
-                    {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                    {(profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) 
-                      ? "Cooldown Active" 
-                      : "Submit"}
+                    {saving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <ShieldCheck className="mr-2 h-5 w-5" />
+                        {(profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) 
+                          ? "Cooldown Active" 
+                          : "Submit"}
+                      </>
+                    )}
                   </Button>
                 ) : (
                   <div className="h-14 flex items-center justify-center bg-white/5 rounded-2xl border border-white/10">
@@ -412,13 +417,13 @@ export default function KYCPage() {
           <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4">
             <Badge variant="outline" className="text-[8px] font-black uppercase tracking-[0.2em] mb-2">Security</Badge>
             <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
-              Documents are encrypted at rest and stored in a secure institutional-grade vault with zero public access.
+              Documents are encrypted at rest and stored in a secure professional-grade vault with zero public access.
             </p>
           </div>
           <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4">
             <Badge variant="outline" className="text-[8px] font-black uppercase tracking-[0.2em] mb-2">Manual Process</Badge>
             <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
-              Every profile is vetted by a physical agent. Decisions are typically finalized within 24-48 business hours.
+              Every profile is checked by a physical agent. Decisions are typically finalized within 24-48 business hours.
             </p>
           </div>
           <div className="p-8 rounded-3xl bg-white/[0.02] border border-white/5 space-y-4">

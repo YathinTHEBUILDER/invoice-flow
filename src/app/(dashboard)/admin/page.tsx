@@ -367,9 +367,8 @@ export default function AdminDashboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-muted-foreground font-medium animate-pulse text-xs uppercase tracking-widest">Initialising Secure Session...</p>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -383,7 +382,7 @@ export default function AdminDashboard() {
         <div className="space-y-2">
           <h2 className="text-2xl font-black text-white italic">Terminal Connection Failure</h2>
           <p className="text-muted-foreground text-sm font-medium">
-            We encountered a protocol error while synchronising with the liquidity engine. 
+            We encountered a protocol error while synchronising with the cash engine. 
             {error && <span className="block mt-2 text-red-400/80 font-mono text-[10px] uppercase tracking-tighter">{error}</span>}
           </p>
         </div>
@@ -408,7 +407,7 @@ export default function AdminDashboard() {
             Operations <span className="text-primary italic">Terminal</span>
           </h1>
           <p className="text-muted-foreground font-medium text-lg max-w-2xl text-balance">
-            Manual administrative control and oversight for the InvoiceFlow liquidity ecosystem.
+            Manual administrative control and oversight for the InvoiceFlow cash platform.
           </p>
         </div>
         <Button
@@ -546,7 +545,7 @@ export default function AdminDashboard() {
                     >
                       <div className="mt-1 w-2 h-2 rounded-full shrink-0 bg-red-500 shadow-lg shadow-red-500/40 group-hover:scale-125 transition-transform" />
                       <div className="space-y-1">
-                        <p className="text-xs font-black text-white uppercase tracking-wider">Liquidity Conflict</p>
+                        <p className="text-xs font-black text-white uppercase tracking-wider">Cash Conflict</p>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase">{stats.disputes} Active Disputes Requiring Mediation</p>
                       </div>
                     </div>
@@ -638,8 +637,14 @@ export default function AdminDashboard() {
                           onClick={() => handleKYCUpdate(selectedRequest.id, "approved", selectedRequest.user_id)}
                           disabled={actionLoading === selectedRequest.id}
                         >
-                          {actionLoading === selectedRequest.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <CheckCircle2 className="mr-2 h-5 w-5" />}
-                          Confirm Clearance
+                          {actionLoading === selectedRequest.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <CheckCircle2 className="mr-2 h-5 w-5" />
+                              Confirm Clearance
+                            </>
+                          )}
                         </Button>
                         <Button
                           variant="destructive"
@@ -647,8 +652,14 @@ export default function AdminDashboard() {
                           onClick={() => handleKYCUpdate(selectedRequest.id, "rejected", selectedRequest.user_id)}
                           disabled={actionLoading === selectedRequest.id}
                         >
-                          {actionLoading === selectedRequest.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-5 w-5" />}
-                          Issue Rejection
+                          {actionLoading === selectedRequest.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <XCircle className="mr-2 h-5 w-5" />
+                              Issue Rejection
+                            </>
+                          )}
                         </Button>
                       </div>
                     </CardContent>
@@ -662,18 +673,42 @@ export default function AdminDashboard() {
                     <CardHeader className="p-8 border-b border-white/5">
                       <CardTitle className="text-sm font-black uppercase tracking-widest">Entity Metadata</CardTitle>
                     </CardHeader>
-                    <CardContent className="p-8 space-y-6">
-                      {[
-                        { label: "Entity Name", value: selectedRequest.profiles?.company_name || selectedRequest.profiles?.full_name },
-                        { label: "Role", value: selectedRequest.profiles?.role },
-                        { label: "Email", value: selectedRequest.profiles?.email },
-                        { label: "Submission", value: new Date(selectedRequest.created_at).toLocaleString() },
-                      ].map((item, i) => (
-                        <div key={i} className="flex justify-between items-center">
-                          <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{item.label}</span>
-                          <span className="text-xs font-black text-white italic">{item.value}</span>
-                        </div>
-                      ))}
+                    <CardContent className="p-8 space-y-4">
+                      {(() => {
+                        const items = [
+                          { label: "Entity Name", value: selectedRequest.profiles?.company_name || selectedRequest.profiles?.full_name },
+                          { label: "Role", value: selectedRequest.profiles?.role?.toUpperCase() },
+                          { label: "Email", value: selectedRequest.profiles?.email },
+                        ];
+                        
+                        if (selectedRequest.profiles?.role === 'msme') {
+                          if (selectedRequest.profiles?.company_address) {
+                            items.push({ label: "Company Address", value: selectedRequest.profiles.company_address });
+                          }
+                          if (selectedRequest.profiles?.gstin) {
+                            items.push({ label: "GSTIN", value: selectedRequest.profiles.gstin });
+                          }
+                        }
+                        
+                        if (selectedRequest.profiles?.pan) {
+                          items.push({ label: "PAN / Tax ID", value: selectedRequest.profiles.pan });
+                        }
+                        if (selectedRequest.profiles?.bank_account_no) {
+                          items.push({ label: "Bank Account", value: selectedRequest.profiles.bank_account_no });
+                        }
+                        if (selectedRequest.profiles?.ifsc_code) {
+                          items.push({ label: "IFSC Code", value: selectedRequest.profiles.ifsc_code });
+                        }
+                        
+                        items.push({ label: "Submission", value: new Date(selectedRequest.created_at).toLocaleString() });
+                        
+                        return items.map((item, i) => (
+                          <div key={i} className="flex flex-col space-y-1 pb-3 border-b border-white/5 last:border-b-0 last:pb-0">
+                            <span className="text-[10px] font-black text-white/40 uppercase tracking-widest">{item.label}</span>
+                            <span className="text-xs font-black text-white italic break-all">{item.value}</span>
+                          </div>
+                        ));
+                      })()}
                     </CardContent>
                   </Card>
                 </div>
@@ -866,8 +901,14 @@ export default function AdminDashboard() {
                           onClick={() => handleInvoiceUpdate(selectedInvoice.id, "approved", tempVerifiedAmount ? parseFloat(tempVerifiedAmount) : selectedInvoice.amount)}
                           disabled={actionLoading === selectedInvoice.id}
                         >
-                          {actionLoading === selectedInvoice.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                          Authorize Asset
+                          {actionLoading === selectedInvoice.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <ShieldCheck className="mr-2 h-5 w-5" />
+                              Authorize Asset
+                            </>
+                          )}
                         </Button>
                         <Button
                           variant="destructive"
@@ -875,8 +916,14 @@ export default function AdminDashboard() {
                           onClick={() => handleInvoiceUpdate(selectedInvoice.id, "rejected")}
                           disabled={actionLoading === selectedInvoice.id}
                         >
-                          {actionLoading === selectedInvoice.id ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <XCircle className="mr-2 h-5 w-5" />}
-                          Decline Request
+                          {actionLoading === selectedInvoice.id ? (
+                            <Loader2 className="w-4 h-4 animate-spin" />
+                          ) : (
+                            <>
+                              <XCircle className="mr-2 h-5 w-5" />
+                              Decline Request
+                            </>
+                          )}
                         </Button>
                       </div>
                     </CardContent>
@@ -944,7 +991,7 @@ export default function AdminDashboard() {
                           <td colSpan={5} className="px-8 py-20 text-center">
                             <div className="space-y-4">
                               <Briefcase className="w-12 h-12 text-muted-foreground/10 mx-auto" />
-                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No active assets detected in liquidity pool</p>
+                              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em] italic">No active assets detected in cash pool</p>
                             </div>
                           </td>
                         </tr>
@@ -1182,8 +1229,13 @@ export default function AdminDashboard() {
                           </td>
                           <td className="px-8 py-8">
                             <div className="flex flex-col">
-                              <span className="text-xs font-bold text-white/80 tracking-tighter">A/C: {w.bank_account_no}</span>
-                              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">IFSC: {w.ifsc_code}</span>
+                              <span className="text-xs font-bold text-white/80 tracking-tighter">Req A/C: {w.bank_account_no || "N/A"}</span>
+                              <span className="text-[10px] font-bold text-primary uppercase tracking-widest">Req IFSC: {w.ifsc_code || "N/A"}</span>
+                              {w.profiles?.bank_account_no && (
+                                <span className="text-[9px] text-muted-foreground mt-1 font-semibold">
+                                  Reg: {w.profiles.bank_account_no} ({w.profiles.ifsc_code})
+                                </span>
+                              )}
                             </div>
                           </td>
                           <td className="px-8 py-8 font-black text-orange-400 text-lg">
@@ -1207,7 +1259,7 @@ export default function AdminDashboard() {
                                   disabled={actionLoading === w.id}
                                   className="h-8 bg-emerald-500 hover:bg-emerald-600 text-[8px] font-black uppercase"
                                 >
-                                  {actionLoading === w.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Approve"}
+                                  {actionLoading === w.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve"}
                                 </Button>
                                 <Button 
                                   size="sm" 
@@ -1216,7 +1268,7 @@ export default function AdminDashboard() {
                                   disabled={actionLoading === w.id}
                                   className="h-8 text-[8px] font-black uppercase"
                                 >
-                                  Reject
+                                  {actionLoading === w.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Reject"}
                                 </Button>
                               </div>
                             )}
@@ -1277,7 +1329,7 @@ export default function AdminDashboard() {
                                   disabled={actionLoading === req.id}
                                   className="h-8 bg-purple-500 hover:bg-purple-600 text-[8px] font-black uppercase"
                                 >
-                                  {actionLoading === req.id ? <Loader2 className="w-3 h-3 animate-spin" /> : "Approve Pre-closure"}
+                                  {actionLoading === req.id ? <Loader2 className="w-4 h-4 animate-spin" /> : "Approve Pre-closure"}
                                 </Button>
                               </div>
                             ) : (
@@ -1452,7 +1504,7 @@ export default function AdminDashboard() {
                         onBlur={(e) => handleUpdateSetting('platform_commission', e.target.value)}
                       />
                     </div>
-                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider italic">Basis point calculation for liquidity dispersal</p>
+                    <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider italic">Basis point calculation for cash payment</p>
                   </div>
 
                   <div className="space-y-4">

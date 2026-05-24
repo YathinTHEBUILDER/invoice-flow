@@ -16,6 +16,35 @@ const signUpSchema = z.object({
   fullName: z.string().min(2, "Full name is too short"),
   role: z.enum(["msme", "investor", "admin"]),
   companyName: z.string().optional(),
+  gstin: z.string().optional(),
+  pan: z.string().min(10, "PAN must be 10 characters").max(10, "PAN must be 10 characters").toUpperCase(),
+  bankAccountNo: z.string().min(9, "Bank account number is too short").max(18, "Bank account number is too long"),
+  ifscCode: z.string().min(11, "IFSC code must be 11 characters").max(11, "IFSC code must be 11 characters").toUpperCase(),
+  companyAddress: z.string().optional(),
+}).superRefine((data, ctx) => {
+  if (data.role === "msme") {
+    if (!data.companyName || data.companyName.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Company name is required for MSMEs",
+        path: ["companyName"],
+      });
+    }
+    if (!data.companyAddress || data.companyAddress.trim().length === 0) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Company address is required for MSMEs",
+        path: ["companyAddress"],
+      });
+    }
+    if (!data.gstin || !/^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}Z[0-9A-Z]{1}$/.test(data.gstin)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: "Invalid GSTIN format (e.g. 22AAAAA0000A1Z5)",
+        path: ["gstin"],
+      });
+    }
+  }
 });
 
 const signInSchema = z.object({
@@ -47,7 +76,8 @@ async function getClientIp() {
 
 export const signUpAction = actionClient
   .schema(signUpSchema)
-  .action(async ({ parsedInput: { email, password, fullName, role, companyName } }) => {
+  .action(async ({ parsedInput }) => {
+    const { email, password, fullName, role, companyName, gstin, pan, bankAccountNo, ifscCode, companyAddress } = parsedInput;
     const ip = await getClientIp();
     const limit = await rateLimit(`signup:${ip}`, 10, 3600000); // 10 signups per hour per IP (relaxed for testing)
 
@@ -64,6 +94,11 @@ export const signUpAction = actionClient
           full_name: fullName,
           role,
           company_name: companyName,
+          gstin,
+          pan,
+          bank_account_no: bankAccountNo,
+          ifsc_code: ifscCode,
+          company_address: companyAddress,
         },
       },
     });

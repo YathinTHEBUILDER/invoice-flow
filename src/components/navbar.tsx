@@ -15,6 +15,17 @@ export async function Navbar() {
           <Logo />
         </Link>
         <nav className="flex items-center gap-6 md:gap-10">
+          <div className="hidden md:flex items-center gap-8 text-sm font-black uppercase tracking-widest text-muted-foreground mr-2">
+            <Link href="/#how-it-works" className="hover:text-primary transition-colors">
+              How it Works
+            </Link>
+            <Link href="/transparency" className="hover:text-primary transition-colors">
+              Transparency
+            </Link>
+            <Link href="/#investors" className="hover:text-primary transition-colors">
+              For Investors
+            </Link>
+          </div>
           <NavAuth initialUser={user} />
         </nav>
       </div>

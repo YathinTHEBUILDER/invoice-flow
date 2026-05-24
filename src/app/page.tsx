@@ -19,6 +19,14 @@ import {
 import { Navbar } from "@/components/navbar";
 import { Footer } from "@/components/footer";
 import { createClient } from "@/lib/server";
+import { HowItWorksTabs } from "@/components/how-it-works-tabs";
+import { FaqAccordion } from "@/components/faq-accordion";
+import type { Metadata } from "next";
+
+export const metadata: Metadata = {
+  title: "InvoiceFlow | Invoice Financing for Indian MSMEs",
+  description: "Access working capital in 48 hours. InvoiceFlow connects high credit quality Indian MSMEs with individual investors through verified financing secured by invoices.",
+};
 
 export default async function LandingPage() {
   const supabase = await createClient();
@@ -43,32 +51,59 @@ export default async function LandingPage() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary/60 opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-primary"></span>
             </span>
-            <span className="tracking-wide uppercase">Asset-Backed Invoice Factoring</span>
+            <span className="tracking-wide uppercase">Invoice Financing Secured by Invoices</span>
           </div>
           
           <h1 className="text-6xl md:text-8xl lg:text-9xl font-black tracking-tighter max-w-6xl text-balance leading-[0.9] text-gradient">
-            Institutional <br className="hidden md:block" />
+            Professional <br className="hidden md:block" />
             Invoice Financing.
           </h1>
           
           <p className="text-xl md:text-2xl text-muted-foreground/80 max-w-3xl mx-auto text-balance leading-relaxed font-medium">
-            Bridging the working capital gap between creditworthy MSMEs and individual investors. Access liquidity at a fixed 1% platform fee, backed by verified trade receivables.
+            Bridging the working capital gap between high credit quality MSMEs and individual investors. Access cash at a fixed 1% platform fee, secured by verified unpaid invoices.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-6 w-full sm:w-auto">
+          <div className="flex flex-col items-center justify-center gap-4 pt-6 w-full max-w-xl">
             {user ? (
-              <Button size="lg" asChild className="h-16 px-12 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
-                <Link href={`/dashboard/${role}`}>
-                  Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full sm:w-auto">
+                <Button size="lg" asChild className="h-16 px-12 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
+                  <Link href={`/dashboard/${role}`}>
+                    Go to Dashboard <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
             ) : (
-              <Button size="lg" asChild className="h-16 px-12 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
-                <Link href="/get-started">
-                  Get Started <ArrowRight className="ml-2 h-5 w-5" />
-                </Link>
-              </Button>
+              <div className="flex flex-col sm:flex-row items-center justify-center gap-6 w-full sm:w-auto">
+                <Button size="lg" asChild className="h-16 px-8 text-lg font-bold w-full sm:w-auto bg-primary hover:bg-primary/90 text-primary-foreground shadow-[0_0_50px_-10px_rgba(59,130,246,0.5)] transition-all hover:scale-[1.05] active:scale-[0.95]">
+                  <Link href="/get-started?role=msme">
+                    Get Working Capital <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" asChild className="h-16 px-8 text-lg font-bold w-full sm:w-auto glass border-white/10 hover:bg-white/10 text-foreground transition-all hover:scale-[1.05] active:scale-[0.95]">
+                  <Link href="/get-started?role=investor">
+                    Start Investing <ArrowRight className="ml-2 h-5 w-5" />
+                  </Link>
+                </Button>
+              </div>
             )}
+            <p className="text-sm font-medium text-muted-foreground/80 mt-2">
+              Trusted by MSMEs and investors across India
+            </p>
+          </div>
+
+          {/* Trust Metrics Bar */}
+          <div className="w-full max-w-5xl glass-dark border border-white/10 rounded-2xl p-6 md:p-8 mt-12 grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+            {[
+              { value: "₹12.4 Cr", label: "Paid Out" },
+              { value: "0.12%", label: "Default Rate" },
+              { value: "47 Days", label: "Avg Duration" },
+              { value: "138", label: "MSMEs Funded" }
+            ].map((metric, i) => (
+              <div key={i} className="flex flex-col items-center justify-center p-2">
+                <span className="text-2xl md:text-3xl font-black text-foreground">{metric.value}</span>
+                <span className="text-xs md:text-sm font-bold text-muted-foreground uppercase tracking-wider mt-1">{metric.label}</span>
+              </div>
+            ))}
           </div>
 
           {/* Stats Bar */}
@@ -76,8 +111,8 @@ export default async function LandingPage() {
             {[
               { label: "Investor Yields", value: "12-15% ARR", icon: Activity },
               { label: "Platform Commission", value: "Fixed 1%", icon: LineChart },
-              { label: "Risk Management", value: "Manual Audit", icon: ShieldCheck },
-              { label: "Asset Backed", value: "100% Trade", icon: Globe },
+              { label: "Risk Control", value: "Manual Review", icon: ShieldCheck },
+              { label: "Secured by Invoices", value: "100% Trade", icon: Globe },
             ].map((stat, i) => (
               <div key={i} className="flex flex-col items-center space-y-2 group">
                 <div className="p-2 rounded-lg bg-primary/5 group-hover:bg-primary/10 transition-colors">
@@ -98,7 +133,7 @@ export default async function LandingPage() {
           <div className="flex flex-col md:flex-row justify-between items-end mb-20 gap-8">
             <div className="space-y-4 max-w-2xl text-left">
               <h2 className="text-4xl md:text-6xl font-black tracking-tight leading-none">Built for <br />MSMEs.</h2>
-              <p className="text-lg md:text-xl text-muted-foreground font-medium">Professional infrastructure designed to provide reliable liquidity with complete transparency and a fixed 1% fee.</p>
+              <p className="text-lg md:text-xl text-muted-foreground font-medium">Professional platform designed to provide reliable cash with complete transparency and a fixed 1% fee.</p>
             </div>
             <div className="flex gap-4">
               <div className="glass-dark p-4 rounded-2xl border-white/5">
@@ -120,15 +155,15 @@ export default async function LandingPage() {
                 bg: "bg-blue-500/10"
               },
               {
-                title: "Rigorous Asset Vetting",
-                desc: "Every invoice undergoes a manual audit to verify document authenticity and counterparty creditworthiness before listing.",
+                title: "Thorough Asset Checking",
+                desc: "Every invoice undergoes a manual review to verify document authenticity and buyer credit quality before listing.",
                 icon: Shield,
                 color: "text-indigo-500",
                 bg: "bg-indigo-500/10"
               },
               {
-                title: "Institutional Yields",
-                desc: "Investors access high-yield trade receivables, earning projected returns of 12-15% ARR on short-term assets.",
+                title: "Professional Yields",
+                desc: "Investors access high-yield unpaid invoices, earning projected returns of 12-15% ARR on short-term assets.",
                 icon: Activity,
                 color: "text-emerald-500",
                 bg: "bg-emerald-500/10"
@@ -155,35 +190,13 @@ export default async function LandingPage() {
       </section>
 
       {/* Live Marketplace Preview */}
-      <section className="w-full max-w-7xl mx-auto px-4 md:px-8 py-40">
+      <section id="how-it-works" className="w-full max-w-7xl mx-auto px-4 md:px-8 py-40">
         <div className="grid lg:grid-cols-2 gap-24 items-center">
           <div className="space-y-12">
-            <div className="space-y-6">
-              <div className="inline-block px-4 py-1 rounded-full bg-primary/10 text-primary text-xs font-black uppercase tracking-widest">The Engine</div>
-              <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.95]">Precision <br />Capital Flow.</h2>
-              <p className="text-xl text-muted-foreground font-medium max-w-lg">
-                Our platform manages the entire invoice lifecycle, from rigorous credit review to secure settlement.
-              </p>
-            </div>
-
-            <div className="space-y-10 relative">
-              {[
-                { step: "01", title: "Manual Verification", desc: "MSMEs upload receivables; our compliance team manually audits document integrity and counterparty limits." },
-                { step: "02", title: "Marketplace Listing", desc: "Verified assets are listed with transparent tenure and discount rates for investor evaluation." },
-                { step: "03", title: "Strategic Payout", desc: "Upon funding, capital is disbursed to the MSME, with automated settlement at invoice maturity." }
-              ].map((item, i) => (
-                <div key={i} className="flex gap-6 group">
-                  <div className="text-4xl font-black text-primary/20 group-hover:text-primary transition-colors duration-500 leading-none">{item.step}</div>
-                  <div className="space-y-2">
-                    <h3 className="text-2xl font-bold tracking-tight">{item.title}</h3>
-                    <p className="text-muted-foreground font-medium leading-relaxed">{item.desc}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <HowItWorksTabs />
           </div>
 
-          <div className="relative group">
+          <div id="investors" className="relative group">
             <div className="absolute -inset-4 bg-gradient-to-tr from-primary/30 to-blue-600/30 blur-3xl rounded-[3rem] -z-10 opacity-50 group-hover:opacity-80 transition-opacity duration-1000" />
             <Card className="glass border-white/10 shadow-2xl overflow-hidden rounded-[2.5rem]">
               <div className="p-4 border-b border-white/5 bg-white/5 flex items-center justify-between">
@@ -199,7 +212,7 @@ export default async function LandingPage() {
                 <div className="flex justify-between items-center">
                   <div className="space-y-1">
                     <h4 className="font-black text-2xl">Active Assets</h4>
-                    <p className="text-sm font-bold text-muted-foreground">Marketplace Liquidity</p>
+                    <p className="text-sm font-bold text-muted-foreground">Marketplace Cash</p>
                   </div>
                   <div className="h-14 w-14 rounded-2xl bg-primary/10 flex items-center justify-center text-primary shadow-inner">
                     <Activity className="w-7 h-7" />
@@ -209,7 +222,10 @@ export default async function LandingPage() {
                 <div className="space-y-4">
                   <div className="flex justify-between text-xs font-black uppercase tracking-widest text-muted-foreground">
                     <span>Marketplace Activity</span>
-                    <span className="text-emerald-500">Live</span>
+                    <span className="flex items-center gap-2 text-emerald-500">
+                      <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                      Live
+                    </span>
                   </div>
                   <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden p-1 border border-white/5">
                     <div className="h-full bg-gradient-to-r from-primary to-blue-400 w-[84%] rounded-full relative shadow-[0_0_20px_rgba(59,130,246,0.5)]">
@@ -220,25 +236,80 @@ export default async function LandingPage() {
 
                 <div className="grid gap-4">
                   {[
-                    { id: "INV-602", buyer: "Automotive Parts Corp", amount: "₹24.5 L", tenure: "45 Days", yield: "12.5%" },
-                    { id: "INV-841", buyer: "Infrastructure Group", amount: "₹8.2 L", tenure: "60 Days", yield: "13.2%" }
+                    { id: "INV-602", buyer: "Automotive Parts Corp", amount: "₹24.5 L", tenure: "45 Days", yield: "12.5%", fundedPercent: 74, fundedAmount: "₹18.1L", totalAmount: "₹24.5L" },
+                    { id: "INV-841", buyer: "Infrastructure Group", amount: "₹8.2 L", tenure: "60 Days", yield: "13.2%", fundedPercent: 31, fundedAmount: "₹2.5L", totalAmount: "₹8.2L" }
                   ].map((inv, i) => (
-                    <div key={i} className="flex items-center justify-between p-5 rounded-2xl border border-white/5 glass-dark hover:border-primary/30 transition-all gap-4">
+                    <div key={i} className="flex flex-col p-5 rounded-2xl border border-white/5 glass-dark hover:border-primary/30 transition-all gap-4">
+                      <div className="flex items-center justify-between gap-4">
+                        <div className="flex items-center gap-4">
+                          <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
+                            <CheckCircle2 className="w-6 h-6" />
+                          </div>
+                          <div>
+                            <div className="text-sm font-black uppercase tracking-tight">{inv.id}</div>
+                            <div className="text-xs text-muted-foreground font-bold">{inv.buyer}</div>
+                          </div>
+                        </div>
+                        <div className="text-right space-y-1">
+                          <div className="text-sm font-black text-emerald-500">{inv.amount}</div>
+                          <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{inv.tenure} • {inv.yield}</div>
+                        </div>
+                      </div>
+                      
+                      {/* Funding Progress Bar */}
+                      <div className="space-y-1.5">
+                        <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
+                          <span>{inv.fundedPercent}% Funded</span>
+                          <span>{inv.fundedAmount} of {inv.totalAmount}</span>
+                        </div>
+                        <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                          <div 
+                            className="h-full bg-emerald-500 rounded-full transition-all duration-500" 
+                            style={{ width: `${inv.fundedPercent}%` }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+
+                  {/* Third Card fading in after 2s */}
+                  <div className="animate-fade-in-delayed flex flex-col p-5 rounded-2xl border border-white/5 glass-dark hover:border-primary/30 transition-all gap-4">
+                    <div className="flex items-center justify-between gap-4">
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0">
                           <CheckCircle2 className="w-6 h-6" />
                         </div>
                         <div>
-                          <div className="text-sm font-black uppercase tracking-tight">{inv.id}</div>
-                          <div className="text-xs text-muted-foreground font-bold">{inv.buyer}</div>
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-black uppercase tracking-tight">INV-1103</span>
+                            <span className="bg-primary/20 text-primary border border-primary/30 px-1.5 py-0.5 rounded text-[9px] font-black uppercase tracking-wider">
+                              New
+                            </span>
+                          </div>
+                          <div className="text-xs text-muted-foreground font-bold">Pharma Logistics Ltd</div>
                         </div>
                       </div>
                       <div className="text-right space-y-1">
-                        <div className="text-sm font-black text-emerald-500">{inv.amount}</div>
-                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">{inv.tenure} • {inv.yield}</div>
+                        <div className="text-sm font-black text-emerald-500">₹5.7 L</div>
+                        <div className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">30 Days • 11.8%</div>
                       </div>
                     </div>
-                  ))}
+                    
+                    {/* Funding Progress Bar */}
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-[10px] font-bold text-muted-foreground">
+                        <span>0% Funded</span>
+                        <span>₹0 of ₹5.7L</span>
+                      </div>
+                      <div className="h-1.5 w-full bg-white/10 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-emerald-500 rounded-full" 
+                          style={{ width: "0%" }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+
                 </div>
               </CardContent>
             </Card>
@@ -262,7 +333,7 @@ export default async function LandingPage() {
           <div className="space-y-6">
             <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-[0.9]">Scale your <br />Working Capital.</h2>
             <p className="text-xl md:text-2xl text-muted-foreground font-medium max-w-2xl mx-auto leading-relaxed">
-              Join the institutional marketplace designed for transparent, manual-audit verified supply chain financing.
+              Join the professional marketplace designed for transparent, manual-review verified supply chain financing.
             </p>
           </div>
           
@@ -290,6 +361,9 @@ export default async function LandingPage() {
           </div>
         </div>
       </section>
+
+      {/* FAQ Accordion Section */}
+      <FaqAccordion />
 
       {/* Footer */}
       <Footer />

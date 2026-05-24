@@ -97,7 +97,7 @@ export default function SettingsPage() {
     try {
       const result = await addFundsAction({ amount });
       if (result?.data?.success) {
-        toast.success("Liquidity Added", { 
+        toast.success("Cash Added", { 
           description: `₹${amount.toLocaleString('en-IN')} has been successfully credited.` 
         });
         setAddAmount("");
@@ -154,7 +154,7 @@ export default function SettingsPage() {
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -180,7 +180,7 @@ export default function SettingsPage() {
               <div className="flex justify-between items-center">
                 <div>
                   <CardTitle className="text-2xl font-black italic uppercase tracking-tight">Fund Management</CardTitle>
-                  <CardDescription className="font-bold uppercase tracking-widest text-[10px] text-muted-foreground italic">Liquidity control and audit</CardDescription>
+                  <CardDescription className="font-bold uppercase tracking-widest text-[10px] text-muted-foreground italic">Cash control and review</CardDescription>
                 </div>
                 <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 px-3 py-1 font-black uppercase tracking-widest text-[8px]">Verified Ledger</Badge>
               </div>
@@ -188,7 +188,7 @@ export default function SettingsPage() {
             <CardContent className="p-8 relative z-10 space-y-8">
               <div className="flex flex-col md:flex-row justify-between gap-8">
                 <div className="space-y-1">
-                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Available Liquidity</p>
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.2em]">Available Cash</p>
                   <p className="text-5xl font-black text-white italic">{formatINR(investorStats?.walletBalance || 0)}</p>
                 </div>
                 <div className="flex items-end pb-1 gap-4">
@@ -304,7 +304,7 @@ export default function SettingsPage() {
                 <div className="p-3 rounded-2xl bg-primary/10 text-primary w-fit mb-4">
                   <IndianRupee className="w-6 h-6" />
                 </div>
-                <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Add Liquidity</CardTitle>
+                <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Add Cash</CardTitle>
                 <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Increase your available capital</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
@@ -334,8 +334,14 @@ export default function SettingsPage() {
                     disabled={processing}
                     className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
                   >
-                    {processing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
-                    Confirm Capital Addition
+                    {processing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Plus className="w-5 h-5 mr-2" />
+                        Confirm Cash Addition
+                      </>
+                    )}
                   </Button>
                 </form>
               </CardContent>
@@ -360,7 +366,7 @@ export default function SettingsPage() {
                   <IndianRupee className="w-6 h-6" />
                 </div>
                 <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Withdraw Capital</CardTitle>
-                <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Transfer liquidity to bank account</CardDescription>
+                <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Transfer cash to bank account</CardDescription>
               </CardHeader>
               <CardContent className="p-8 space-y-6">
                 <form onSubmit={handleWithdrawFunds} className="space-y-8">
@@ -417,8 +423,14 @@ export default function SettingsPage() {
                     disabled={processing || !withdrawAmount || parseFloat(withdrawAmount) > (investorStats?.walletBalance || 0) || !investorStats?.bankDetails?.accountNo}
                     className="w-full h-14 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-orange-500/20 rounded-2xl"
                   >
-                    {processing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <IndianRupee className="w-5 h-5 mr-2" />}
-                    Confirm Withdrawal
+                    {processing ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <IndianRupee className="w-5 h-5 mr-2" />
+                        Confirm Withdrawal
+                      </>
+                    )}
                   </Button>
                   <p className="text-[8px] text-muted-foreground text-center uppercase tracking-widest font-bold italic">
                     Funds will be reserved and transferred within 48 hours.
@@ -465,8 +477,14 @@ export default function SettingsPage() {
                   disabled={saving === 'platform_commission'}
                   className="h-14 px-6 font-bold"
                 >
-                  {saving === 'platform_commission' ? <Loader2 className="animate-spin" /> : <Save className="mr-2 w-4 h-4" />}
-                  Save
+                  {saving === 'platform_commission' ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Save className="mr-2 w-4 h-4" />
+                      Save
+                    </>
+                  )}
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground italic">Fixed percentage applied to all invoice values (Official Model).</p>
@@ -487,8 +505,14 @@ export default function SettingsPage() {
                   disabled={saving === 'preclosure_penalty'}
                   className="h-14 px-6 font-bold"
                 >
-                  {saving === 'preclosure_penalty' ? <Loader2 className="animate-spin" /> : <Save className="mr-2 w-4 h-4" />}
-                  Save
+                  {saving === 'preclosure_penalty' ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Save className="mr-2 w-4 h-4" />
+                      Save
+                    </>
+                  )}
                 </Button>
               </div>
               <p className="text-[10px] text-muted-foreground italic">Applied on principal amount for early settlements.</p>

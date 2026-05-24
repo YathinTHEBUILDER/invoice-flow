@@ -32,8 +32,8 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-screen w-full hero-gradient pointer-events-none -z-10 opacity-40" />
+    <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 relative">
+      <div className="fixed inset-0 w-full h-full hero-gradient pointer-events-none -z-10 opacity-40" />
       
       <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="flex flex-col items-center text-center space-y-6">
@@ -88,7 +88,7 @@ export default function ForgotPasswordPage() {
                 disabled={isPending}
                 className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-sm shadow-[0_0_30px_rgba(59,130,246,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
               >
-                {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Send Reset Link"}
+                {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Send Reset Link"}
               </Button>
             </form>
           ) : (

@@ -67,9 +67,8 @@ export default function InvestorMarketplace() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Synchronizing Liquidity Market...</p>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -79,11 +78,11 @@ export default function InvestorMarketplace() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
           <h2 className="text-5xl font-black tracking-tighter text-white uppercase italic">Asset Marketplace</h2>
-          <p className="text-muted-foreground font-medium text-lg italic">Strategic capital deployment into vetted MSME receivables.</p>
+          <p className="text-muted-foreground font-medium text-lg italic">Smart money investment into checked MSME invoices.</p>
         </div>
         <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 px-6">
           <div className="space-y-0.5">
-            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Available Liquidity</p>
+            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Available Cash</p>
             <p className="text-xl font-black text-white italic">{formatINR(profile?.walletBalance || 0)}</p>
           </div>
           <div className="w-px h-8 bg-white/10 mx-2" />
@@ -153,11 +152,11 @@ export default function InvestorMarketplace() {
 
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-white/5">
                       <div className="space-y-1">
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Discount Rate</p>
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Financing Rate</p>
                         <p className="text-lg font-black text-white uppercase italic">{(invoice.discount_rate * 100 || 14.5).toFixed(1)}% p.a.</p>
                       </div>
                       <div className="space-y-1">
-                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Tenure</p>
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest">Duration</p>
                         <p className="text-lg font-black text-white uppercase italic">{invoice.tenure_days || 45} Days</p>
                       </div>
                       <div className="space-y-1">
@@ -238,8 +237,8 @@ export default function InvestorMarketplace() {
               <AlertCircle className="w-8 h-8" />
             </div>
             <div className="space-y-1">
-              <h4 className="text-xl font-black text-white italic">Compliance Lock Active</h4>
-              <p className="text-sm font-medium text-muted-foreground italic">Your capital deployment features are restricted until institutional vetting is complete.</p>
+              <h4 className="text-xl font-black text-white italic">Verification Lock Active</h4>
+              <p className="text-sm font-medium text-muted-foreground italic">Your money investment features are restricted until professional checking is complete.</p>
             </div>
           </div>
           <Button 

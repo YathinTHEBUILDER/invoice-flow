@@ -103,7 +103,7 @@ export function ResetPasswordForm() {
         disabled={isPending}
         className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-sm shadow-[0_0_30px_rgba(59,130,246,0.3)] transition-all hover:scale-[1.02] active:scale-[0.98]"
       >
-        {isPending ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : "Update Password"}
+        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : "Update Password"}
       </Button>
     </form>
   );

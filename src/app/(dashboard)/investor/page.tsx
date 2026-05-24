@@ -44,9 +44,8 @@ export default function InvestorDashboard() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Syncing Capital Command...</p>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -86,8 +85,8 @@ export default function InvestorDashboard() {
       {/* Hero Section */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
-          <h2 className="text-5xl font-black tracking-tighter text-white uppercase italic">Capital Command</h2>
-          <p className="text-muted-foreground font-medium text-lg italic">Strategic liquidity management & portfolio expansion.</p>
+          <h2 className="text-5xl font-black tracking-tighter text-white uppercase italic">Investment Command</h2>
+          <p className="text-muted-foreground font-medium text-lg italic">Smart cash management & portfolio expansion.</p>
         </div>
         <div className="flex gap-4">
           <Link href="/investor/marketplace">
@@ -111,9 +110,9 @@ export default function InvestorDashboard() {
               <AlertTriangle className="w-10 h-10" />
             </div>
             <div className="space-y-2">
-              <h3 className="text-3xl font-black text-white italic tracking-tighter">Compliance Clearance Required</h3>
+              <h3 className="text-3xl font-black text-white italic tracking-tighter">Verification Clearance Required</h3>
               <p className="text-muted-foreground font-medium italic max-w-xl">
-                Institutional investment actions are strictly locked until your identity credentials and biometric selfie are manually vetted.
+                Professional investment actions are strictly locked until your identity credentials and biometric selfie are manually checked.
               </p>
             </div>
           </div>
@@ -121,7 +120,7 @@ export default function InvestorDashboard() {
             onClick={() => router.push("/investor/kyc")}
             className="h-16 px-12 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-[10px] rounded-[20px] shadow-2xl shadow-orange-500/20"
           >
-            {kycStatus === 'pending' ? "Vetting in Progress..." : "Begin Verification Process"} <ArrowRight className="ml-2 w-5 h-5" />
+            {kycStatus === 'pending' ? "Checking in Progress..." : "Begin Verification Process"} <ArrowRight className="ml-2 w-5 h-5" />
           </Button>
         </div>
       )}
@@ -170,8 +169,8 @@ export default function InvestorDashboard() {
                      <PieChart className="w-12 h-12 text-muted-foreground/20" />
                   </div>
                   <div className="space-y-2">
-                     <p className="text-muted-foreground font-medium italic">Your capital is awaiting strategic deployment.</p>
-                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Institutional Liquidity Pool Active</p>
+                     <p className="text-muted-foreground font-medium italic">Your money is awaiting smart investment.</p>
+                     <p className="text-[10px] font-black text-primary uppercase tracking-[0.3em]">Professional Cash Pool Active</p>
                   </div>
                   <Link href="/investor/marketplace">
                      <Button variant="outline" className="h-12 px-8 border-white/10 hover:bg-white/5 text-[10px] font-black uppercase tracking-widest rounded-xl">
@@ -184,7 +183,7 @@ export default function InvestorDashboard() {
                   <div className="p-8 rounded-3xl bg-white/5 border border-white/5 flex items-center justify-between">
                      <div className="space-y-1">
                         <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Active Positions</p>
-                        <p className="text-2xl font-black text-white italic">{stats.activeAssets} Vetted Assets</p>
+                        <p className="text-2xl font-black text-white italic">{stats.activeAssets} Checked Assets</p>
                      </div>
                      <div className="p-4 rounded-2xl bg-primary/10 text-primary">
                         <ShieldCheck className="w-6 h-6" />
@@ -199,7 +198,7 @@ export default function InvestorDashboard() {
         <Card className="glass-dark border-white/5 overflow-hidden flex flex-col min-h-[500px]">
           <CardHeader className="p-10 border-b border-white/5 bg-white/[0.02]">
             <CardTitle className="text-2xl font-black italic tracking-tighter text-white uppercase">Treasury Feed</CardTitle>
-            <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Real-time financial visibility and events</CardDescription>
+            <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Live financial updates and events</CardDescription>
           </CardHeader>
           <CardContent className="p-10 flex-1 flex flex-col items-center justify-center">
              <div className="text-center space-y-6">
@@ -208,7 +207,7 @@ export default function InvestorDashboard() {
                 </div>
                 <div className="space-y-2">
                    <p className="text-muted-foreground font-medium italic">No recent treasury activity detected.</p>
-                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Waiting for Liquidity Events</p>
+                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-[0.3em]">Waiting for Cash Events</p>
                 </div>
              </div>
           </CardContent>
@@ -220,7 +219,7 @@ export default function InvestorDashboard() {
          <div className="space-y-2">
             <h4 className="text-2xl font-black text-white italic uppercase tracking-tighter">Manual Governance Terminal</h4>
             <p className="text-sm font-medium text-muted-foreground italic max-w-2xl">
-               Every investment action and liquidity event is manually audited by InvoiceFlow's institutional risk desk. No automated or predictive capital deployment is permitted within this terminal.
+               Every investment action and cash event is manually reviewed by InvoiceFlow's professional risk desk. No automated or predictive money investment is permitted within this terminal.
             </p>
          </div>
          <div className="flex gap-4">

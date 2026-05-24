@@ -8,8 +8,8 @@ import { Shield } from "lucide-react";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "InvoiceFlow | Premium Grade Factoring",
-  description: "Secure, transparent MSME invoice discounting for individual investors.",
+  title: "InvoiceFlow | High Quality Financing",
+  description: "Secure, transparent MSME invoice financing for individual investors.",
 };
 
 export default function RootLayout({

@@ -318,7 +318,7 @@ export async function getMSMEStats() {
       profile?.kyc_status !== 'verified' && {
         type: 'warning',
         title: 'KYC Clearance Pending',
-        message: 'Your funding access is restricted. Complete verification to unlock ₹50L+ in liquidity.',
+        message: 'Your funding access is restricted. Complete verification to unlock ₹50L+ in cash.',
         action: '/msme/kyc',
         actionLabel: 'Verify Now'
       },
@@ -450,7 +450,7 @@ export async function submitRepaymentProofAction(formData: FormData) {
     for (const admin of admins) {
       await createNotification(
         admin.id,
-        "Payment Settlement Submitted 💰",
+        "Payment Submitted 💰",
         `UTR ${utr} submitted for verification. Amount: ${amountPaid}`,
         "success",
         "/admin"

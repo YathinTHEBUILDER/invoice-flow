@@ -8,7 +8,7 @@ export default function AboutPage() {
           Democratizing <br />Working Capital.
         </h1>
         <p className="text-xl text-muted-foreground font-medium max-w-3xl leading-relaxed">
-          InvoiceFlow is India's premier marketplace for invoice discounting, connecting verified MSMEs with a community of individual investors looking for secure, asset-backed yields.
+          InvoiceFlow is India's premier marketplace for invoice financing, connecting verified MSMEs with a community of individual investors looking for secure yields secured by invoices.
         </p>
       </div>
 
@@ -19,7 +19,7 @@ export default function AboutPage() {
           </div>
           <h2 className="text-2xl font-bold tracking-tight">Our Mission</h2>
           <p className="text-muted-foreground leading-relaxed">
-            To bridge the credit gap for small businesses by unlocking the value of their unpaid invoices, while providing investors with a low-risk, high-return alternative to traditional debt instruments.
+            To bridge the credit gap for small businesses by unlocking the value of their unpaid invoices, while providing investors with a low-risk, high-return alternative to traditional debt products.
           </p>
         </div>
         <div className="space-y-4">
@@ -28,7 +28,7 @@ export default function AboutPage() {
           </div>
           <h2 className="text-2xl font-bold tracking-tight">Our Vision</h2>
           <p className="text-muted-foreground leading-relaxed">
-            To become the backbone of India's supply chain finance infrastructure, facilitating seamless liquidity flow for every enterprise, no matter the size.
+            To become the backbone of India's supply chain finance platform, handling seamless cash flow for every enterprise, no matter the size.
           </p>
         </div>
       </div>
@@ -40,14 +40,14 @@ export default function AboutPage() {
             <Shield className="w-6 h-6 text-primary shrink-0" />
             <div>
               <h3 className="font-bold">Trust & Transparency</h3>
-              <p className="text-sm text-muted-foreground">Every MSME and buyer undergoes rigorous KYC and credit assessment.</p>
+              <p className="text-sm text-muted-foreground">Every MSME and buyer undergoes thorough KYC and credit assessment.</p>
             </div>
           </div>
           <div className="flex gap-4">
             <Users className="w-6 h-6 text-primary shrink-0" />
             <div>
               <h3 className="font-bold">Community Driven</h3>
-              <p className="text-sm text-muted-foreground">Our platform is built for individual investors to participate in premium-quality assets.</p>
+              <p className="text-sm text-muted-foreground">Our platform is built for individual investors to participate in high quality assets.</p>
             </div>
           </div>
         </div>

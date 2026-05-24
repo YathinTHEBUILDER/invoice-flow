@@ -108,9 +108,8 @@ export default function SupportPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Loading Support History...</p>
+              <div className="flex items-center justify-center py-32">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : tickets.length === 0 ? (
               <div className="text-center py-32 space-y-6">
@@ -176,7 +175,7 @@ export default function SupportPage() {
               <CardTitle className="text-xl font-black italic">Quick Categories</CardTitle>
             </CardHeader>
             <CardContent className="p-8 space-y-4">
-              {["Invoice Rejection", "Repayment Issues", "KYC Verification", "Disbursement Delay"].map((cat, i) => (
+              {["Invoice Rejection", "Repayment Issues", "KYC Verification", "Payment Delay"].map((cat, i) => (
                 <div key={i} className="flex items-center justify-between p-4 rounded-xl bg-white/5 border border-white/10 group cursor-pointer hover:bg-white/10 transition-all">
                   <span className="text-[10px] font-black text-white uppercase tracking-widest">{cat}</span>
                   <ChevronRight className="w-3.5 h-3.5 text-muted-foreground group-hover:translate-x-1 transition-transform" />
@@ -288,8 +287,14 @@ export default function SupportPage() {
                     className="flex-[2] h-14 bg-primary hover:bg-primary/90 text-white font-black uppercase tracking-widest text-xs shadow-xl shadow-primary/20"
                     disabled={submitting}
                   >
-                    {submitting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Send className="mr-2 h-4 w-4" />}
-                    Initialize Ticket
+                    {submitting ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Send className="mr-2 h-4 w-4" />
+                        Start Ticket
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>

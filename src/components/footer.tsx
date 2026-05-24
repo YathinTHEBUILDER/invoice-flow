@@ -15,7 +15,7 @@ export function Footer() {
           <div className="col-span-2 md:col-span-1 space-y-8">
             <Logo className="scale-110 origin-left" />
             <p className="text-base text-muted-foreground font-medium pr-8 leading-relaxed">
-              Institutional infrastructure for invoice discounting and strategic supply chain finance.
+              Professional platform for invoice financing and smart supply chain finance.
             </p>
             <div className="flex gap-4">
               {[Globe, Users, Shield].map((Icon, i) => (
@@ -45,7 +45,7 @@ export function Footer() {
             <ul className="space-y-5 text-base font-bold text-muted-foreground">
               <li><Link href="/privacy" className="hover:text-foreground transition-colors">Privacy Policy</Link></li>
               <li><Link href="/terms" className="hover:text-foreground transition-colors">Terms of Service</Link></li>
-              <li><Link href="/compliance" className="hover:text-foreground transition-colors">Compliance</Link></li>
+              <li><Link href="/compliance" className="hover:text-foreground transition-colors">Verification</Link></li>
             </ul>
           </div>
         </div>

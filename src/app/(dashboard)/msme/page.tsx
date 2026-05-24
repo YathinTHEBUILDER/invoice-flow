@@ -31,7 +31,7 @@ export default async function MsmeDashboard() {
           <h2 className="text-4xl md:text-5xl font-black tracking-tighter text-white italic underline decoration-primary/20 decoration-4 underline-offset-[12px]">
             Operations <span className="text-primary italic">Terminal</span>
           </h2>
-          <p className="text-muted-foreground font-medium text-sm md:text-lg italic mt-6">Enterprise liquidity overview and asset monitoring interface.</p>
+          <p className="text-muted-foreground font-medium text-sm md:text-lg italic mt-6">Enterprise cash overview and asset monitoring interface.</p>
         </div>
         <div className="flex gap-4">
           <Link href="/msme/support">
@@ -81,7 +81,7 @@ export default async function MsmeDashboard() {
         <div className="lg:col-span-2 space-y-8">
           <div className="space-y-4">
             <div className="flex items-center justify-between px-2">
-              <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] italic">Liquidity Timeline</h3>
+              <h3 className="text-[10px] font-black text-white/40 uppercase tracking-[0.3em] italic">Cash Timeline</h3>
               <Badge variant="outline" className="border-white/10 text-[9px] font-black uppercase">Real-time Dues</Badge>
             </div>
             <RepaymentTimeline repayments={stats.repayments || []} />
@@ -165,7 +165,7 @@ export default async function MsmeDashboard() {
                <Card className="glass-dark border-white/5 overflow-hidden">
                 <CardHeader className="p-8 border-b border-white/5">
                   <CardTitle className="text-xl font-black italic">Buyer Concentration</CardTitle>
-                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">Counterparty Exposure</p>
+                  <p className="text-xs text-muted-foreground font-bold uppercase tracking-wider mt-1">Buyer Exposure</p>
                 </CardHeader>
                 <CardContent className="p-8">
                   <BuyerConcentration analytics={stats.buyerAnalytics || []} />

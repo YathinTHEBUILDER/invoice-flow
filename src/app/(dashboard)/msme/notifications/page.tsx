@@ -69,7 +69,7 @@ export default function NotificationsPage() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
           <h2 className="text-5xl font-black tracking-tighter text-white">Notifications</h2>
-          <p className="text-muted-foreground font-medium text-lg italic">Stay updated with platform events and compliance status.</p>
+          <p className="text-muted-foreground font-medium text-lg italic">Stay updated with platform events and verification status.</p>
         </div>
         <Button 
           variant="outline" 
@@ -95,9 +95,8 @@ export default function NotificationsPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Accessing Secure Comms...</p>
+              <div className="flex items-center justify-center py-32">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : notifications.length === 0 ? (
               <div className="text-center py-32 space-y-6">

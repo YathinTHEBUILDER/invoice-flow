@@ -54,7 +54,7 @@ export default function InvoicesPage() {
       const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
       
       if (diffDays < 30) {
-        toast.warning("Discounting typically requires >30 days tenure.");
+        toast.warning("Financing typically requires >30 days duration.");
       }
       
       setFormData(prev => ({ ...prev, tenure: Math.max(0, diffDays).toString() }));
@@ -240,9 +240,8 @@ export default function InvoicesPage() {
           </CardHeader>
           <CardContent className="p-0">
             {loading ? (
-              <div className="flex flex-col items-center justify-center py-32 space-y-4">
-                <Loader2 className="w-10 h-10 animate-spin text-primary" />
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest animate-pulse">Retrieving Asset Ledger...</p>
+              <div className="flex items-center justify-center py-32">
+                <Loader2 className="w-6 h-6 animate-spin text-primary" />
               </div>
             ) : invoices.length === 0 ? (
               <div className="text-center py-32 space-y-6">
@@ -418,7 +417,7 @@ export default function InvoicesPage() {
                     </div>
                   </div>
                   <div className="space-y-3">
-                    <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Tenure (Days)</label>
+                     <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Duration (Days)</label>
                     <div className="relative group">
                       <Input 
                         name="tenure_days" 
@@ -473,8 +472,14 @@ export default function InvoicesPage() {
                     className="flex-[2] h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-xl shadow-primary/20"
                     disabled={uploading}
                   >
-                    {uploading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Upload className="mr-2 h-4 w-4" />}
-                    Submit for Verification
+                    {uploading ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <>
+                        <Upload className="mr-2 h-4 w-4" />
+                        Submit for Verification
+                      </>
+                    )}
                   </Button>
                 </div>
               </form>
@@ -519,7 +524,7 @@ export default function InvoicesPage() {
                 <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/10 flex gap-3">
                   <AlertCircle className="w-5 h-5 text-red-500 shrink-0" />
                   <p className="text-[10px] text-muted-foreground font-medium italic leading-relaxed">
-                    Formal disputes will suspend all liquidity operations on this asset until resolved by an administrator.
+                    Formal disputes will suspend all cash operations on this asset until resolved by an administrator.
                   </p>
                 </div>
 

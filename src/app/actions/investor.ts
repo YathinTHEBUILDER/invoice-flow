@@ -224,7 +224,7 @@ export async function submitInvestorKYCAction(formData: FormData) {
         await createNotification(
           admin.id,
           "Investor Documents Submitted 🛡️",
-          `Investor ${user.email} has submitted credentials for manual audit.`,
+          `Investor ${user.email} has submitted credentials for manual review.`,
           "info",
           "/admin?tab=kyc"
         );
@@ -263,7 +263,7 @@ export const fundInvoiceAction = actionClient
       .single();
 
     if (profile?.kyc_status !== 'verified') {
-      throw new Error("Compliance Clearance Required. Please complete KYC verification.");
+      throw new Error("Verification Required. Please complete KYC verification.");
     }
 
     // 2. Call Atomic RPC for investment
@@ -346,7 +346,7 @@ export const addFundsAction = actionClient
     await createNotification(
       user.id,
       "Funds Added! 💰",
-      `₹${amount.toLocaleString('en-IN')} has been successfully credited to your liquidity wallet.`,
+      `₹${amount.toLocaleString('en-IN')} has been successfully credited to your cash wallet.`,
       "success",
       "/investor/wallet"
     );
@@ -389,7 +389,7 @@ export const withdrawFundsAction = actionClient
     const currentBalance = Number(profile?.wallet_balance || 0);
 
     if (currentBalance < amount) {
-      throw new Error("Insufficient liquidity for this withdrawal.");
+      throw new Error("Insufficient cash for this withdrawal.");
     }
 
     // Call Atomic RPC for withdrawal

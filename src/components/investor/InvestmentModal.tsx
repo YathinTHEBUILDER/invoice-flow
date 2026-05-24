@@ -81,7 +81,7 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
     }
 
     if (payableAmount > userBalance) {
-      toast.error("Liquidity Shortfall", {
+      toast.error("Cash Shortfall", {
         description: `You need ${formatINR(payableAmount)} to purchase this face value. Available: ${formatINR(userBalance)}`
       });
       return;
@@ -120,8 +120,8 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
             <CheckCircle2 className="w-12 h-12 text-emerald-500" />
           </div>
           <div className="space-y-2">
-            <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Capital Deployed</h2>
-            <p className="text-muted-foreground font-medium italic">Your participation has been successfully recorded on the ledger.</p>
+            <h2 className="text-3xl font-black text-white italic uppercase tracking-tighter">Money Invested</h2>
+            <p className="text-muted-foreground font-medium italic">Your participation has been successfully recorded on the record.</p>
           </div>
           <div className="p-4 rounded-2xl bg-white/5 border border-white/10">
             <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest mb-1">Face Value Secured</p>
@@ -138,7 +138,7 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
         <div className="p-8 space-y-8">
           <DialogHeader>
             <DialogTitle className="text-3xl font-black text-white italic uppercase tracking-tighter flex items-center gap-3">
-              <TrendingUp className="w-8 h-8 text-primary" /> Deploy Capital
+              <TrendingUp className="w-8 h-8 text-primary" /> Invest Money
             </DialogTitle>
             <DialogDescription className="text-muted-foreground font-medium italic text-base">
               Participating in Invoice #{invoice?.invoice_number} by {invoice?.profiles?.company_name}
@@ -151,7 +151,7 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
               <p className="text-xl font-black text-emerald-400 italic">~{yieldRate.toFixed(1)}% p.a.</p>
             </div>
             <div className="p-4 rounded-2xl bg-white/5 border border-white/5 space-y-1">
-              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Tenure</p>
+              <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Duration</p>
               <p className="text-xl font-black text-white italic">{tenure} Days</p>
             </div>
           </div>
@@ -161,7 +161,7 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
               <div className="flex justify-between items-end">
                 <Label className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Face Value to Purchase</Label>
                 <div className="text-right">
-                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Available Liquidity</p>
+                   <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">Available Cash</p>
                    <p className="text-sm font-black text-white italic">{formatINR(userBalance)}</p>
                 </div>
               </div>
@@ -202,7 +202,7 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
                    <span className="text-xl font-black text-emerald-400 italic">+{formatINR(estYield)}</span>
                 </div>
                 <div className="pt-2 text-center mt-2">
-                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest italic">You deploy {formatINR(payableAmount)} (Discounted) to receive {formatINR(numAmount)} (Face Value) after {tenure} days.</p>
+                   <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest italic">You invest {formatINR(payableAmount)} (Discounted) to receive {formatINR(numAmount)} (Face Value) after {tenure} days.</p>
                 </div>
               </div>
             )}
@@ -212,7 +212,7 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
         <div className="bg-white/[0.02] border-t border-white/5 p-8 flex flex-col space-y-4">
           <div className="flex items-center gap-3 text-muted-foreground/60 italic">
             <ShieldCheck className="w-5 h-5 text-emerald-500/40" />
-            <p className="text-[10px] font-black uppercase tracking-widest">Institutional-grade security. Transaction recorded on immutable ledger.</p>
+            <p className="text-[10px] font-black uppercase tracking-widest">Professional-grade security. Transaction recorded on permanent record.</p>
           </div>
           <Button 
             onClick={handleInvest}
@@ -220,9 +220,9 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
             className="h-16 w-full bg-white text-black hover:bg-white/90 font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-white/5 flex items-center justify-center gap-3 group"
           >
             {loading ? (
-              <Loader2 className="w-6 h-6 animate-spin" />
+              <Loader2 className="w-4 h-4 animate-spin" />
             ) : (
-              <>Confirm Deployment <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" /></>
+              <>Confirm Investment <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" /></>
             )}
           </Button>
         </div>

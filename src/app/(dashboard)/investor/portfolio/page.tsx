@@ -41,9 +41,8 @@ export default function InvestorPortfolio() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Synchronizing Asset States...</p>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -55,7 +54,7 @@ export default function InvestorPortfolio() {
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
           <h2 className="text-5xl font-black tracking-tighter text-white uppercase italic">Active Portfolio</h2>
-          <p className="text-muted-foreground font-medium text-lg italic">Comprehensive governance of your deployed liquidity.</p>
+          <p className="text-muted-foreground font-medium text-lg italic">Comprehensive governance of your invested cash.</p>
         </div>
         <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 px-6">
           <div className="space-y-0.5">
@@ -76,8 +75,8 @@ export default function InvestorPortfolio() {
                 <Briefcase className="w-10 h-10 text-muted-foreground/20" />
              </div>
              <div className="space-y-2">
-                <h3 className="text-2xl font-black text-white italic">No Deployed Capital</h3>
-                <p className="text-muted-foreground font-medium italic">Explore the marketplace to begin building your asset-backed portfolio.</p>
+                <h3 className="text-2xl font-black text-white italic">No Invested Money</h3>
+                <p className="text-muted-foreground font-medium italic">Explore the marketplace to begin building your portfolio secured by invoices.</p>
              </div>
           </div>
         ) : (

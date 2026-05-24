@@ -23,6 +23,11 @@ const updateSettingSchema = z.object({
 const updateProfileSchema = z.object({
   fullName: z.string().min(2, "Full name is too short"),
   companyName: z.string().optional(),
+  companyAddress: z.string().optional(),
+  gstin: z.string().optional(),
+  pan: z.string().optional(),
+  bankAccountNo: z.string().optional(),
+  ifscCode: z.string().optional(),
 });
 
 async function ensureAdmin() {
@@ -143,7 +148,12 @@ export async function getKYCQueue() {
         full_name,
         company_name,
         role,
-        email
+        email,
+        pan,
+        gstin,
+        bank_account_no,
+        ifsc_code,
+        company_address
       )
     `)
     .order('created_at', { ascending: false });
@@ -362,7 +372,7 @@ export const approveKYCAction = actionClient
       user_id: userId,
       amount: -50000,
       type: 'platform_fee' as any, // Cast to any if 'platform_fee' is not in the enum yet
-      description: 'One-time Platform Onboarding Fee (1% of facility limit)',
+      description: 'One-time Platform Setup Fee (1% of facility limit)',
       reference_id: requestId
     });
 
@@ -388,8 +398,8 @@ export const approveKYCAction = actionClient
     } else if (userProfile?.role === 'investor') {
       await createNotification(
         userId,
-        "Compliance Cleared! 🛡️",
-        "Your investor credentials have been formally vetted. Capital deployment is now unlocked.",
+        "Verification Cleared! 🛡️",
+        "Your investor credentials have been formally checked. Investing money is now unlocked.",
         "success",
         "/investor"
       );
@@ -449,7 +459,7 @@ export const rejectKYCAction = actionClient
     // Notify User
     await createNotification(
       userId,
-      "Compliance Issue ⚠️",
+      "Verification Issue ⚠️",
       `Your verification request was not approved. Reason: ${notes}`,
       "error",
       "/profile"
@@ -463,7 +473,7 @@ export const rejectKYCAction = actionClient
  */
 export const updateProfileAction = actionClient
   .schema(updateProfileSchema)
-  .action(async ({ parsedInput: { fullName, companyName } }) => {
+  .action(async ({ parsedInput }) => {
     const supabase = await createClient();
     const { data } = await supabase.auth.getUser();
     const user = data?.user;
@@ -473,8 +483,13 @@ export const updateProfileAction = actionClient
     const { error } = await supabase
       .from('profiles')
       .update({ 
-        full_name: fullName, 
-        company_name: companyName,
+        full_name: parsedInput.fullName, 
+        company_name: parsedInput.companyName,
+        company_address: parsedInput.companyAddress,
+        gstin: parsedInput.gstin,
+        pan: parsedInput.pan,
+        bank_account_no: parsedInput.bankAccountNo,
+        ifsc_code: parsedInput.ifscCode,
         updated_at: new Date().toISOString() 
       })
       .eq('id', user.id);
@@ -483,7 +498,15 @@ export const updateProfileAction = actionClient
     
     // Also update auth metadata
     await supabase.auth.updateUser({
-      data: { full_name: fullName, company_name: companyName }
+      data: { 
+        full_name: parsedInput.fullName, 
+        company_name: parsedInput.companyName,
+        company_address: parsedInput.companyAddress,
+        gstin: parsedInput.gstin,
+        pan: parsedInput.pan,
+        bank_account_no: parsedInput.bankAccountNo,
+        ifsc_code: parsedInput.ifscCode
+      }
     });
 
     revalidatePath("/profile");
@@ -675,7 +698,7 @@ export const verifySettlementAction = actionClient
       // 2. Notify MSME
       await createNotification(
         repayment.invoices.msme_id,
-        "Settlement Confirmed! 🏦",
+        "Payment Confirmed! 🏦",
         `Your payment for Invoice #${repayment.invoices.invoice_number} has been verified. Asset is now fully repaid.`,
         "success",
         "/msme/repayments"
@@ -749,7 +772,9 @@ export async function getWithdrawalRequests() {
         full_name,
         email,
         company_name,
-        wallet_balance
+        wallet_balance,
+        bank_account_no,
+        ifsc_code
       )
     `)
     .order('created_at', { ascending: false });
@@ -932,7 +957,7 @@ export const approvePreClosureAction = actionClient
     await createNotification(
       request.invoices.msme_id,
       "Pre-closure Approved! 🛡️",
-      `Your request for Invoice #${request.invoices.invoice_number} is approved. Total settlement: ₹${request.pre_closure_amount.toLocaleString('en-IN')}.`,
+      `Your request for Invoice #${request.invoices.invoice_number} is approved. Total payment: ₹${request.pre_closure_amount.toLocaleString('en-IN')}.`,
       "success",
       "/msme/repayments"
     );
@@ -966,7 +991,7 @@ export const disburseToMSMEAction = actionClient
 
     const result = data as any;
     if (!result.success) {
-      throw new Error(result.error || "Disbursement failed.");
+      throw new Error(result.error || "Payment failed.");
     }
 
     revalidatePath("/admin");

@@ -75,7 +75,7 @@ export default async function DashboardLayout({
         ]
       },
       {
-        group: "Compliance & Support",
+        group: "Verification & Support",
         items: [
           { label: "KYC Verification", href: "/msme/kyc", icon: ShieldCheck },
           { label: "Notifications", href: "/msme/notifications", icon: Mail },

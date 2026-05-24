@@ -54,7 +54,7 @@ export default function InvestorWalletPage() {
     }
 
     if (amount < 100) {
-      toast.error("Minimum Requirement", { description: "Minimum liquidity addition is ₹100." });
+      toast.error("Minimum Requirement", { description: "Minimum cash addition is ₹100." });
       return;
     }
 
@@ -62,7 +62,7 @@ export default function InvestorWalletPage() {
     try {
       const result = await addFundsAction({ amount });
       if (result?.data?.success) {
-        toast.success("Liquidity Added", { 
+        toast.success("Cash Added", { 
           description: `₹${formatIndianNumber(amount)} has been successfully credited to your wallet.` 
         });
         setAddAmount("");
@@ -114,9 +114,8 @@ export default function InvestorWalletPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Synchronizing Ledger State...</p>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -139,13 +138,13 @@ export default function InvestorWalletPage() {
               <div className="p-3 rounded-2xl bg-primary/10 text-primary w-fit mb-4">
                 <IndianRupee className="w-6 h-6" />
               </div>
-              <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Add Liquidity</CardTitle>
-              <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Add capital to your investment wallet</CardDescription>
+              <CardTitle className="text-2xl font-black italic uppercase tracking-tight text-white">Add Cash</CardTitle>
+              <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground italic">Add money to your investment wallet</CardDescription>
             </CardHeader>
             <CardContent className="p-8 space-y-6">
               <form onSubmit={handleAddFunds} className="space-y-6">
                 <div className="space-y-3">
-                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Deployment Amount (₹)</label>
+                  <label className="text-[10px] font-black text-white/40 uppercase tracking-[0.2em]">Investment Amount (₹)</label>
                   <div className="relative group">
                     <IndianRupee className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                     <Input 
@@ -167,7 +166,7 @@ export default function InvestorWalletPage() {
                 <div className="p-4 rounded-xl bg-blue-500/5 border border-blue-500/10 flex gap-3">
                   <AlertCircle className="w-4 h-4 text-blue-400 shrink-0" />
                   <p className="text-[10px] text-blue-400/80 font-medium leading-relaxed italic">
-                    Funds will be instantly credited to your wallet balance for immediate marketplace deployment.
+                    Funds will be instantly credited to your wallet balance for immediate marketplace investment.
                   </p>
                 </div>
 
@@ -176,8 +175,14 @@ export default function InvestorWalletPage() {
                   disabled={processing}
                   className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
                 >
-                  {processing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <Plus className="w-5 h-5 mr-2" />}
-                  Confirm Liquidity Addition
+                  {processing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5 mr-2" />
+                      Confirm Cash Addition
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -265,8 +270,14 @@ export default function InvestorWalletPage() {
                   disabled={processing || !withdrawAmount || parseFloat(withdrawAmount) > (stats?.walletBalance || 0)}
                   className="w-full h-14 bg-orange-500 hover:bg-orange-600 text-white font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-orange-500/20 rounded-2xl"
                 >
-                  {processing ? <Loader2 className="w-5 h-5 animate-spin mr-2" /> : <ArrowDownLeft className="w-5 h-5 mr-2" />}
-                  Confirm Withdrawal Request
+                  {processing ? (
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                  ) : (
+                    <>
+                      <ArrowDownLeft className="w-5 h-5 mr-2" />
+                      Confirm Withdrawal Request
+                    </>
+                  )}
                 </Button>
               </form>
             </CardContent>
@@ -277,15 +288,15 @@ export default function InvestorWalletPage() {
 
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div className="space-y-1">
-          <h2 className="text-5xl font-black tracking-tighter text-white uppercase italic">Capital Wallet</h2>
-          <p className="text-muted-foreground font-medium text-lg italic">Strategic liquidity management and transaction transparency.</p>
+          <h2 className="text-5xl font-black tracking-tighter text-white uppercase italic">Cash Wallet</h2>
+          <p className="text-muted-foreground font-medium text-lg italic">Smart cash management and transaction transparency.</p>
         </div>
         <div className="flex gap-4">
           <Button 
             onClick={() => setIsAddingFunds(true)}
             className="h-14 px-10 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl transition-all hover:scale-105 active:scale-95"
           >
-            <Plus className="mr-2 h-5 w-5" /> Add Liquidity
+            <Plus className="mr-2 h-5 w-5" /> Add Cash
           </Button>
           <Button 
             onClick={() => setIsWithdrawingFunds(true)}

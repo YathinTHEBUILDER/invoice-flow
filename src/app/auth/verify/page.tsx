@@ -4,7 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { OtpForm } from "@/components/auth/otp-form";
 import { Logo } from "@/components/ui/logo";
 import Link from "next/link";
-import { Mail, ChevronLeft } from "lucide-react";
+import { Mail, ChevronLeft, Loader2 } from "lucide-react";
 import { Suspense } from "react";
 
 function VerifyContent() {
@@ -13,8 +13,8 @@ function VerifyContent() {
   const type = (searchParams.get("type") as 'signup' | 'recovery' | 'email_change') || "signup";
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden">
-      <div className="absolute top-0 left-0 right-0 h-screen w-full hero-gradient pointer-events-none -z-10 opacity-40" />
+    <div className="min-h-screen flex flex-col items-center justify-center py-12 px-4 relative">
+      <div className="fixed inset-0 w-full h-full hero-gradient pointer-events-none -z-10 opacity-40" />
       
       <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="flex flex-col items-center text-center space-y-6">
@@ -60,7 +60,7 @@ function VerifyContent() {
 
 export default function VerifyPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-black"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
       <VerifyContent />
     </Suspense>
   );

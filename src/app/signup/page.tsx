@@ -5,7 +5,7 @@ import { AuthForm } from "@/components/auth/auth-form";
 import { signUpAction } from "@/app/actions/auth";
 import { Logo } from "@/components/ui/logo";
 import Link from "next/link";
-import { Building2, LineChart, ChevronLeft } from "lucide-react";
+import { Building2, LineChart, ChevronLeft, Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Suspense } from "react";
 
@@ -75,7 +75,7 @@ function SignupContent() {
 
 export default function SignupPage() {
   return (
-    <Suspense fallback={<div>Loading...</div>}>
+    <Suspense fallback={<div className="flex items-center justify-center min-h-screen bg-black"><Loader2 className="w-6 h-6 animate-spin text-primary" /></div>}>
       <SignupContent />
     </Suspense>
   );

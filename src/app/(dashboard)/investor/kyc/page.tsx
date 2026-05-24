@@ -80,7 +80,7 @@ export default function InvestorKYCPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!documents.pan || !documents.aadhaar) {
-      toast.error("Compliance Error", {
+      toast.error("Verification Error", {
         description: "PAN Card and Identity Proof are mandatory."
       });
       return;
@@ -97,8 +97,8 @@ export default function InvestorKYCPage() {
       const result = await submitInvestorKYCAction(formData);
       if (result.error) throw new Error(result.error);
 
-      toast.success("Compliance Submitted", {
-        description: "Your credentials are now under manual vetting by our risk assessment team."
+      toast.success("Verification Submitted", {
+        description: "Your credentials are now under manual checking by our risk assessment team."
       });
       fetchProfile();
     } catch (error: any) {
@@ -112,9 +112,8 @@ export default function InvestorKYCPage() {
 
   if (loading) {
     return (
-      <div className="flex flex-col items-center justify-center min-h-[600px] space-y-4">
-        <Loader2 className="w-12 h-12 animate-spin text-primary" />
-        <p className="text-xs font-black text-muted-foreground uppercase tracking-[0.2em]">Synchronizing Identity State...</p>
+      <div className="flex items-center justify-center min-h-[600px]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
       </div>
     );
   }
@@ -127,9 +126,9 @@ export default function InvestorKYCPage() {
         <div className="inline-flex p-4 rounded-3xl bg-primary/10 text-primary mb-4 border border-primary/20">
           <ShieldCheck className="w-10 h-10" />
         </div>
-        <h1 className="text-6xl font-black tracking-tighter text-white italic uppercase">Institutional Compliance</h1>
+        <h1 className="text-6xl font-black tracking-tighter text-white italic uppercase">Professional Verification</h1>
         <p className="text-muted-foreground font-medium text-lg italic max-w-2xl mx-auto">
-          Manual vetting of identity documents is required to unlock capital deployment features.
+          Manual checking of identity documents is required to unlock money investment features.
         </p>
       </div>
 
@@ -143,7 +142,7 @@ export default function InvestorKYCPage() {
               <div className="space-y-3">
                 <h3 className="text-4xl font-black text-white italic">Identity Authenticated</h3>
                 <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
-                  Your investor credentials have been formally vetted. All capital deployment features and portfolio tools are now fully unlocked.
+                  Your investor credentials have been formally checked. All money investment features and portfolio tools are now fully unlocked.
                 </p>
               </div>
               <div className="flex justify-center pt-4">
@@ -162,7 +161,7 @@ export default function InvestorKYCPage() {
               <Loader2 className="w-12 h-12 text-blue-500 animate-spin" />
             </div>
             <div className="space-y-3">
-              <h3 className="text-4xl font-black text-white italic">Manual Vetting in Progress</h3>
+              <h3 className="text-4xl font-black text-white italic">Manual Checking in Progress</h3>
               <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
                 Our risk assessment team is manually verifying your documents. This process typically concludes within 24-48 business hours.
               </p>
@@ -179,7 +178,7 @@ export default function InvestorKYCPage() {
               <AlertTriangle className="w-12 h-12 text-red-500" />
             </div>
             <div className="space-y-3">
-              <h3 className="text-4xl font-black text-white italic">Compliance Lockout Active</h3>
+              <h3 className="text-4xl font-black text-white italic">Verification Lockout Active</h3>
               <p className="text-muted-foreground font-medium max-w-md mx-auto leading-relaxed">
                 Due to multiple consecutive KYC rejections, your ability to submit credentials has been temporarily restricted for security purposes.
               </p>
@@ -334,7 +333,7 @@ export default function InvestorKYCPage() {
                       <div className="p-2 rounded-xl bg-primary/10 text-primary">
                         <ShieldCheck className="w-5 h-5" />
                       </div>
-                      <p className="text-sm font-black text-white italic uppercase tracking-widest">Compliance Status</p>
+                      <p className="text-sm font-black text-white italic uppercase tracking-widest">Verification Status</p>
                     </div>
                     
                     <div className="space-y-4">
@@ -351,7 +350,7 @@ export default function InvestorKYCPage() {
                     </div>
 
                     <p className="text-[10px] text-muted-foreground font-medium leading-relaxed italic">
-                      By submitting these documents, you authorize InvoiceFlow to perform institutional-grade manual vetting and financial due diligence.
+                      By submitting these documents, you authorize InvoiceFlow to perform professional-grade manual checking and financial due diligence.
                     </p>
 
                     <Button 
@@ -359,10 +358,16 @@ export default function InvestorKYCPage() {
                       disabled={saving || (profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000))}
                       className="w-full h-14 bg-primary hover:bg-primary/90 text-primary-foreground font-black uppercase tracking-widest text-[10px] shadow-2xl shadow-primary/20 rounded-2xl"
                     >
-                      {saving ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <ShieldCheck className="mr-2 h-5 w-5" />}
-                      {(profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) 
-                        ? "Cooldown In Effect" 
-                        : "Submit Documents for Audit"}
+                      {saving ? (
+                        <Loader2 className="w-4 h-4 animate-spin" />
+                      ) : (
+                        <>
+                          <ShieldCheck className="mr-2 h-5 w-5" />
+                          {(profile?.kycRejectionCount >= 2 && profile?.lastKycRejectedAt && (new Date().getTime() - new Date(profile.lastKycRejectedAt).getTime() < 8 * 60 * 60 * 1000)) 
+                            ? "Cooldown In Effect" 
+                            : "Submit Documents for Audit"}
+                        </>
+                      )}
                     </Button>
                   </CardContent>
                 </Card>

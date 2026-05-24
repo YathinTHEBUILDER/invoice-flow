@@ -23,7 +23,7 @@ export function RepaymentTimeline({ repayments }: { repayments: Repayment[] }) {
     return (
       <div className="flex flex-col items-center justify-center py-12 text-center space-y-4 bg-white/[0.02] rounded-3xl border border-white/5 border-dashed">
         <Calendar className="w-8 h-8 text-white/10" />
-        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest italic">No upcoming liquidity dues detected</p>
+        <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest italic">No upcoming cash dues detected</p>
       </div>
     );
   }
@@ -86,7 +86,7 @@ export function CreditHealthDial({ utilization, limit, kycStatus }: { utilizatio
             </svg>
          </div>
          <p className="text-center text-[10px] font-black text-muted-foreground uppercase tracking-widest leading-relaxed px-4">
-           Compliance verification required to activate credit monitoring
+           Verification required to activate credit monitoring
          </p>
        </div>
     );
@@ -171,7 +171,7 @@ export function BuyerConcentration({ analytics }: { analytics: any[] }) {
       
       {analytics.length > 4 && (
         <p className="text-[9px] font-black text-center text-muted-foreground uppercase tracking-widest pt-2">
-          + {analytics.length - 4} more counterparties
+          + {analytics.length - 4} more buyers
         </p>
       )}
     </div>
