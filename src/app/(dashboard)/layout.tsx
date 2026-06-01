@@ -1,6 +1,5 @@
 import { createClient } from "@/lib/server";
 import { redirect } from "next/navigation";
-import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/ui/logo";
 import Link from "next/link";
 import { 
@@ -32,7 +31,12 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const role = user.app_metadata?.role || user.user_metadata?.role || "investor";
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+  const role = profile?.role || "investor";
   const initials = (user.email?.[0] || user.user_metadata?.full_name?.[0] || "U").toUpperCase();
 
   const navItems = {

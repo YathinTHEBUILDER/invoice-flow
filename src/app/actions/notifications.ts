@@ -56,10 +56,17 @@ export async function getMyNotifications() {
  */
 export async function markAsRead(notificationId: string) {
   const supabase = await createClient();
+
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) throw new Error("Unauthorized");
+
   const { error } = await supabase
     .from('notifications')
     .update({ is_read: true })
-    .eq('id', notificationId);
+    .eq('id', notificationId)
+    .eq('user_id', user.id);
 
   if (error) throw new Error(error.message);
   revalidatePath("/");

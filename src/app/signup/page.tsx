@@ -12,7 +12,8 @@ import { Suspense } from "react";
 function SignupContent() {
   const searchParams = useSearchParams();
   const router = useRouter();
-  const role = searchParams.get("role") || "investor";
+  const roleParam = searchParams.get("role");
+  const role = (roleParam === "msme" || roleParam === "investor") ? roleParam : "investor";
 
   const handleSuccess = (data: any) => {
     toast.success("Account created! Please verify your email.");

@@ -93,9 +93,14 @@ export default function AdminDashboard() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
-      const userRole = user?.app_metadata?.role || user?.user_metadata?.role;
+      if (!user) {
+        toast.error("Access Denied: Administrative authority required.");
+        router.push("/");
+        return;
+      }
 
-      if (!user || userRole !== 'admin') {
+      const { data: isAdmin, error: rpcError } = await supabase.rpc("is_admin");
+      if (rpcError || isAdmin !== true) {
         toast.error("Access Denied: Administrative authority required.");
         router.push("/");
         return;

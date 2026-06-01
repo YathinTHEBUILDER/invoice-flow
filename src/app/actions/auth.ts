@@ -14,7 +14,7 @@ const signUpSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(8, "Password must be at least 8 characters").regex(/[A-Z]/, "Password must contain at least one uppercase letter").regex(/[0-9]/, "Password must contain at least one number"),
   fullName: z.string().min(2, "Full name is too short"),
-  role: z.enum(["msme", "investor", "admin"]),
+  role: z.enum(["msme", "investor"]),
   companyName: z.string().optional(),
   gstin: z.string().optional(),
   pan: z.string().min(10, "PAN must be 10 characters").max(10, "PAN must be 10 characters").toUpperCase(),
@@ -167,6 +167,15 @@ export const signInAction = actionClient
       await supabase.auth.signOut();
       const formattedRole = userRole === "msme" ? "MSME" : userRole === "investor" ? "Investor" : "Admin";
       throw new Error(`Access Denied: This email is registered as an ${formattedRole}`);
+    }
+
+    // Secondary secure DB verification for admins
+    if (role === "admin") {
+      const { data: isAdmin, error: rpcError } = await supabase.rpc("is_admin");
+      if (rpcError || isAdmin !== true) {
+        await supabase.auth.signOut();
+        throw new Error("Access Denied: Administrative authority required.");
+      }
     }
 
     revalidatePath("/", "layout");

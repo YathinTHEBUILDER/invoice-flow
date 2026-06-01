@@ -37,19 +37,9 @@ async function ensureAdmin() {
 
   if (!user) throw new Error("Not authenticated");
 
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-
-  if (profile?.role !== 'admin') {
-    // Second check: check metadata just in case
-    const { data: userDetails } = await supabase.auth.getUser();
-    const metadataRole = userDetails.user?.app_metadata?.role || userDetails.user?.user_metadata?.role;
-    if (metadataRole !== 'admin') {
-      throw new Error("Unauthorized: Admin access required");
-    }
+  const { data, error } = await supabase.rpc("is_admin");
+  if (error || data !== true) {
+    throw new Error("Unauthorized: Admin access required");
   }
   
   return user;
@@ -179,52 +169,27 @@ export async function getKYCQueue() {
       for (const [key, path] of Object.entries(docs)) {
         if (!path) continue;
         
-        // If it's already a full URL, use it (backward compatibility)
-        if (typeof path === 'string' && path.startsWith('http')) {
-          enrichedDocs[key] = path;
-          continue;
-        }
-        
         try {
           let signedUrl = null;
           
           if (supabaseAdmin) {
-            // Try primary bucket (hyphen)
             const { data: signedData } = await supabaseAdmin.storage
               .from('kyc-documents')
-              .createSignedUrl(path, 3600);
+              .createSignedUrl(path, 300);
               
             if (signedData) {
               signedUrl = signedData.signedUrl;
-            } else {
-              // Fallback to secondary bucket (underscore)
-              const { data: fallbackData } = await supabaseAdmin.storage
-                .from('kyc_documents')
-                .createSignedUrl(path, 3600);
-              
-              if (fallbackData) {
-                signedUrl = fallbackData.signedUrl;
-              }
             }
           }
 
-          // Ultimate Fallback: Public URL
-          if (!signedUrl) {
-            const supabase = await createClient();
-            const { data: { publicUrl } } = supabase.storage
-              .from('kyc-documents')
-              .getPublicUrl(path);
-            signedUrl = publicUrl;
+          if (signedUrl) {
+            enrichedDocs[key] = signedUrl;
+          } else {
+            enrichedDocs[key] = "";
           }
-
-          enrichedDocs[key] = signedUrl;
         } catch (storageErr) {
           console.error(`Storage retrieval error for ${key}:`, storageErr);
-          // Last resort: try to construct a public URL manually if path is relative
-          if (path && !path.startsWith('http')) {
-            const baseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
-            enrichedDocs[key] = `${baseUrl}/storage/v1/object/public/kyc-documents/${path}`;
-          }
+          enrichedDocs[key] = "";
         }
       }
     }
@@ -256,7 +221,45 @@ export async function getInvoices() {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data;
+
+  let supabaseAdmin;
+  try {
+    supabaseAdmin = await createAdminClient();
+  } catch (e) {
+    console.warn("Admin client initialization failed, skipping signed URLs for invoices:", e);
+    return data || [];
+  }
+
+  const enrichedInvoices = await Promise.all((data || []).map(async (inv: any) => {
+    let invoiceUrl = "";
+    if (inv.documents && typeof inv.documents === 'object') {
+      const docs = inv.documents as Record<string, string>;
+      const path = docs.invoice_path || docs.invoice_url;
+      if (path && !path.startsWith('http')) {
+        try {
+          const { data: signedData } = await supabaseAdmin.storage
+            .from('invoice-documents')
+            .createSignedUrl(path, 300);
+          if (signedData) {
+            invoiceUrl = signedData.signedUrl;
+          }
+        } catch (err) {
+          console.error("Error signing invoice URL:", err);
+        }
+      } else if (path) {
+        invoiceUrl = path;
+      }
+    }
+    return {
+      ...inv,
+      documents: {
+        ...inv.documents,
+        invoice_url: invoiceUrl
+      }
+    };
+  }));
+
+  return enrichedInvoices;
 }
 
 /**
@@ -344,39 +347,17 @@ export const approveKYCAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
-    // 1. Update Profile status and reset rejection tracking
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ 
-        kyc_status: 'verified', 
-        kyc_notes: 'KYC verified successfully.',
-        kyc_rejection_count: 0,
-        last_kyc_rejected_at: null
-      })
-      .eq('id', userId);
-
-    if (profileError) throw new Error(profileError.message);
-
-    // 2. Update KYC Request status
-    const { error: kycError } = await supabase
-      .from('kyc_requests')
-      .update({ status: 'verified', updated_at: new Date().toISOString() })
-      .eq('id', requestId);
-
-    if (kycError) throw new Error(kycError.message);
-
-    // 3. Log Platform Fee (1% of the default facility limit of 50 Lakhs = 50,000)
-    // The user rules specify Platform Fee = Invoice Value * 1% but charged ONLY at KYC.
-    // We treat this as a one-time onboarding fee based on the standard credit limit.
-    await supabase.from('transactions').insert({
-      user_id: userId,
-      amount: -50000,
-      type: 'platform_fee' as any, // Cast to any if 'platform_fee' is not in the enum yet
-      description: 'One-time Platform Setup Fee (1% of facility limit)',
-      reference_id: requestId
+    // Call the safe atomic RPC
+    const { data, error: rpcError } = await supabase.rpc('approve_kyc_request', {
+      p_user_id: userId,
+      p_request_id: requestId
     });
 
-    await logAdminAction('approve_kyc', 'profile', userId, { requestId, fee: 50000 });
+    if (rpcError) throw new Error(rpcError.message);
+    const result = data as any;
+    if (!result || !result.success) {
+      throw new Error(result?.error || "Failed to approve KYC.");
+    }
     
     const { data: userProfile } = await supabase.from('profiles').select('role').eq('id', userId).single();
 
@@ -418,37 +399,18 @@ export const rejectKYCAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
-    // 1. Fetch current rejection stats
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('kyc_rejection_count')
-      .eq('id', userId)
-      .single();
+    // Call the safe atomic RPC
+    const { data, error: rpcError } = await supabase.rpc('reject_kyc_request', {
+      p_user_id: userId,
+      p_request_id: requestId,
+      p_notes: notes
+    });
 
-    const newCount = (profile?.kyc_rejection_count || 0) + 1;
-
-    // 2. Update Profile status and tracking
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({ 
-        kyc_status: 'rejected', 
-        kyc_notes: notes,
-        kyc_rejection_count: newCount,
-        last_kyc_rejected_at: new Date().toISOString()
-      })
-      .eq('id', userId);
-
-    if (profileError) throw new Error(profileError.message);
-
-    // 2. Update KYC Request status
-    const { error: kycError } = await supabase
-      .from('kyc_requests')
-      .update({ status: 'rejected', notes, updated_at: new Date().toISOString() })
-      .eq('id', requestId);
-
-    if (kycError) throw new Error(kycError.message);
-
-    await logAdminAction('reject_kyc', 'profile', userId, { requestId, notes });
+    if (rpcError) throw new Error(rpcError.message);
+    const result = data as any;
+    if (!result || !result.success) {
+      throw new Error(result?.error || "Failed to reject KYC.");
+    }
     
     revalidatePath("/admin");
     revalidatePath("/msme");
@@ -480,19 +442,15 @@ export const updateProfileAction = actionClient
     
     if (!user) throw new Error("Not authenticated");
 
-    const { error } = await supabase
-      .from('profiles')
-      .update({ 
-        full_name: parsedInput.fullName, 
-        company_name: parsedInput.companyName,
-        company_address: parsedInput.companyAddress,
-        gstin: parsedInput.gstin,
-        pan: parsedInput.pan,
-        bank_account_no: parsedInput.bankAccountNo,
-        ifsc_code: parsedInput.ifscCode,
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', user.id);
+    const { error } = await supabase.rpc('update_own_profile_details', {
+      p_full_name: parsedInput.fullName, 
+      p_company_name: parsedInput.companyName || null,
+      p_company_address: parsedInput.companyAddress || null,
+      p_gstin: parsedInput.gstin || null,
+      p_pan: parsedInput.pan || null,
+      p_bank_account_no: parsedInput.bankAccountNo || null,
+      p_ifsc_code: parsedInput.ifscCode || null
+    });
 
     if (error) throw new Error(error.message);
     
@@ -525,32 +483,17 @@ export const approveInvoiceAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
-    // 1. Fetch invoice to check default amount if verifiedAmount not provided
-    const { data: currentInv } = await supabase
-      .from('invoices')
-      .select('amount, verified_amount')
-      .eq('id', invoiceId)
-      .single();
-
-    const updatePayload: any = { 
-      status: 'approved', 
-      updated_at: new Date().toISOString() 
-    };
-
-    // Use provided verifiedAmount, or default to current verified_amount, or fallback to amount
-    updatePayload.verified_amount = verifiedAmount || currentInv?.verified_amount || currentInv?.amount;
-
-    const { error } = await supabase
-      .from('invoices')
-      .update(updatePayload)
-      .eq('id', invoiceId);
-
-    if (error) throw new Error(error.message);
-    
-    await logAdminAction('approve_invoice', 'invoice', invoiceId, { 
-      status: 'approved',
-      verified_amount: updatePayload.verified_amount
+    // Call safe atomic RPC
+    const { data, error: rpcError } = await supabase.rpc('approve_invoice_request', {
+      p_invoice_id: invoiceId,
+      p_verified_amount: verifiedAmount || null
     });
+
+    if (rpcError) throw new Error(rpcError.message);
+    const result = data as any;
+    if (!result || !result.success) {
+      throw new Error(result?.error || "Failed to approve invoice.");
+    }
     
     revalidatePath("/admin");
 
@@ -581,18 +524,17 @@ export const rejectInvoiceAction = actionClient
     await ensureAdmin();
     const supabase = await createClient();
     
-    const { error } = await supabase
-      .from('invoices')
-      .update({ 
-        status: 'rejected', 
-        admin_notes: notes,
-        updated_at: new Date().toISOString() 
-      })
-      .eq('id', invoiceId);
+    // Call safe atomic RPC
+    const { data, error: rpcError } = await supabase.rpc('reject_invoice_request', {
+      p_invoice_id: invoiceId,
+      p_notes: notes
+    });
 
-    if (error) throw new Error(error.message);
-    
-    await logAdminAction('reject_invoice', 'invoice', invoiceId, { status: 'rejected', notes });
+    if (rpcError) throw new Error(rpcError.message);
+    const result = data as any;
+    if (!result || !result.success) {
+      throw new Error(result?.error || "Failed to reject invoice.");
+    }
     
     revalidatePath("/admin");
 
@@ -738,7 +680,6 @@ export const verifySettlementAction = actionClient
     // 1. Call Atomic RPC for settlement
     const { data, error: rpcError } = await supabase.rpc('settle_repayment', {
       p_repayment_id: repaymentId,
-      p_admin_id: (await supabase.auth.getUser()).data.user?.id,
       p_status: status
     });
 
@@ -1042,8 +983,7 @@ export const disburseToMSMEAction = actionClient
 
     // Call the RPC we created
     const { data, error: rpcError } = await supabase.rpc('disburse_to_msme', {
-      p_invoice_id: invoiceId,
-      p_admin_id: user.id
+      p_invoice_id: invoiceId
     });
 
     if (rpcError) {

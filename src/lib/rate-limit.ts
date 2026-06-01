@@ -1,42 +1,32 @@
 "use server";
 
-// Note: This is an in-memory rate limiter. In a multi-instance/serverless environment,
-// it is better to use Redis (e.g., Upstash) or a similar shared store.
-// For single instances, this works perfectly.
-
-const trackers = new Map<string, { count: number; expires: number }>();
+import { createClient } from "@/lib/server";
 
 /**
- * Basic rate limiter
+ * Supabase database-backed rate limiter
  * @param key Unique key to track (e.g., IP + Action Name)
  * @param limit Number of allowed requests in the window
  * @param windowMs Window size in milliseconds
  */
 export async function rateLimit(key: string, limit: number, windowMs: number) {
-  const now = Date.now();
-  const tracker = trackers.get(key);
+  const supabase = await createClient();
+  const windowSeconds = Math.max(1, Math.ceil(windowMs / 1000));
 
-  if (!tracker || now > tracker.expires) {
-    trackers.set(key, { count: 1, expires: now + windowMs });
-    return { success: true, remaining: limit - 1 };
+  const { data, error } = await supabase.rpc("check_rate_limit", {
+    p_key: key,
+    p_limit: limit,
+    p_window_seconds: windowSeconds
+  });
+
+  if (error) {
+    console.error("Rate limit check error:", error);
+    // Fallback: allow request if rate limiter database call fails
+    return { success: true, remaining: 0 };
   }
 
-  if (tracker.count >= limit) {
-    return { success: false, remaining: 0 };
-  }
-
-  tracker.count += 1;
-  return { success: true, remaining: limit - tracker.count };
-}
-
-// Cleanup expired entries periodically
-if (typeof setInterval !== 'undefined') {
-  setInterval(() => {
-    const now = Date.now();
-    for (const [key, value] of trackers.entries()) {
-      if (now > value.expires) {
-        trackers.delete(key);
-      }
-    }
-  }, 60000); // Cleanup every minute
+  const result = data as { success: boolean; remaining: number } | null;
+  return {
+    success: result?.success ?? true,
+    remaining: result?.remaining ?? 0
+  };
 }

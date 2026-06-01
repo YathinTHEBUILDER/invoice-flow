@@ -31,6 +31,18 @@ export function NotificationBell() {
   const [loading, setLoading] = useState(true);
   const [isOpen, setIsOpen] = useState(false);
 
+  const fetchNotifications = async () => {
+    try {
+      const data = await getMyNotifications();
+      setNotifications(data || []);
+      setUnreadCount(data?.filter((n: any) => !n.is_read).length || 0);
+    } catch (error) {
+      console.error("Failed to fetch notifications:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchNotifications();
 
@@ -77,18 +89,6 @@ export function NotificationBell() {
       if (activeChannel) supabase.removeChannel(activeChannel);
     };
   }, []);
-
-  async function fetchNotifications() {
-    try {
-      const data = await getMyNotifications();
-      setNotifications(data || []);
-      setUnreadCount(data?.filter((n: any) => !n.is_read).length || 0);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   const handleMarkAsRead = async (id: string) => {
     try {

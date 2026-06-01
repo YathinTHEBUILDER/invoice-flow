@@ -3,6 +3,7 @@
 import { createClient } from "@/lib/server";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
+import { z } from "zod";
 
 export async function uploadInvoiceAction(formData: FormData) {
   const supabase = await createClient();
@@ -61,12 +62,12 @@ export async function uploadInvoiceAction(formData: FormData) {
   const discountRate = Number(settings?.value || 0.12);
 
   // Upload Invoice File
-  let invoiceUrl = null;
+  let invoicePath = null;
   if (invoiceFile && invoiceFile.size > 0) {
     const fileExt = invoiceFile.name.split('.').pop();
     const fileName = `${user.id}/${Date.now()}.${fileExt}`;
     const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('invoices')
+      .from('invoice-documents')
       .upload(fileName, invoiceFile);
 
     if (uploadError) {
@@ -74,11 +75,7 @@ export async function uploadInvoiceAction(formData: FormData) {
       return { error: "Failed to upload invoice document." };
     }
 
-    const { data: { publicUrl } } = supabase.storage
-      .from('invoices')
-      .getPublicUrl(fileName);
-    
-    invoiceUrl = publicUrl;
+    invoicePath = uploadData.path;
   }
 
   const { data, error } = await supabase
@@ -94,7 +91,7 @@ export async function uploadInvoiceAction(formData: FormData) {
         buyer_gstin: buyerGstin,
         due_date: dueDate,
         status: "pending_verification",
-        documents: invoiceUrl ? { invoice_url: invoiceUrl } : null
+        documents: invoicePath ? { invoice_path: invoicePath } : null
       }
     ])
     .select();
@@ -203,15 +200,27 @@ export async function createSupportTicketAction(formData: FormData) {
   const category = formData.get("category") as string;
   const priority = formData.get("priority") as string;
 
+  const supportTicketSchema = z.object({
+    subject: z.string().min(5).max(120),
+    message: z.string().min(10).max(3000),
+    category: z.enum(["invoice", "kyc", "repayment", "technical", "other"]),
+    priority: z.enum(["low", "medium", "high", "urgent"]),
+  });
+
+  const parsed = supportTicketSchema.safeParse({ subject, message, category, priority });
+  if (!parsed.success) {
+    return { error: parsed.error.issues[0]?.message || "Invalid support ticket details." };
+  }
+
   const { error } = await supabase
     .from("support_tickets")
     .insert([
       {
         user_id: user.id,
-        subject,
-        message,
-        category,
-        priority,
+        subject: parsed.data.subject,
+        message: parsed.data.message,
+        category: parsed.data.category,
+        priority: parsed.data.priority,
         status: "open"
       }
     ]);
@@ -381,6 +390,36 @@ export async function getMSMEInvestments() {
   return data;
 }
 
+async function enrichInvoiceWithSignedUrl(supabase: any, invoice: any) {
+  if (!invoice) return invoice;
+  let invoiceUrl = "";
+  if (invoice.documents && typeof invoice.documents === 'object') {
+    const docs = invoice.documents as Record<string, string>;
+    const path = docs.invoice_path || docs.invoice_url;
+    if (path && !path.startsWith('http')) {
+      try {
+        const { data, error } = await supabase.storage
+          .from('invoice-documents')
+          .createSignedUrl(path, 300);
+        if (data?.signedUrl) {
+          invoiceUrl = data.signedUrl;
+        }
+      } catch (err) {
+        console.error("Error signing invoice URL:", err);
+      }
+    } else if (path) {
+      invoiceUrl = path;
+    }
+  }
+  return {
+    ...invoice,
+    documents: {
+      ...invoice.documents,
+      invoice_url: invoiceUrl
+    }
+  };
+}
+
 export async function getRecentMSMEInvoices(limit = 5) {
   const supabase = await createClient();
   const { data: userData } = await supabase.auth.getUser();
@@ -400,7 +439,11 @@ export async function getRecentMSMEInvoices(limit = 5) {
     return [];
   }
 
-  return data;
+  const enrichedInvoices = await Promise.all((data || []).map(async (inv: any) => {
+    return await enrichInvoiceWithSignedUrl(supabase, inv);
+  }));
+
+  return enrichedInvoices;
 }
 
 /**
@@ -421,6 +464,22 @@ export async function submitRepaymentProofAction(formData: FormData) {
     return { error: "Missing required repayment details (UTR/Amount)." };
   }
 
+  // Verify ownership: repayment.invoice_id -> invoices.msme_id must equal user.id
+  const { data: repayment, error: fetchError } = await supabase
+    .from("repayments")
+    .select("*, invoices!inner(msme_id)")
+    .eq("id", repaymentId)
+    .single();
+
+  if (fetchError || !repayment) {
+    return { error: "Repayment record not found." };
+  }
+
+  const invoiceOwnerId = (repayment.invoices as any)?.msme_id;
+  if (invoiceOwnerId !== user.id) {
+    return { error: "Unauthorized: You do not own this invoice repayment." };
+  }
+
   const { error } = await supabase
     .from("repayments")
     .update({
@@ -433,21 +492,6 @@ export async function submitRepaymentProofAction(formData: FormData) {
     .eq("id", repaymentId);
 
   if (error) return { error: error.message };
-
-  // --- AUTOMATION FOR MOCK DEMO ---
-  // In a real system, we'd wait for admin verification.
-  // For the mock, we settle immediately to "disburse funds to investors" as requested.
-  const { data: settlementData, error: settlementError } = await supabase.rpc('settle_repayment', {
-    p_repayment_id: repaymentId,
-    p_admin_id: user.id, // Using the MSME as admin for the RPC call in mock
-    p_status: 'repaid'
-  });
-
-  if (settlementError) {
-    console.error("Auto-settlement Error:", settlementError);
-    // We don't fail the whole action if settlement fails (it's in the background), 
-    // but the record is already updated to pending_verification.
-  }
 
   // Notify Admins
   const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
@@ -483,6 +527,21 @@ export async function raiseDisputeAction(formData: FormData) {
 
   if (!invoiceId || !subject || !message) {
     return { error: "Missing required dispute details." };
+  }
+
+  // Verify ownership: invoice.msme_id must equal user.id
+  const { data: invoice, error: invoiceError } = await supabase
+    .from("invoices")
+    .select("msme_id")
+    .eq("id", invoiceId)
+    .single();
+
+  if (invoiceError || !invoice) {
+    return { error: "Invoice not found." };
+  }
+
+  if (invoice.msme_id !== user.id) {
+    return { error: "Unauthorized: You do not own this invoice." };
   }
 
   const { error } = await supabase
@@ -526,6 +585,21 @@ export async function requestPreClosureAction(invoiceId: string, details: any) {
   const user = userData?.user;
 
   if (!user) return { error: "Unauthorized" };
+
+  // Verify ownership: invoice.msme_id must equal user.id
+  const { data: invoice, error: invoiceError } = await supabase
+    .from("invoices")
+    .select("msme_id")
+    .eq("id", invoiceId)
+    .single();
+
+  if (invoiceError || !invoice) {
+    return { error: "Invoice not found." };
+  }
+
+  if (invoice.msme_id !== user.id) {
+    return { error: "Unauthorized: You do not own this invoice." };
+  }
 
   const { error } = await supabase
     .from("pre_closure_requests")

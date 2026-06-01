@@ -17,19 +17,16 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
+import { markAsRead } from "@/app/actions/notifications";
 
 export default function NotificationsPage() {
   const [notifications, setNotifications] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchNotifications();
-  }, []);
-
-  async function fetchNotifications() {
+  const fetchNotifications = async () => {
     const supabase = createClient();
     const { data: userData } = await supabase.auth.getUser();
-  const user = userData?.user;
+    const user = userData?.user;
     if (user) {
       const { data } = await supabase
         .from("notifications")
@@ -39,17 +36,18 @@ export default function NotificationsPage() {
       setNotifications(data || []);
     }
     setLoading(false);
-  }
+  };
 
-  const markAsRead = async (id: string) => {
-    const supabase = createClient();
-    const { error } = await supabase
-      .from("notifications")
-      .update({ is_read: true })
-      .eq("id", id);
-    
-    if (!error) {
-      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
+
+  const handleMarkAsRead = async (id: string) => {
+    try {
+      await markAsRead(id);
+      setNotifications(prev => prev.map(n => n.id === id ? { ...n, is_read: true } : n));
+    } catch (error: any) {
+      toast.error(error.message || "Failed to update notification");
     }
   };
 
@@ -75,7 +73,7 @@ export default function NotificationsPage() {
           variant="outline" 
           className="h-12 border-white/10 text-white font-bold uppercase tracking-wider text-[10px] rounded-xl"
           onClick={() => {
-            notifications.forEach(n => !n.is_read && markAsRead(n.id));
+            notifications.forEach(n => !n.is_read && handleMarkAsRead(n.id));
           }}
         >
           Mark all as read
@@ -114,7 +112,7 @@ export default function NotificationsPage() {
                   <div 
                     key={notif.id} 
                     className={`p-8 flex items-start gap-6 hover:bg-white/[0.01] transition-all cursor-pointer group relative ${!notif.is_read ? 'bg-primary/[0.02]' : ''}`}
-                    onClick={() => !notif.is_read && markAsRead(notif.id)}
+                    onClick={() => !notif.is_read && handleMarkAsRead(notif.id)}
                   >
                     {!notif.is_read && (
                       <div className="absolute left-0 top-0 bottom-0 w-1 bg-primary" />

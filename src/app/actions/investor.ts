@@ -85,6 +85,36 @@ export async function getInvestorStats() {
   };
 };
 
+async function enrichInvoiceWithSignedUrl(supabase: any, invoice: any) {
+  if (!invoice) return invoice;
+  let invoiceUrl = "";
+  if (invoice.documents && typeof invoice.documents === 'object') {
+    const docs = invoice.documents as Record<string, string>;
+    const path = docs.invoice_path || docs.invoice_url;
+    if (path && !path.startsWith('http')) {
+      try {
+        const { data, error } = await supabase.storage
+          .from('invoice-documents')
+          .createSignedUrl(path, 300);
+        if (data?.signedUrl) {
+          invoiceUrl = data.signedUrl;
+        }
+      } catch (err) {
+        console.error("Error signing invoice URL:", err);
+      }
+    } else if (path) {
+      invoiceUrl = path;
+    }
+  }
+  return {
+    ...invoice,
+    documents: {
+      ...invoice.documents,
+      invoice_url: invoiceUrl
+    }
+  };
+}
+
 /**
  * Fetch Detailed Portfolio
  */
@@ -108,7 +138,15 @@ export async function getInvestorPortfolio() {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data;
+
+  const enrichedInvestments = await Promise.all((data || []).map(async (inv: any) => {
+    if (inv.invoices) {
+      inv.invoices = await enrichInvoiceWithSignedUrl(supabase, inv.invoices);
+    }
+    return inv;
+  }));
+
+  return enrichedInvestments;
 }
 
 /**
@@ -130,7 +168,12 @@ export async function getMarketplaceInvoices() {
     .order('created_at', { ascending: false });
 
   if (error) throw new Error(error.message);
-  return data;
+
+  const enrichedInvoices = await Promise.all((data || []).map(async (inv: any) => {
+    return await enrichInvoiceWithSignedUrl(supabase, inv);
+  }));
+
+  return enrichedInvoices;
 }
 
 /**
@@ -139,7 +182,7 @@ export async function getMarketplaceInvoices() {
 async function uploadKYCDocument(supabase: any, userId: string, file: File | Blob, type: string) {
   const fileName = `${userId}/${type}-${Date.now()}`;
   const { data, error } = await supabase.storage
-    .from('kyc_documents')
+    .from('kyc-documents')
     .upload(fileName, file, {
       cacheControl: '3600',
       upsert: false
@@ -147,11 +190,7 @@ async function uploadKYCDocument(supabase: any, userId: string, file: File | Blo
 
   if (error) throw new Error(`Upload failed for ${type}: ${error.message}`);
   
-  const { data: { publicUrl } } = supabase.storage
-    .from('kyc_documents')
-    .getPublicUrl(data.path);
-
-  return publicUrl;
+  return data.path;
 }
 
 /**
@@ -268,7 +307,6 @@ export const fundInvoiceAction = actionClient
 
     // 2. Call Atomic RPC for investment
     const { data, error: rpcError } = await supabase.rpc('invest_in_invoice', {
-      p_investor_id: user.id,
       p_invoice_id: invoiceId,
       p_amount: amount
     });
@@ -398,7 +436,6 @@ export const withdrawFundsAction = actionClient
 
     // Call Atomic RPC for withdrawal
     const { data: withdrawalId, error: rpcError } = await supabase.rpc('create_withdrawal_request', {
-      p_user_id: user.id,
       p_amount: amount,
       p_description: description || "Wallet Withdrawal Request"
     });
