@@ -1,9 +1,12 @@
 import { Navbar } from "@/components/navbar";
 import { HeroSection } from "@/components/landing/hero-section";
 import { HowItWorks } from "@/components/landing/how-it-works";
+import { RoleJourneySection } from "@/components/landing/role-journey-section";
+import { MarketplacePreviewSection } from "@/components/landing/marketplace-preview-section";
 import { MSMESection } from "@/components/landing/msme-section";
 import { InvestorSection } from "@/components/landing/investor-section";
 import { TrustSection } from "@/components/landing/trust-section";
+import { RiskSection } from "@/components/landing/risk-section";
 import { ProductPreview } from "@/components/landing/product-preview";
 import { CTASection } from "@/components/landing/cta-section";
 import { Footer } from "@/components/footer";
@@ -12,7 +15,7 @@ import type { Metadata } from "next";
 
 export const metadata: Metadata = {
   title: "InvoiceFlow | Invoice Financing for Indian MSMEs",
-  description: "Access working capital in 48 hours. InvoiceFlow connects high credit quality Indian MSMEs with capital partners through verified receivables financing.",
+  description: "Access working capital. InvoiceFlow connects high credit quality Indian MSMEs with capital partners through verified receivables financing.",
 };
 
 export default async function LandingPage() {
@@ -34,9 +37,12 @@ export default async function LandingPage() {
       {/* Core Homepage Modular Sections */}
       <HeroSection user={user} role={role} />
       <HowItWorks />
+      <RoleJourneySection />
+      <MarketplacePreviewSection />
       <MSMESection />
       <InvestorSection />
       <TrustSection />
+      <RiskSection />
       <ProductPreview />
       <CTASection user={user} role={role} />
 

@@ -1,7 +1,7 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { ShieldCheck, CalendarRange, TrendingUp, SearchCode, PieChart } from "lucide-react";
+import { ShieldCheck, CalendarRange, SearchCode, PieChart } from "lucide-react";
 
 export function InvestorSection() {
   const benefits = [
@@ -14,7 +14,7 @@ export function InvestorSection() {
     },
     {
       title: "Short Duration Cycles",
-      desc: "Maturity ranges of 30 to 90 days allow rapid liquidity cycles, flexible cash turns, and compound trade yields.",
+      desc: "Maturity ranges of 30 to 90 days allow rapid liquidity cycles, flexible cash turns, and compound expected returns.",
       icon: CalendarRange,
       accent: "from-blue-500/20 to-blue-500/0 text-blue-400 border-blue-500/20",
       glow: "hover:border-blue-500/40 hover:shadow-[0_0_40px_rgba(59,130,246,0.15)]"
@@ -28,7 +28,7 @@ export function InvestorSection() {
     },
     {
       title: "Portfolio Visibility",
-      desc: "Monitor ongoing allocations, track interest settlements, and audit historical platform performance in real-time.",
+      desc: "Monitor ongoing allocations, track estimated return settlements, and audit historical platform performance in real-time.",
       icon: PieChart,
       accent: "from-cyan-500/20 to-cyan-500/0 text-cyan-400 border-cyan-500/20",
       glow: "hover:border-cyan-500/40 hover:shadow-[0_0_40px_rgba(6,182,212,0.15)]"
@@ -99,7 +99,7 @@ export function InvestorSection() {
             transition={{ duration: 0.6, delay: 0.1 }}
             className="text-4xl md:text-5xl lg:text-6xl font-bold tracking-tight text-white leading-[1.1] text-balance"
           >
-            Access secure, short-duration yields
+            Access short-duration expected returns
           </motion.h2>
           
           <motion.p 
@@ -109,7 +109,7 @@ export function InvestorSection() {
             transition={{ duration: 0.6, delay: 0.2 }}
             className="text-base text-neutral-400 leading-relaxed max-w-md"
           >
-            Gain exposure to a verified marketplace of corporate trade receivables. Earn predictable ARR ranging from 12% to 15% backed by physical business activity.
+            Gain exposure to a verified marketplace of corporate trade receivables. Target expected returns range from 12% to 15% (indicative) backed by physical business activity.
           </motion.p>
         </div>
         

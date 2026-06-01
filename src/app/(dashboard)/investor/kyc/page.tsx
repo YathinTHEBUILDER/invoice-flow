@@ -204,7 +204,7 @@ export default function InvestorKYCPage() {
                 <Card className="glass-dark overflow-hidden rounded-2xl">
                   <CardHeader className="p-10 border-b border-white/5">
                     <CardTitle className="text-2xl font-bold tracking-tight text-white uppercase">Identity Repositories</CardTitle>
-                    <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Upload mandatory institutional documentation</CardDescription>
+                    <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Upload mandatory investor documentation</CardDescription>
                   </CardHeader>
                   <CardContent className="p-10 space-y-10">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-10">
@@ -373,7 +373,7 @@ export default function InvestorKYCPage() {
                 </Card>
 
                 <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
-                  <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-wider mb-2">Institutional Security</Badge>
+                  <Badge variant="outline" className="text-[8px] font-bold uppercase tracking-wider mb-2">Verified Security</Badge>
                   <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
                     Every document is encrypted and stored in an isolated vault with zero public ingress. Our physical agents manually verify each claim.
                   </p>

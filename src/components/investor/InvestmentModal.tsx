@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/set-state-in-effect */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -6,20 +7,17 @@ import {
   DialogContent, 
   DialogHeader, 
   DialogTitle, 
-  DialogDescription,
-  DialogFooter
+  DialogDescription
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { formatINR, formatIndianNumber } from "@/lib/utils";
+import { formatINR } from "@/lib/utils";
 import { 
   ShieldCheck, 
   TrendingUp, 
-  AlertCircle, 
   Loader2, 
   CheckCircle2,
-  Wallet,
   ArrowRight
 } from "lucide-react";
 import { fundInvoiceAction } from "@/app/actions/investor";
@@ -37,16 +35,17 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
   const [amount, setAmount] = useState<string>("");
   const [loading, setLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [acceptedRisk, setAcceptedRisk] = useState(false);
 
   const remainingToFund = Number(invoice?.verified_amount || invoice?.amount) - Number(invoice?.funded_amount || 0);
   const minInvestment = Number(invoice?.min_investment || 10000);
-  const maxAllowed = Math.min(userBalance, remainingToFund);
 
   useEffect(() => {
     if (!isOpen) {
       setAmount("");
       setIsSuccess(false);
       setLoading(false);
+      setAcceptedRisk(false);
     }
   }, [isOpen]);
 
@@ -66,6 +65,13 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
   const annualizedROI = payableAmount > 0 ? (estYield / payableAmount) * (365 / tenure) * 100 : 0;
 
   async function handleInvest() {
+    if (!acceptedRisk) {
+      toast.error("Risk Consent Required", {
+        description: "You must accept the risk disclosure before investing."
+      });
+      return;
+    }
+
     if (numAmount < minInvestment) {
       toast.error("Investment Floor", {
         description: `Minimum participation for this asset is ${formatINR(minInvestment)}.`
@@ -206,6 +212,20 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
                 </div>
               </div>
             )}
+
+            {/* Risk Consent Checkbox */}
+            <div className="flex items-start gap-3 bg-red-500/5 border border-red-500/10 p-4 rounded-2xl">
+              <input 
+                type="checkbox" 
+                id="accept-risk" 
+                checked={acceptedRisk} 
+                onChange={(e) => setAcceptedRisk(e.target.checked)}
+                className="w-4 h-4 mt-0.5 rounded border-white/10 bg-white/5 text-primary focus:ring-primary accent-primary cursor-pointer" 
+              />
+              <label htmlFor="accept-risk" className="text-[10px] text-muted-foreground font-semibold leading-relaxed cursor-pointer select-none">
+                I understand that returns are not guaranteed and repayment depends on buyer payment. Investments carry default and payment delay risk.
+              </label>
+            </div>
           </div>
         </div>
 
@@ -216,8 +236,8 @@ export function InvestmentModal({ isOpen, onClose, invoice, userBalance, onSucce
           </div>
           <Button 
             onClick={handleInvest}
-            disabled={loading || !amount || numAmount < minInvestment || numAmount > remainingToFund || payableAmount > userBalance}
-            className="h-16 w-full bg-white text-black hover:bg-white/90 font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-white/5 flex items-center justify-center gap-3 group"
+            disabled={loading || !amount || numAmount < minInvestment || numAmount > remainingToFund || payableAmount > userBalance || !acceptedRisk}
+            className="h-16 w-full bg-white text-black hover:bg-white/90 font-black uppercase tracking-widest text-xs rounded-2xl shadow-2xl shadow-white/5 flex items-center justify-center gap-3 group disabled:opacity-40"
           >
             {loading ? (
               <Loader2 className="w-4 h-4 animate-spin" />

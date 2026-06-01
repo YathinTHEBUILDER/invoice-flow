@@ -219,7 +219,7 @@ export default function InvestorDashboard() {
          <div className="space-y-2">
             <h4 className="text-base font-bold text-white tracking-tight">Manual Governance Portal</h4>
             <p className="text-xs text-neutral-400 leading-relaxed max-w-2xl">
-               Every investment action and cash event is manually reviewed by InvoiceFlow's professional risk desk. No automated or predictive money investment is permitted within this portal.
+               Every investment action and cash event is manually reviewed by InvoiceFlow&apos;s professional risk desk. No automated or predictive money investment is permitted within this portal.
             </p>
          </div>
          <div className="flex gap-3">

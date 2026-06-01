@@ -109,12 +109,12 @@ export default function InvestorPortfolio() {
 
     ctx.fillStyle = "#c5a85c";
     ctx.font = "bold 12px sans-serif";
-    ctx.fillText("SECURED RECEIVABLES ASSET CLASS", 800, 155);
+    ctx.fillText("VERIFIED RECEIVABLES ASSET CLASS", 800, 155);
 
     // Main Heading
     ctx.fillStyle = "#ffffff";
     ctx.font = "bold 56px sans-serif";
-    ctx.fillText("CERTIFICATE OF DEBT DEPLOYMENT", 800, 250);
+    ctx.fillText("CERTIFICATE OF CAPITAL DEPLOYMENT", 800, 250);
 
     // Subtext
     ctx.fillStyle = "rgba(255,255,255,0.6)";
@@ -142,7 +142,7 @@ export default function InvestorPortfolio() {
     // Deployed Statement
     ctx.fillStyle = "rgba(255,255,255,0.7)";
     ctx.font = "18px sans-serif";
-    ctx.fillText("representing senior debt participation with secondary buyer guarantee", 800, 505);
+    ctx.fillText("representing senior capital participation with secondary buyer confirmation", 800, 505);
 
     // Parameters
     const invoice = inv.invoices;
@@ -189,7 +189,7 @@ export default function InvestorPortfolio() {
 
     const row2Y = row1Y + cardH + 30;
     drawParam(startX, row2Y, cardW, cardH, "Maturity Date", invoice?.due_date ? new Date(invoice.due_date).toLocaleDateString('en-IN') : "N/A");
-    drawParam(startX + cardW + gap, row2Y, cardW, cardH, "Annualized ROI", `~${annualizedROI.toFixed(1)}% p.a.`);
+    drawParam(startX + cardW + gap, row2Y, cardW, cardH, "Indicative Return (p.a.)", `~${annualizedROI.toFixed(1)}% p.a.`);
     drawParam(startX + (cardW + gap) * 2, row2Y, cardW, cardH, "Issuer (MSME)", invoice?.profiles?.company_name || "Enterprise");
 
     // Left Foot metadata
@@ -395,14 +395,14 @@ export default function InvestorPortfolio() {
         )}
       </div>
 
-      {/* Institutional Note */}
+      {/* Platform Note */}
       <div className="p-10 rounded-2xl bg-white/[0.02] border border-white/5 space-y-4">
         <div className="flex items-center gap-3 mb-2">
            <ShieldCheck className="w-6 h-6 text-primary" />
            <h4 className="text-lg font-bold text-white uppercase tracking-tight">Asset Security Protocol</h4>
         </div>
         <p className="text-sm font-medium text-muted-foreground leading-relaxed max-w-4xl">
-          All assets in your portfolio are backed by verified receivables and secondary corporate guarantees. Repayments are monitored in real-time by our institutional treasury operations. Overdue positions are immediately transitioned to our legal recovery portal.
+          All assets in your portfolio are backed by verified receivables and secondary corporate guarantees. Repayments are monitored in real-time by our platform operations. Overdue positions are immediately transitioned to our legal recovery portal.
         </p>
       </div>
     </div>

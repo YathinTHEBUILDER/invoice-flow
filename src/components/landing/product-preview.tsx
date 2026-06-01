@@ -129,8 +129,8 @@ export function ProductPreview() {
                 <div className="space-y-2">
                   <span className="text-[9px] font-semibold text-neutral-500 uppercase tracking-wider block">Receivables Queue</span>
                   {[
-                    { number: "INV-2026/TM-804", buyer: "Tata Motors Ltd", amount: "₹25,00,000", status: "Funded" },
-                    { number: "INV-2026/BI-915", buyer: "Britannia Industries", amount: "₹8,50,000", status: "Partially Funded" }
+                    { number: "INV-2026/VA-804", buyer: "Verified Auto Components Buyer", amount: "₹25,00,000", status: "Funded" },
+                    { number: "INV-2026/FD-915", buyer: "FMCG Distribution Buyer", amount: "₹8,50,000", status: "Partially Funded" }
                   ].map((inv, idx) => (
                     <div key={idx} className="flex justify-between items-center p-3 rounded-xl bg-[#0D1117]/80 border border-white/[0.03] group-hover:border-white/[0.06] text-[11px] transition-colors duration-500">
                       <div className="flex items-center gap-3">
@@ -169,7 +169,7 @@ export function ProductPreview() {
                   Deploy liquidity into secure commercial debt
                 </h3>
                 <p className="text-xs md:text-sm text-neutral-400 leading-relaxed font-normal">
-                  Access curated, pre-verified invoice listings. Earn 12-15% yields with transparent risk profiles and short-duration maturity timelines.
+                  Access curated, pre-verified invoice listings. Target expected returns range from 12-15% (indicative) with transparent risk profiles and short-duration maturity timelines.
                 </p>
 
                 <div className="space-y-2.5 pt-2">
@@ -213,8 +213,8 @@ export function ProductPreview() {
                 <div className="space-y-2">
                   <span className="text-[9px] font-semibold text-neutral-500 uppercase tracking-wider block">Portfolio Highlights</span>
                   {[
-                    { id: "inv-1", name: "Tata Motors invoice", rate: "13.2% APR", returnDate: "Due in 15 days" },
-                    { id: "inv-2", name: "Cipla Pharmaceuticals invoice", rate: "11.8% APR", returnDate: "Due in 30 days" }
+                    { id: "inv-1", name: "Auto Components Invoice", rate: "13.2% Target return", returnDate: "Due in 15 days" },
+                    { id: "inv-2", name: "Pharma Distributor Invoice", rate: "11.8% Target return", returnDate: "Due in 30 days" }
                   ].map((port, idx) => (
                     <div key={idx} className="flex justify-between items-center p-3 rounded-xl bg-[#0D1117]/80 border border-white/[0.03] group-hover:border-white/[0.06] text-[11px] transition-colors duration-500">
                       <div>
@@ -280,8 +280,8 @@ export function ProductPreview() {
                 {/* Verification list */}
                 <div className="space-y-2">
                   {[
-                    { id: "review-1", supplier: "Apex Auto Parts", buyer: "Tata Motors Ltd", check: "Confirm PO Match" },
-                    { id: "review-2", supplier: "Cipla Labs Distributor", buyer: "Cipla Ltd", check: "Confirm GST Register" }
+                    { id: "review-1", supplier: "Apex Auto Component Supplier", buyer: "Verified Auto Components Buyer", check: "Confirm PO Match" },
+                    { id: "review-2", supplier: "Pharma Labs Distributor", buyer: "Verified Pharma Buyer", check: "Confirm GST Register" }
                   ].map((rev, idx) => (
                     <div key={idx} className="p-3 rounded-xl bg-[#0D1117]/80 border border-white/[0.03] group-hover:border-white/[0.06] text-[11px] flex justify-between items-center transition-colors duration-500">
                       <div>

@@ -455,13 +455,19 @@ export default function InvoicesPage() {
                   </div>
                 </div>
 
-                <div className="p-6 rounded-2xl bg-primary/5 border border-primary/10 flex items-center gap-4">
-                  <div className="p-2 rounded-full bg-primary/20 text-primary">
+                <div className="p-6 rounded-2xl bg-orange-500/5 border border-orange-500/10 flex items-start gap-4">
+                  <div className="p-2 rounded-xl bg-orange-500/10 text-orange-400 border border-orange-500/20 shrink-0">
                     <AlertCircle className="w-5 h-5" />
                   </div>
-                  <p className="text-xs text-muted-foreground font-medium leading-relaxed">
-                    By submitting this invoice, you certify that the details are accurate and represent a valid trade receivable. Fraudulent submissions will lead to platform suspension.
-                  </p>
+                  <div className="space-y-1">
+                    <p className="text-xs text-white font-bold uppercase tracking-wider">Verification Statement</p>
+                    <p className="text-[11px] text-muted-foreground font-medium leading-relaxed">
+                      Only unpaid B2B invoices with valid supporting documents should be submitted.
+                    </p>
+                    <p className="text-[11px] text-orange-400 font-bold leading-relaxed">
+                      Warning: Submitting duplicate, disputed, or false invoices may lead to account suspension.
+                    </p>
+                  </div>
                 </div>
 
                 <div className="flex gap-4">

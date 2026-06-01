@@ -30,8 +30,8 @@ interface InvoiceDemo {
 const DEMO_INVOICES: InvoiceDemo[] = [
   {
     id: "inv-1",
-    invoiceNumber: "INV/2026/TM-804",
-    buyerName: "Tata Motors Limited",
+    invoiceNumber: "INV/2026/VA-804",
+    buyerName: "Verified Auto Components Buyer",
     industry: "Automotive",
     amount: 2500000,
     fundedAmount: 1875000,
@@ -42,8 +42,8 @@ const DEMO_INVOICES: InvoiceDemo[] = [
   },
   {
     id: "inv-2",
-    invoiceNumber: "INV/2026/CP-302",
-    buyerName: "Cipla Pharmaceuticals",
+    invoiceNumber: "INV/2026/VP-302",
+    buyerName: "Verified Pharma Distributor",
     industry: "Healthcare",
     amount: 1200000,
     fundedAmount: 480000,
@@ -54,8 +54,8 @@ const DEMO_INVOICES: InvoiceDemo[] = [
   },
   {
     id: "inv-3",
-    invoiceNumber: "INV/2026/BI-915",
-    buyerName: "Britannia Industries",
+    invoiceNumber: "INV/2026/FD-915",
+    buyerName: "FMCG Distribution Buyer",
     industry: "Consumer Goods",
     amount: 850000,
     fundedAmount: 765000,
@@ -129,7 +129,7 @@ export function MarketplacePortal() {
             {[
               { id: "all", label: "All Invoices" },
               { id: "short", label: "Short Term (≤45d)" },
-              { id: "high", label: "High Yield (≥12.5%)" }
+              { id: "high", label: "Target Return (≥12.5%)" }
             ].map(tab => (
               <button
                 key={tab.id}
@@ -195,7 +195,7 @@ export function MarketplacePortal() {
                       <div className="text-right">
                         <div className="text-xs font-bold text-emerald-400">{formatIndianNumber(inv.amount)}</div>
                         <div className="text-[9px] font-semibold text-muted-foreground uppercase tracking-wider mt-0.5">
-                          {inv.tenureDays} Days • {(inv.discountRate * 100).toFixed(1)}%
+                          {inv.tenureDays} Days • Target Return: {(inv.discountRate * 100).toFixed(1)}% p.a.
                         </div>
                       </div>
                     </div>
@@ -235,8 +235,8 @@ export function MarketplacePortal() {
 
                 <div className="grid grid-cols-2 gap-4 bg-black/25 rounded-2xl p-3 border border-white/5">
                   <div>
-                    <span className="text-[8px] font-semibold uppercase tracking-wider text-muted-foreground">Discount Rate</span>
-                    <div className="text-sm font-bold text-white mt-0.5">{(selectedInvoice.discountRate * 100).toFixed(1)}% ARR</div>
+                    <span className="text-[8px] font-semibold uppercase tracking-wider text-muted-foreground">Target Return</span>
+                    <div className="text-sm font-bold text-white mt-0.5">{(selectedInvoice.discountRate * 100).toFixed(1)}% p.a. (Indicative)</div>
                   </div>
                   <div>
                     <span className="text-[8px] font-semibold uppercase tracking-wider text-muted-foreground">Duration</span>
@@ -270,7 +270,7 @@ export function MarketplacePortal() {
               <div className="mt-6 pt-4 border-t border-white/5 space-y-4">
                 <div className="space-y-2">
                   <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground">
-                    <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Projected Yield</span>
+                    <span className="flex items-center gap-1"><TrendingUp className="w-3.5 h-3.5 text-emerald-400" /> Projected Return</span>
                     <span className="text-emerald-400 font-bold">+{formatIndianNumber(calculatedYield)}</span>
                   </div>
                   <div className="flex justify-between items-center text-[10px] font-bold text-muted-foreground">

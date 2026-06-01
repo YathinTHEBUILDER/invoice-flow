@@ -69,7 +69,7 @@ export function HeroSection({ user, role }: HeroSectionProps) {
             variants={itemVariants} 
             className="text-base text-neutral-400 max-w-xl leading-relaxed font-sans"
           >
-            Convert verified B2B receivables into fast, transparent working capital with manual review, clear fees, and invoice-backed funding. Built for growing Indian MSMEs and smart investors.
+            InvoiceFlow helps Indian MSMEs unlock cash from unpaid B2B invoices through manual verification, transparent discounting, and marketplace investor funding.
           </motion.p>
 
           {/* CTAs */}
@@ -161,7 +161,7 @@ export function HeroSection({ user, role }: HeroSectionProps) {
                 </div>
                 <div>
                   <span className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider block">Receivables Listing</span>
-                  <h3 className="text-xs font-bold text-white mt-0.5">Tata Motors Ltd — INV/804</h3>
+                  <h3 className="text-xs font-bold text-white mt-0.5">Verified Auto Components Buyer — INV/804</h3>
                 </div>
               </div>
               <span className="text-[9px] font-semibold uppercase tracking-wider text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-2 py-0.5 rounded-full shadow-[0_0_15px_rgba(16,185,129,0.1)]">
@@ -170,14 +170,18 @@ export function HeroSection({ user, role }: HeroSectionProps) {
             </div>
 
             {/* Grid stats */}
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-[#101622]/50 border border-white/[0.03] rounded-xl p-3 group-hover:border-white/[0.06] transition-colors">
-                <span className="text-[9px] font-medium text-neutral-500 uppercase block tracking-wider">Receivable Value</span>
-                <div className="text-base font-bold text-white mt-0.5">₹25,00,000</div>
+            <div className="grid grid-cols-3 gap-2 mb-4">
+              <div className="bg-[#101622]/50 border border-white/[0.03] rounded-xl p-2.5 group-hover:border-white/[0.06] transition-colors">
+                <span className="text-[8px] font-medium text-neutral-500 uppercase block tracking-wider">Receivable Value</span>
+                <div className="text-xs font-bold text-white mt-1">₹25,00,000</div>
               </div>
-              <div className="bg-[#101622]/50 border border-white/[0.03] rounded-xl p-3 group-hover:border-white/[0.06] transition-colors">
-                <span className="text-[9px] font-medium text-neutral-500 uppercase block tracking-wider">Tenure / Yield</span>
-                <div className="text-base font-bold text-white mt-0.5">45 Days / 13.5%</div>
+              <div className="bg-[#101622]/50 border border-white/[0.03] rounded-xl p-2.5 group-hover:border-white/[0.06] transition-colors">
+                <span className="text-[8px] font-medium text-neutral-500 uppercase block tracking-wider">Tenure</span>
+                <div className="text-xs font-bold text-white mt-1">45 Days</div>
+              </div>
+              <div className="bg-[#101622]/50 border border-white/[0.03] rounded-xl p-2.5 group-hover:border-white/[0.06] transition-colors">
+                <span className="text-[8px] font-medium text-neutral-500 uppercase block tracking-wider">Return</span>
+                <div className="text-[10px] font-bold text-white mt-1 leading-tight">Indicative after review</div>
               </div>
             </div>
 
@@ -217,8 +221,8 @@ export function HeroSection({ user, role }: HeroSectionProps) {
 
             {/* Timeline */}
             <div className="flex justify-between items-center text-[10px] text-neutral-500">
-              <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-neutral-500" /> Payout: <strong>48h</strong></span>
-              <span className="flex items-center gap-1"><Users className="w-3 h-3 text-neutral-500" /> Pool: <strong>14 Providers</strong></span>
+              <span className="flex items-center gap-1"><Clock className="w-3 h-3 text-neutral-500" /> Estimated payout: <strong>48h after approval</strong></span>
+              <span className="flex items-center gap-1"><Users className="w-3 h-3 text-neutral-500" /> Pool: <strong>14 Investors</strong></span>
             </div>
           </motion.div>
         </motion.div>

@@ -250,7 +250,7 @@ export default function InvestmentsPage() {
                             ))}
                           </div>
                         ) : (
-                          <p className="text-lg font-bold text-white">Institutional Treasury</p>
+                          <p className="text-lg font-bold text-white">Marketplace Investors</p>
                         )}
                       </div>
                       <div className="space-y-1">
@@ -269,7 +269,7 @@ export default function InvestmentsPage() {
                       </div>
                       <div className="grid grid-cols-2 gap-8">
                         <div>
-                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Financing Rate</p>
+                          <p className="text-[9px] font-bold text-muted-foreground uppercase tracking-wider mb-1">Indicative Discount Rate</p>
                           <p className="text-sm font-bold text-white">{(selectedInvoice.discount_rate * 100).toFixed(2)}% Flat</p>
                         </div>
                         <div>

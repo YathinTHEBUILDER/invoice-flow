@@ -351,8 +351,8 @@ export default function RepaymentsPage() {
                 {[
                   { label: "Account Name", value: "INVOICE FLOW TECHNOLOGIES PVT LTD" },
                   { label: "Account Number", value: "923020054812934" },
-                  { label: "Bank Name", value: "AXIS BANK LTD" },
-                  { label: "IFSC Code", value: "UTIB0000001" },
+                  { label: "Bank Name", value: "APEX BANK LTD" },
+                  { label: "IFSC Code", value: "APEX0000001" },
                   { label: "Account Type", value: "CURRENT" },
                 ].map((item, i) => (
                   <div key={i} className="flex justify-between items-center py-2 border-b border-white/5">

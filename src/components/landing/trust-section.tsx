@@ -7,27 +7,27 @@ export function TrustSection() {
   const steps = [
     {
       title: "1. Manual Risk Review",
-      desc: "Supplier KYC validations, business registry lookups, and financial history matching.",
+      desc: "Supplier KYC validations, business registry lookups, and financial history matching (including MSME business identity, GST details, and PAN/business registration verification).",
       icon: UserCheck
     },
     {
       title: "2. Document Verification",
-      desc: "Checking physical purchase orders, shipping bills, and GST portal invoices.",
+      desc: "Checking physical purchase orders, shipping bills, and GST portal invoices (including verification of invoice PDF, purchase order, and due date).",
       icon: ClipboardCheck
     },
     {
       title: "3. Buyer Quality Checks",
-      desc: "Confirming invoice validity and acceptance limits directly with the corporate buyer.",
+      desc: "Confirming invoice validity and acceptance limits directly with the corporate buyer (including buyer confirmation and duplicate invoice checks).",
       icon: FileCheck2
     },
     {
       title: "4. Invoice-Backed Funding",
-      desc: "Linking capital directly to tangible corporate receivables routed via secure escrow banks.",
+      desc: "Linking capital directly to tangible corporate receivables routed via secure escrow banks (including bank account verification).",
       icon: Landmark
     },
     {
       title: "5. Audit Trail Integration",
-      desc: "Logging every transaction parameter to maintain complete compliance history.",
+      desc: "Logging every transaction parameter to maintain complete compliance history (including automated repayment tracking).",
       icon: ListTodo
     }
   ];
@@ -69,7 +69,7 @@ export function TrustSection() {
           transition={{ duration: 0.6, delay: 0.2 }}
           className="text-base text-neutral-400 max-w-xl mx-auto leading-relaxed"
         >
-          We manually verify every asset on the platform to prevent double-invoicing, disputes, and default exposure.
+          We manually verify every asset on the platform, designed to reduce duplicate invoices, disputes, and repayment uncertainty.
         </motion.p>
       </div>
 

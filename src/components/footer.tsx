@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { Logo } from "@/components/ui/logo";
-import { Globe, Users, Shield, Lock } from "lucide-react";
+import { Lock } from "lucide-react";
 
 export function Footer() {
   return (
@@ -27,11 +27,12 @@ export function Footer() {
           
           {/* Company Col */}
           <div className="text-left">
-            <h4 className="font-semibold text-[10px] uppercase tracking-widest mb-5 text-neutral-500">Company</h4>
+            <h4 className="font-semibold text-[10px] uppercase tracking-widest mb-5 text-neutral-500">Governance</h4>
             <ul className="space-y-3 text-xs text-neutral-400 font-medium">
-              <li><Link href="/about" className="hover:text-white transition-colors duration-200">About Us</Link></li>
               <li><Link href="/transparency" className="hover:text-white transition-colors duration-200">Transparency</Link></li>
               <li><Link href="/contact" className="hover:text-white transition-colors duration-200">Contact</Link></li>
+              <li><Link href="/grievance-policy" className="hover:text-white transition-colors duration-200">Grievance Policy</Link></li>
+              <li><Link href="/refund-policy" className="hover:text-white transition-colors duration-200">Refund Policy</Link></li>
             </ul>
           </div>
           
@@ -39,9 +40,10 @@ export function Footer() {
           <div className="text-left">
             <h4 className="font-semibold text-[10px] uppercase tracking-widest mb-5 text-neutral-500">Legal</h4>
             <ul className="space-y-3 text-xs text-neutral-400 font-medium">
-              <li><Link href="/privacy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link></li>
-              <li><Link href="/terms" className="hover:text-white transition-colors duration-200">Terms of Service</Link></li>
-              <li><Link href="/compliance" className="hover:text-white transition-colors duration-200">Verification Integrity</Link></li>
+              <li><Link href="/risk-disclosure" className="hover:text-white transition-colors duration-200">Risk Disclosure</Link></li>
+              <li><Link href="/investor-terms" className="hover:text-white transition-colors duration-200">Investor Terms</Link></li>
+              <li><Link href="/msme-terms" className="hover:text-white transition-colors duration-200">MSME Terms</Link></li>
+              <li><Link href="/privacy-policy" className="hover:text-white transition-colors duration-200">Privacy Policy</Link></li>
             </ul>
           </div>
           

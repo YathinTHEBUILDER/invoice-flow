@@ -277,7 +277,7 @@ export default function InvestorWalletPage() {
                   <div className="space-y-1">
                     <p className="text-[10px] text-orange-400 font-bold uppercase tracking-widest leading-none">Security Protocol</p>
                     <p className="text-[10px] text-orange-400/80 font-medium leading-relaxed">
-                      Funds will be transferred to your verified HDFC Bank account (•••• 4829) within 24-48 business hours.
+                      Funds will be transferred to your verified retail bank account (•••• 4829) within 24-48 business hours.
                     </p>
                   </div>
                 </div>
@@ -396,7 +396,7 @@ export default function InvestorWalletPage() {
                        <div className="flex items-center gap-3">
                           <CreditCard className="w-5 h-5 text-muted-foreground" />
                           <div className="space-y-0.5">
-                             <p className="text-[10px] font-bold text-white uppercase tracking-widest">HDFC BANK</p>
+                             <p className="text-[10px] font-bold text-white uppercase tracking-widest">VERIFIED BANK</p>
                              <p className="text-[10px] text-muted-foreground">•••• 4829</p>
                           </div>
                        </div>
@@ -409,10 +409,10 @@ export default function InvestorWalletPage() {
            <div className="p-8 rounded-2xl bg-white/[0.02] border border-white/5">
               <div className="flex items-center gap-3 mb-4">
                  <TrendingUp className="w-5 h-5 text-emerald-500" />
-                 <p className="text-xs font-bold text-white uppercase tracking-widest">Yield Momentum</p>
+                 <p className="text-xs font-bold text-white uppercase tracking-widest">Return Momentum</p>
               </div>
               <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
-                 Your annualized yield curve is trending at {stats?.expectedARR || '14.2'}% across your current MSME asset allocation.
+                 Your indicative portfolio return is trending at {stats?.expectedARR || '14.2'}% across your current MSME asset allocation.
               </p>
            </div>
         </div>
@@ -424,7 +424,7 @@ export default function InvestorWalletPage() {
            <div className="flex justify-between items-center">
               <div className="space-y-1">
                  <CardTitle className="text-2xl font-bold tracking-tight text-white uppercase">Transaction Ledger</CardTitle>
-                 <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Institutional-grade financial audit log</CardDescription>
+                 <CardDescription className="text-xs font-bold uppercase tracking-widest text-muted-foreground">Verified financial audit log</CardDescription>
               </div>
               <Button variant="outline" className="h-10 border-white/10 text-[10px] font-bold uppercase tracking-widest rounded-xl">
                  <History className="mr-2 h-4 w-4" /> Export Ledger

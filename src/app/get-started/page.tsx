@@ -1,13 +1,22 @@
 "use client";
 
 import { AuthCard } from "@/components/auth/auth-card";
-import { Building2, LineChart, ArrowRight } from "lucide-react";
-import { useRouter } from "next/navigation";
+import { Building2, LineChart, ArrowRight, Loader2 } from "lucide-react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Logo } from "@/components/ui/logo";
 import Link from "next/link";
+import { useEffect, Suspense } from "react";
 
-export default function GetStartedPage() {
+function GetStartedContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const roleParam = searchParams.get("role");
+
+  useEffect(() => {
+    if (roleParam === "msme" || roleParam === "investor") {
+      router.replace(`/signup?role=${roleParam}`);
+    }
+  }, [roleParam, router]);
 
   const handleSelect = (role: string) => {
     router.push(`/signup?role=${role}`);
@@ -56,5 +65,17 @@ export default function GetStartedPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function GetStartedPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-[#05070A]">
+        <Loader2 className="w-6 h-6 animate-spin text-primary" />
+      </div>
+    }>
+      <GetStartedContent />
+    </Suspense>
   );
 }
