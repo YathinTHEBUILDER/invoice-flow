@@ -16,13 +16,36 @@ export async function getInvestorStats() {
 
   if (!user) return null;
 
-  // 1. Fetch investments participation
-  const { data: investments } = await supabase
-    .from('investments')
-    .select('*, invoices(*)')
-    .eq('investor_id', user.id);
+  // Fetch investments, payouts, profile, and recent transactions in parallel
+  const [investmentsResult, payoutTxsResult, profileResult, recentTransactionsResult] = await Promise.all([
+    supabase
+      .from('investments')
+      .select('*, invoices(*)')
+      .eq('investor_id', user.id),
+    supabase
+      .from('transactions')
+      .select('amount')
+      .eq('user_id', user.id)
+      .eq('type', 'payout'),
+    supabase
+      .from('profiles')
+      .select('wallet_balance, locked_balance, kyc_status, bank_account_no, ifsc_code, kyc_rejection_count, last_kyc_rejected_at')
+      .eq('id', user.id)
+      .single(),
+    supabase
+      .from('transactions')
+      .select('*')
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(10)
+  ]);
 
-  // 2. Calculate actual deployment costs (Discounting: Paid Face Value - Discount)
+  const investments = investmentsResult.data;
+  const payoutTxs = payoutTxsResult.data;
+  const profile = profileResult.data;
+  const recentTransactions = recentTransactionsResult.data;
+
+  // Calculate actual deployment costs (Discounting: Paid Face Value - Discount)
   const totalDeployed = investments?.reduce((sum, inv) => {
     const rate = inv.invoices?.discount_rate || 0.145;
     const tenure = inv.invoices?.tenure_days || 45;
@@ -30,36 +53,15 @@ export async function getInvestorStats() {
     return sum + (Number(inv.amount) - discount);
   }, 0) || 0;
 
-  // 3. Fetch Payouts (Face Value received back)
-  const { data: payoutTxs } = await supabase
-    .from('transactions')
-    .select('amount')
-    .eq('user_id', user.id)
-    .eq('type', 'payout');
-
   const totalReceived = payoutTxs?.reduce((sum, tx) => sum + Number(tx.amount), 0) || 0;
-  
-  // 4. Calculate Net Profit (Yield)
+
+  // Calculate Net Profit (Yield)
   const realizedInvestments = investments?.filter(inv => inv.status === 'repaid') || [];
   const realizedProfit = realizedInvestments.reduce((sum, inv) => {
     const rate = inv.invoices?.discount_rate || 0.145;
     const tenure = inv.invoices?.tenure_days || 45;
     return sum + (Number(inv.amount) * rate * (tenure / 365));
   }, 0);
-
-  // 3. Fetch Wallet Balance & KYC Status & Recent Transactions
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('wallet_balance, locked_balance, kyc_status, bank_account_no, ifsc_code, kyc_rejection_count, last_kyc_rejected_at')
-    .eq('id', user.id)
-    .single();
-
-  const { data: recentTransactions } = await supabase
-    .from('transactions')
-    .select('*')
-    .eq('user_id', user.id)
-    .order('created_at', { ascending: false })
-    .limit(10);
 
   const totalInvestedFaceValue = investments?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
   const activeAssets = investments?.filter(inv => inv.status === 'active').length || 0;
@@ -256,19 +258,22 @@ export async function submitInvestorKYCAction(formData: FormData) {
       .update({ kyc_status: 'pending' })
       .eq('id', user.id);
 
-    // Notify Admins
-    const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
-    if (admins) {
-      for (const admin of admins) {
-        await createNotification(
-          admin.id,
-          "Investor Documents Submitted 🛡️",
-          `Investor ${user.email} has submitted credentials for manual review.`,
-          "info",
-          "/admin?tab=kyc"
+    // Notify Admins (Non-blocking)
+    supabase.from('profiles').select('id').eq('role', 'admin').then(({ data: admins }) => {
+      if (admins) {
+        Promise.allSettled(
+          admins.map((admin) =>
+            createNotification(
+              admin.id,
+              "Investor Documents Submitted 🛡️",
+              `Investor ${user.email} has submitted credentials for manual review.`,
+              "info",
+              "/admin?tab=kyc"
+            )
+          )
         );
       }
-    }
+    });
 
     revalidatePath("/investor/kyc");
     revalidatePath("/investor");
@@ -454,19 +459,22 @@ export const withdrawFundsAction = actionClient
       "/investor/wallet"
     );
 
-    // To Admins
-    const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
-    if (admins) {
-      for (const admin of admins) {
-        await createNotification(
-          admin.id,
-          "New Withdrawal Request ⚠️",
-          `Investor ${user.email} requested ₹${amount.toLocaleString('en-IN')}.`,
-          "info",
-          "/admin?tab=withdrawals"
+    // Notify Admins (Non-blocking)
+    supabase.from('profiles').select('id').eq('role', 'admin').then(({ data: admins }) => {
+      if (admins) {
+        Promise.allSettled(
+          admins.map((admin) =>
+            createNotification(
+              admin.id,
+              "New Withdrawal Request ⚠️",
+              `Investor ${user.email} requested ₹${amount.toLocaleString('en-IN')}.`,
+              "info",
+              "/admin?tab=withdrawals"
+            )
+          )
         );
       }
-    }
+    });
 
     revalidatePath("/investor/wallet");
     revalidatePath("/investor");

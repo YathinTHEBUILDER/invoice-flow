@@ -33,32 +33,38 @@ const REQUIRED_DOCS = [
   { id: "address_proof", label: "Address Proof", icon: MapPin },
 ];
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 export default function KYCPage() {
   const router = useRouter();
-  const [profile, setProfile] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const supabase = createClient();
+
+  const [userId, setUserId] = useState<string | undefined>(undefined);
   const [saving, setSaving] = useState(false);
   const [files, setFiles] = useState<Record<string, File>>({});
   const [previews, setPreviews] = useState<Record<string, string>>({});
 
   useEffect(() => {
-    fetchProfile();
-  }, []);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, [supabase]);
 
-  async function fetchProfile() {
-    const supabase = createClient();
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData?.user;
-    if (user) {
+  // Queries
+  const { data: profile, isLoading: loading } = useQuery({
+    queryKey: ["msme-profile", userId],
+    queryFn: async () => {
+      if (!userId) return null;
       const { data } = await supabase
         .from("profiles")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", userId)
         .single();
-      setProfile(data);
-    }
-    setLoading(false);
-  }
+      return data;
+    },
+    enabled: !!userId,
+  });
 
   const handleFileChange = (id: string, e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -72,11 +78,29 @@ export default function KYCPage() {
     }
   };
 
-
+  const kycMutation = useMutation({
+    mutationFn: async ({ formData, documentUrls }: { formData: FormData, documentUrls: Record<string, string> }) => {
+      return await submitKYCAction(formData, documentUrls);
+    },
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success("Verification documents submitted for manual checking.");
+      } else {
+        toast.error(result.error || "Submission failed");
+      }
+      queryClient.invalidateQueries({ queryKey: ["msme-profile", userId] });
+      queryClient.invalidateQueries({ queryKey: ["msme-stats", userId] });
+    },
+    onError: (err: any) => {
+      toast.error(err.message || "An unexpected error occurred during upload");
+    },
+    onSettled: () => {
+      setSaving(false);
+    }
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // No selfie required anymore
 
     const missingDocs = REQUIRED_DOCS.filter(doc => !files[doc.id] && profile?.kyc_status !== 'verified');
     if (missingDocs.length > 0 && profile?.kyc_status !== 'verified') {
@@ -85,19 +109,17 @@ export default function KYCPage() {
     }
 
     setSaving(true);
-    const formData = new FormData(e.currentTarget);
-    const supabase = createClient();
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData?.user;
+    const form = e.currentTarget;
+    const formData = new FormData(form);
 
-    if (!user) return;
+    if (!userId) return;
 
     try {
       const documentUrls: Record<string, string> = {};
 
       // Upload documents
       for (const [id, file] of Object.entries(files)) {
-        const filePath = `${user.id}/${id}_${Date.now()}_${file.name}`;
+        const filePath = `${userId}/${id}_${Date.now()}_${file.name}`;
         const { error: uploadError } = await supabase.storage
           .from("kyc-documents")
           .upload(filePath, file);
@@ -107,22 +129,14 @@ export default function KYCPage() {
         documentUrls[id] = filePath;
       }
 
-      // selfie removed
-
-      const result = await submitKYCAction(formData, documentUrls);
-      if (result.success) {
-        toast.success("Verification documents submitted for manual checking.");
-        fetchProfile();
-      } else {
-        toast.error(result.error || "Submission failed");
-      }
+      kycMutation.mutate({ formData, documentUrls });
     } catch (error: any) {
       console.error(error);
       toast.error(error.message || "An unexpected error occurred during upload");
-    } finally {
       setSaving(false);
     }
   };
+
 
   const getKYCBadge = (status: string) => {
     // Check for cooldown first

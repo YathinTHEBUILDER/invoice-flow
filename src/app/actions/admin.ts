@@ -72,54 +72,47 @@ export async function getAdminStats() {
   const supabase = await createClient();
 
   // 1. Calculate GMV (Sum of all active/funded/repaid invoices)
-  const { data: invoices } = await supabase
-    .from('invoices')
-    .select('amount, status')
-    .in('status', ['approved', 'partially_funded', 'funded', 'repaid']);
-  
+  // Fetch all stats for the admin dashboard in parallel
+  const [invoicesResult, msmeResult, investorResult, activeInvoicesResult, pendingKYCResult, disputesResult] = await Promise.all([
+    supabase
+      .from('invoices')
+      .select('amount, status')
+      .in('status', ['approved', 'partially_funded', 'funded', 'repaid']),
+    supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'msme'),
+    supabase
+      .from('profiles')
+      .select('*', { count: 'exact', head: true })
+      .eq('role', 'investor'),
+    supabase
+      .from('invoices')
+      .select('*', { count: 'exact', head: true })
+      .in('status', ['approved', 'partially_funded', 'funded']),
+    supabase
+      .from('kyc_requests')
+      .select('*', { count: 'exact', head: true })
+      .eq('status', 'pending'),
+    supabase
+      .from('disputes')
+      .select('*', { count: 'exact', head: true })
+      .neq('status', 'resolved')
+  ]);
+
+  const invoices = invoicesResult.data;
   const gmv = invoices?.reduce((sum, inv) => sum + Number(inv.amount), 0) || 0;
-  
-  // 2. Calculate Projected Revenue (0.42% on withdrawals, modeled as 0.42% of GMV for projection)
   const commission = 0.0042;
   const revenue = gmv * commission;
-
-  // 3. User counts
-  const { count: msmeCount } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .eq('role', 'msme');
-
-  const { count: investorCount } = await supabase
-    .from('profiles')
-    .select('*', { count: 'exact', head: true })
-    .eq('role', 'investor');
-
-  // 4. Active Assets (Approved & Funded)
-  const { count: activeInvoices } = await supabase
-    .from('invoices')
-    .select('*', { count: 'exact', head: true })
-    .in('status', ['approved', 'partially_funded', 'funded']);
-
-  // 5. Pending KYC
-  const { count: pendingKYC } = await supabase
-    .from('kyc_requests')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'pending');
-
-  // 6. Disputes
-  const { count: disputes } = await supabase
-    .from('disputes')
-    .select('*', { count: 'exact', head: true })
-    .neq('status', 'resolved');
 
   return {
     gmv,
     revenue,
-    msmeCount: msmeCount || 0,
-    investorCount: investorCount || 0,
-    activeInvoices: activeInvoices || 0,
-    pendingKYC: pendingKYC || 0,
-    disputes: disputes || 0,
+    msmeCount: msmeResult.count || 0,
+    investorCount: investorResult.count || 0,
+    activeInvoices: activeInvoicesResult.count || 0,
+    pendingKYC: pendingKYCResult.count || 0,
+    disputes: disputesResult.count || 0,
     commissionPercent: commission * 100
   };
 }
@@ -586,12 +579,12 @@ export const resolveDisputeAction = actionClient
     
     await logAdminAction('resolve_dispute', 'dispute', disputeId, { resolution });
     
-    // 3. Notify Creator
+    // Notify Creator and Participants (Non-blocking)
     if (dispute) {
       const disp = dispute as any;
       const invNum = disp.invoices?.invoice_number || (Array.isArray(disp.invoices) ? disp.invoices[0]?.invoice_number : 'Asset');
 
-      await createNotification(
+      createNotification(
         disp.raised_by,
         "Dispute Resolved ⚖️",
         `The dispute on Invoice #${invNum} has been resolved: "${disp.subject}"`,
@@ -599,24 +592,27 @@ export const resolveDisputeAction = actionClient
         "/msme/invoices"
       );
 
-      // 4. Notify funded investors
+      // Notify funded investors
       if (disp.invoice_id) {
-        const { data: investments } = await supabase
+        supabase
           .from('investments')
           .select('investor_id')
-          .eq('invoice_id', disp.invoice_id);
-
-        if (investments) {
-          for (const inv of investments) {
-            await createNotification(
-              inv.investor_id,
-              "Invoice Dispute Resolved ✅",
-              `The dispute on your invested Invoice #${invNum} has been fully resolved.`,
-              "success",
-              "/investor/portfolio"
-            );
-          }
-        }
+          .eq('invoice_id', disp.invoice_id)
+          .then(({ data: investments }) => {
+            if (investments) {
+              Promise.allSettled(
+                investments.map((inv) =>
+                  createNotification(
+                    inv.investor_id,
+                    "Invoice Dispute Resolved ✅",
+                    `The dispute on your invested Invoice #${invNum} has been fully resolved.`,
+                    "success",
+                    "/investor/portfolio"
+                  )
+                )
+              );
+            }
+          });
       }
     }
 
@@ -687,8 +683,8 @@ export const verifySettlementAction = actionClient
     if (!data.success) throw new Error(data.error || "Settlement failed.");
 
     if (status === 'repaid') {
-      // 2. Notify MSME
-      await createNotification(
+      // Notify MSME and Participating Investors (Non-blocking)
+      createNotification(
         repayment.invoices.msme_id,
         "Payment Confirmed! 🏦",
         `Your payment for Invoice #${repayment.invoices.invoice_number} has been verified. Asset is now fully repaid.`,
@@ -696,27 +692,29 @@ export const verifySettlementAction = actionClient
         "/msme/repayments"
       );
 
-      // 3. Notify Participating Investors (Batch)
-      const { data: investments } = await supabase
+      supabase
         .from('investments')
         .select('investor_id, amount')
-        .eq('invoice_id', repayment.invoice_id);
+        .eq('invoice_id', repayment.invoice_id)
+        .then(({ data: investments }) => {
+          if (investments) {
+            Promise.allSettled(
+              investments.map((inv) => {
+                const totalFace = Number(repayment.invoices.verified_amount || repayment.invoices.amount || 1);
+                const share = Number(inv.amount) / totalFace;
+                const payout = Math.round(Number(repayment.amount_paid - (repayment.penalty_amount || 0)) * share);
 
-      if (investments) {
-        for (const inv of investments) {
-          const totalFace = Number(repayment.invoices.verified_amount || repayment.invoices.amount || 1);
-          const share = Number(inv.amount) / totalFace;
-          const payout = Math.round(Number(repayment.amount_paid - (repayment.penalty_amount || 0)) * share);
-
-          await createNotification(
-            inv.investor_id,
-            "Repayment Received! 💰",
-            `₹${payout.toLocaleString('en-IN')} credited for Invoice #${repayment.invoices.invoice_number}.`,
-            "success",
-            "/investor/portfolio"
-          );
-        }
-      }
+                return createNotification(
+                  inv.investor_id,
+                  "Repayment Received! 💰",
+                  `₹${payout.toLocaleString('en-IN')} credited for Invoice #${repayment.invoices.invoice_number}.`,
+                  "success",
+                  "/investor/portfolio"
+                );
+              })
+            );
+          }
+        });
     }
 
     await logAdminAction('verify_settlement', 'repayment', repaymentId, { status });

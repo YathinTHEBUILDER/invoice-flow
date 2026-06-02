@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,12 +24,15 @@ import { createClient } from "@/lib/client";
 import { formatINR } from "@/lib/utils";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { useRealtimeInvoices } from "@/hooks/use-realtime-invoices";
 
 export default function InvoicesPage() {
   const router = useRouter();
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [filteredInvoices, setFilteredInvoices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const supabase = createClient();
+
+  const [userId, setUserId] = useState<string | undefined>(undefined);
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,6 +44,44 @@ export default function InvoicesPage() {
     tenure: ""
   });
   const [autoInvoiceNumber, setAutoInvoiceNumber] = useState("");
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, [supabase]);
+
+  // Hook for real-time subscription
+  useRealtimeInvoices(userId);
+
+  // Queries
+  const { data: invoices = [], isLoading: loading } = useQuery({
+    queryKey: ["msme-invoices", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data } = await supabase
+        .from("invoices")
+        .select("*")
+        .eq("msme_id", userId)
+        .order("created_at", { ascending: false });
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  const { data: profile } = useQuery({
+    queryKey: ["msme-stats", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      const { data } = await supabase
+        .from("profiles")
+        .select("kyc_status")
+        .eq("id", userId)
+        .single();
+      return data;
+    },
+    enabled: !!userId,
+  });
 
   const openUploadModal = () => {
     const dateStr = new Date().toISOString().slice(0, 10).replace(/-/g, "");
@@ -71,36 +112,7 @@ export default function InvoicesPage() {
     }
   }, [formData.dueDate]);
 
-  useEffect(() => {
-    fetchInvoices();
-  }, []);
-
-  const [profile, setProfile] = useState<any>(null);
-
-  async function fetchInvoices() {
-    const supabase = createClient();
-    const { data: userData } = await supabase.auth.getUser();
-    const user = userData?.user;
-    if (user) {
-      const { data: invoicesData } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("msme_id", user.id)
-        .order("created_at", { ascending: false });
-      setInvoices(invoicesData || []);
-      setFilteredInvoices(invoicesData || []);
-
-      const { data: profileData } = await supabase
-        .from("profiles")
-        .select("kyc_status")
-        .eq("id", user.id)
-        .single();
-      setProfile(profileData);
-    }
-    setLoading(false);
-  }
-
-  useEffect(() => {
+  const filteredInvoices = useMemo(() => {
     let result = invoices;
     
     if (searchQuery) {
@@ -114,53 +126,92 @@ export default function InvoicesPage() {
       result = result.filter(inv => inv.status === statusFilter);
     }
 
-    setFilteredInvoices(result);
+    return result;
   }, [searchQuery, statusFilter, invoices]);
 
-  const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setUploading(true);
-    const formData = new FormData(e.currentTarget);
-    
-    try {
-      const result = await uploadInvoiceAction(formData);
+  // Mutations
+  const uploadMutation = useMutation({
+    mutationFn: uploadInvoiceAction,
+    onMutate: async (newInvoiceForm) => {
+      await queryClient.cancelQueries({ queryKey: ["msme-invoices", userId] });
+      const oldInvoices = queryClient.getQueryData<any[]>(["msme-invoices", userId]) || [];
+      
+      const tempInvoice = {
+        id: `temp-${Date.now()}`,
+        invoice_number: newInvoiceForm.get("invoice_number") || autoInvoiceNumber,
+        amount: Number(newInvoiceForm.get("amount")),
+        buyer_name: newInvoiceForm.get("buyer_name"),
+        buyer_gstin: newInvoiceForm.get("buyer_gstin"),
+        due_date: newInvoiceForm.get("due_date"),
+        status: "pending_verification",
+        created_at: new Date().toISOString(),
+        isOptimistic: true,
+      };
+
+      queryClient.setQueryData(["msme-invoices", userId], [tempInvoice, ...oldInvoices]);
+      return { oldInvoices };
+    },
+    onError: (err, newInvoiceForm, context: any) => {
+      if (context?.oldInvoices) {
+        queryClient.setQueryData(["msme-invoices", userId], context.oldInvoices);
+      }
+      toast.error("Failed to submit invoice");
+    },
+    onSuccess: (result) => {
       if (result.success) {
         toast.success("Invoice submitted for verification");
         setShowUploadModal(false);
         setFormData({ dueDate: "", tenure: "" });
-        fetchInvoices();
       } else {
         toast.error(result.error || "Failed to submit invoice");
       }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    } finally {
+      queryClient.invalidateQueries({ queryKey: ["msme-invoices", userId] });
+      queryClient.invalidateQueries({ queryKey: ["msme-stats", userId] });
+    },
+    onSettled: () => {
       setUploading(false);
     }
+  });
+
+  const handleUpload = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setUploading(true);
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    uploadMutation.mutate(data);
   };
+
+  const disputeMutation = useMutation({
+    mutationFn: raiseDisputeAction,
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success("Dispute raised successfully. Admin will review.");
+        setSelectedInvoice(null);
+      } else {
+        toast.error(result.error || "Failed to raise dispute");
+      }
+      queryClient.invalidateQueries({ queryKey: ["msme-invoices", userId] });
+    },
+    onError: () => {
+      toast.error("An unexpected error occurred");
+    },
+    onSettled: () => {
+      setDisputing(false);
+    }
+  });
 
   const handleRaiseDispute = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setDisputing(true);
-    const formData = new FormData(e.currentTarget);
-    
-    try {
-      const result = await raiseDisputeAction(formData);
-      if (result.success) {
-        toast.success("Dispute raised successfully. Admin will review.");
-        setSelectedInvoice(null);
-        fetchInvoices();
-      } else {
-        toast.error(result.error || "Failed to raise dispute");
-      }
-    } catch (error) {
-      toast.error("An unexpected error occurred");
-    } finally {
-      setDisputing(false);
-    }
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    disputeMutation.mutate(data);
   };
 
-  const getStatusBadge = (status: string) => {
+  const getStatusBadge = (status: string, isOptimistic?: boolean) => {
+    if (isOptimistic) {
+      return <Badge variant="outline" className="bg-orange-500/10 text-orange-500 border-orange-500/20 font-black uppercase tracking-widest text-[9px] animate-pulse">Submitting...</Badge>;
+    }
     switch (status) {
       case "pending_verification":
         return <Badge variant="outline" className="bg-blue-500/10 text-blue-500 border-blue-500/20 font-black uppercase tracking-widest text-[9px]">Under Review</Badge>;
@@ -179,6 +230,7 @@ export default function InvoicesPage() {
     }
   };
 
+
   return (
     <div className="space-y-12 pb-20">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
@@ -188,7 +240,7 @@ export default function InvoicesPage() {
         </div>
         <div className="flex gap-4">
           <Button 
-            onClick={() => fetchInvoices()}
+            onClick={() => queryClient.invalidateQueries({ queryKey: ["msme-invoices", userId] })}
             variant="outline"
             className="h-14 px-6 border-white/10 hover:bg-white/5 text-white font-bold uppercase tracking-wider text-xs rounded-xl"
           >
@@ -307,7 +359,7 @@ export default function InvoicesPage() {
                           <p className="text-sm font-bold text-white">{invoice.due_date ? new Date(invoice.due_date).toLocaleDateString() : "N/A"}</p>
                         </td>
                         <td className="px-8 py-6">
-                          {getStatusBadge(invoice.status)}
+                          {getStatusBadge(invoice.status, invoice.isOptimistic)}
                         </td>
                         <td className="px-8 py-6 text-right">
                           <div className="flex justify-end gap-2">

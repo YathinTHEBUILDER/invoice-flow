@@ -22,25 +22,36 @@ import { useRouter } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
+import { useQuery } from "@tanstack/react-query";
+import { useRealtimeWallet } from "@/hooks/use-realtime-wallet";
+import { useRealtimeInvestments } from "@/hooks/use-realtime-investments";
+import { createClient } from "@/lib/client";
+
 export default function InvestorDashboard() {
   const router = useRouter();
-  const [stats, setStats] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    loadStats();
-  }, []);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, [supabase]);
 
-  async function loadStats() {
-    try {
-      const data = await getInvestorStats();
-      setStats(data);
-    } catch (error) {
-      console.error("Failed to load investor stats:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Hook for real-time wallet & investments updates
+  useRealtimeWallet(userId);
+  useRealtimeInvestments(userId);
+
+  // Queries
+  const { data: stats, isLoading: loading } = useQuery({
+    queryKey: ["investor-stats", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      return await getInvestorStats();
+    },
+    enabled: !!userId,
+  });
+
 
   if (loading) {
     return (
@@ -183,7 +194,7 @@ export default function InvestorDashboard() {
                    <div className="p-5 rounded-xl bg-white/[0.02] border border-white/5 flex items-center justify-between">
                       <div className="space-y-1">
                          <p className="text-[10px] font-semibold text-neutral-500 uppercase tracking-wider">Active Positions</p>
-                         <p className="text-xl font-bold text-white">{stats.activeAssets} Checked Assets</p>
+                         <p className="text-xl font-bold text-white">{stats?.activeAssets} Checked Assets</p>
                       </div>
                       <div className="p-3 rounded-lg bg-blue-600/10 text-blue-400">
                          <ShieldCheck className="w-5 h-5" />

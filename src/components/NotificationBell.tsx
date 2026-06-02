@@ -25,78 +25,50 @@ import { createClient } from "@/lib/client";
 import { formatDate } from "@/lib/utils";
 import Link from "next/link";
 
-export function NotificationBell() {
-  const [notifications, setNotifications] = useState<any[]>([]);
-  const [unreadCount, setUnreadCount] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [isOpen, setIsOpen] = useState(false);
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRealtimeNotifications } from "@/hooks/use-realtime-notifications";
 
-  const fetchNotifications = async () => {
-    try {
-      const data = await getMyNotifications();
-      setNotifications(data || []);
-      setUnreadCount(data?.filter((n: any) => !n.is_read).length || 0);
-    } catch (error) {
-      console.error("Failed to fetch notifications:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
+export function NotificationBell() {
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+  const [isOpen, setIsOpen] = useState(false);
+  const supabase = createClient();
+  const queryClient = useQueryClient();
 
   useEffect(() => {
-    fetchNotifications();
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, [supabase]);
 
-    // Set up realtime subscription
-    const supabase = createClient();
-    
-    async function setupRealtime() {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
+  // Hook for real-time notification updates
+  useRealtimeNotifications(userId);
 
-      const channel = supabase
-        .channel(`user-notifications-${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'notifications',
-            filter: `user_id=eq.${user.id}`
-          },
-          (payload) => {
-            fetchNotifications();
-            // Trigger a toast alert for the new notification
-            import("sonner").then(({ toast }) => {
-              toast(payload.new.title, {
-                description: payload.new.message,
-                action: payload.new.link ? {
-                  label: "View",
-                  onClick: () => window.location.href = payload.new.link
-                } : undefined
-              });
-            });
-          }
-        )
-        .subscribe();
+  // TanStack Query
+  const { data: notifications = [], isLoading: loading } = useQuery({
+    queryKey: ["notifications", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      return await getMyNotifications();
+    },
+    enabled: !!userId,
+  });
 
-      return channel;
-    }
-
-    let activeChannel: any;
-    setupRealtime().then(channel => activeChannel = channel);
-
-    return () => {
-      if (activeChannel) supabase.removeChannel(activeChannel);
-    };
-  }, []);
+  const unreadCount = notifications.filter((n: any) => !n.is_read).length;
 
   const handleMarkAsRead = async (id: string) => {
+    if (!userId) return;
+
+    // Optimistically update cache
+    queryClient.setQueryData(["notifications", userId], (old: any[] = []) =>
+      old.map((n) => (n.id === id ? { ...n, is_read: true } : n))
+    );
+
     try {
       await markAsRead(id);
-      setNotifications(notifications.map(n => n.id === id ? { ...n, is_read: true } : n));
-      setUnreadCount(prev => Math.max(0, prev - 1));
     } catch (error) {
       console.error("Failed to mark as read:", error);
+      // Rollback on error
+      queryClient.invalidateQueries({ queryKey: ["notifications", userId] });
     }
   };
 

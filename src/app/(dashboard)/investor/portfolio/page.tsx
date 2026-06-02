@@ -20,32 +20,47 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 
+import { useQuery } from "@tanstack/react-query";
+import { useRealtimeInvestments } from "@/hooks/use-realtime-investments";
+import { createClient } from "@/lib/client";
+
 export default function InvestorPortfolio() {
-  const [investments, setInvestments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [investorName, setInvestorName] = useState("");
+  const supabase = createClient();
+  const [userId, setUserId] = useState<string | undefined>(undefined);
 
   useEffect(() => {
-    fetchPortfolio();
-  }, []);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, [supabase]);
 
-  async function fetchPortfolio() {
-    try {
-      const data = await getInvestorPortfolio();
-      setInvestments(data);
-      
-      const profile = await getInvestorProfile();
-      if (profile?.full_name) {
-        setInvestorName(profile.full_name);
-      } else {
-        setInvestorName(profile?.email || "Valued Investor");
-      }
-    } catch (error) {
-      console.error("Failed to fetch portfolio:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Hook for realtime updates to investments
+  useRealtimeInvestments(userId);
+
+  // Queries
+  const { data: investments = [], isLoading: loadingPortfolio } = useQuery({
+    queryKey: ["investor-portfolio", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      return await getInvestorPortfolio();
+    },
+    enabled: !!userId,
+  });
+
+  const { data: profile, isLoading: loadingProfile } = useQuery({
+    queryKey: ["investor-profile", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      return await getInvestorProfile();
+    },
+    enabled: !!userId,
+  });
+
+  const loading = !userId || loadingPortfolio || loadingProfile;
+
+  const investorName = profile?.full_name 
+    ? profile.full_name 
+    : (profile?.email || "Valued Investor");
 
   const generateCertificate = (inv: any) => {
     const canvas = document.createElement("canvas");

@@ -22,9 +22,13 @@ import { submitRepaymentProofAction } from "@/app/actions/msme";
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 export default function RepaymentsPage() {
-  const [repayments, setRepayments] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const queryClient = useQueryClient();
+  const supabase = createClient();
+
+  const [userId, setUserId] = useState<string | undefined>(undefined);
   const [showBankDetails, setShowBankDetails] = useState(false);
   const [selectedRepayment, setSelectedRepayment] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -32,8 +36,25 @@ export default function RepaymentsPage() {
   const repaymentId = searchParams.get("id");
 
   useEffect(() => {
-    fetchRepayments();
-  }, []);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, [supabase]);
+
+  // Queries
+  const { data: repayments = [], isLoading: loading } = useQuery({
+    queryKey: ["msme-repayments", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data } = await supabase
+        .from("repayments")
+        .select("*, invoices!inner(*)")
+        .eq("invoices.msme_id", userId)
+        .order("due_date", { ascending: true });
+      return data || [];
+    },
+    enabled: !!userId,
+  });
 
   useEffect(() => {
     if (repaymentId && repayments.length > 0) {
@@ -42,41 +63,34 @@ export default function RepaymentsPage() {
     }
   }, [repaymentId, repayments]);
 
-  async function fetchRepayments() {
-    const supabase = createClient();
-    const { data: userData } = await supabase.auth.getUser();
-  const user = userData?.user;
-    if (user) {
-      const { data } = await supabase
-        .from("repayments")
-        .select("*, invoices!inner(*)")
-        .eq("invoices.msme_id", user.id)
-        .order("due_date", { ascending: true });
-      setRepayments(data || []);
+  const repaymentProofMutation = useMutation({
+    mutationFn: submitRepaymentProofAction,
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success("Payment proof submitted for verification.");
+        setSelectedRepayment(null);
+      } else {
+        toast.error(result.error || "Submission failed.");
+      }
+      queryClient.invalidateQueries({ queryKey: ["msme-repayments", userId] });
+      queryClient.invalidateQueries({ queryKey: ["msme-stats", userId] });
+    },
+    onError: () => {
+      toast.error("System error during submission.");
+    },
+    onSettled: () => {
+      setIsSubmitting(false);
     }
-    setLoading(false);
-  }
+  });
 
   const handleSubmitProof = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
-    
-    try {
-      const result = await submitRepaymentProofAction(formData);
-      if (result.success) {
-        toast.success("Payment proof submitted for verification.");
-        setSelectedRepayment(null);
-        await fetchRepayments();
-      } else {
-        toast.error(result.error || "Submission failed.");
-      }
-    } catch (error) {
-      toast.error("System error during submission.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    repaymentProofMutation.mutate(data);
   };
+
 
   const getStatusBadge = (status: string) => {
     switch (status) {

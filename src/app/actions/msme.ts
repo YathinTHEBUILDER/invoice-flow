@@ -12,12 +12,14 @@ export async function uploadInvoiceAction(formData: FormData) {
 
   if (!user) return { error: "Unauthorized" };
 
-  // Strict Role & KYC Check
-  const { data: profile } = await supabase
-    .from("profiles")
-    .select("kyc_status, role, company_name")
-    .eq("id", user.id)
-    .single();
+  // Parallelize Profile and settings check
+  const [profileResult, settingsResult] = await Promise.all([
+    supabase.from("profiles").select("kyc_status, role, company_name").eq("id", user.id).single(),
+    supabase.from('platform_settings').select('value').eq('key', 'default_discount_rate').single()
+  ]);
+
+  const profile = profileResult.data;
+  const settings = settingsResult.data;
 
   if (profile?.role !== 'msme') {
     return { error: "Only MSME accounts can upload invoices." };
@@ -52,13 +54,6 @@ export async function uploadInvoiceAction(formData: FormData) {
     return { error: `Invoice number ${invoiceNumber} has already been uploaded.` };
   }
 
-  // Fetch default discount rate from settings
-  const { data: settings } = await supabase
-    .from('platform_settings')
-    .select('value')
-    .eq('key', 'default_discount_rate')
-    .single();
-  
   const discountRate = Number(settings?.value || 0.12);
 
   // Upload Invoice File
@@ -101,19 +96,22 @@ export async function uploadInvoiceAction(formData: FormData) {
     return { error: error.message };
   }
 
-  // Notify Admins
-  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
-  if (admins) {
-    for (const admin of admins) {
-      await createNotification(
-        admin.id,
-        "New Asset Uploaded 📄",
-        `${profile.company_name} uploaded Invoice #${invoiceNumber} for verification.`,
-        "info",
-        "/admin?tab=invoices"
+  // Notify Admins (Non-blocking)
+  supabase.from('profiles').select('id').eq('role', 'admin').then(({ data: admins }) => {
+    if (admins) {
+      Promise.allSettled(
+        admins.map((admin) =>
+          createNotification(
+            admin.id,
+            "New Asset Uploaded 📄",
+            `${profile?.company_name || 'MSME'} uploaded Invoice #${invoiceNumber} for verification.`,
+            "info",
+            "/admin?tab=invoices"
+          )
+        )
       );
     }
-  }
+  });
 
   revalidatePath("/msme/invoices");
   return { success: true, data };
@@ -493,19 +491,22 @@ export async function submitRepaymentProofAction(formData: FormData) {
 
   if (error) return { error: error.message };
 
-  // Notify Admins
-  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
-  if (admins) {
-    for (const admin of admins) {
-      await createNotification(
-        admin.id,
-        "Payment Submitted 💰",
-        `UTR ${utr} submitted for verification. Amount: ${amountPaid}`,
-        "success",
-        "/admin"
+  // Notify Admins (Non-blocking)
+  supabase.from('profiles').select('id').eq('role', 'admin').then(({ data: admins }) => {
+    if (admins) {
+      Promise.allSettled(
+        admins.map((admin) =>
+          createNotification(
+            admin.id,
+            "Payment Submitted 💰",
+            `UTR ${utr} submitted for verification. Amount: ${amountPaid}`,
+            "success",
+            "/admin"
+          )
+        )
       );
     }
-  }
+  });
 
   revalidatePath("/msme/repayments");
   return { success: true };
@@ -558,19 +559,22 @@ export async function raiseDisputeAction(formData: FormData) {
 
   if (error) return { error: error.message };
 
-  // Notify Admins
-  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
-  if (admins) {
-    for (const admin of admins) {
-      await createNotification(
-        admin.id,
-        "New Dispute Raised ⚖️",
-        `Dispute on Invoice #${invoiceId.split('-')[0].toUpperCase()}: ${subject}`,
-        "error",
-        "/admin?tab=disputes"
+  // Notify Admins (Non-blocking)
+  supabase.from('profiles').select('id').eq('role', 'admin').then(({ data: admins }) => {
+    if (admins) {
+      Promise.allSettled(
+        admins.map((admin) =>
+          createNotification(
+            admin.id,
+            "New Dispute Raised ⚖️",
+            `Dispute on Invoice #${invoiceId.split('-')[0].toUpperCase()}: ${subject}`,
+            "error",
+            "/admin?tab=disputes"
+          )
+        )
       );
     }
-  }
+  });
 
   revalidatePath("/msme/invoices");
   return { success: true };
@@ -617,19 +621,22 @@ export async function requestPreClosureAction(invoiceId: string, details: any) {
 
   if (error) return { error: error.message };
 
-  // Notify Admins
-  const { data: admins } = await supabase.from('profiles').select('id').eq('role', 'admin');
-  if (admins) {
-    for (const admin of admins) {
-      await createNotification(
-        admin.id,
-        "Pre-closure Request ⚡",
-        `New pre-closure request for Invoice #${invoiceId.split('-')[0].toUpperCase()}`,
-        "warning",
-        "/admin?tab=disputes"
+  // Notify Admins (Non-blocking)
+  supabase.from('profiles').select('id').eq('role', 'admin').then(({ data: admins }) => {
+    if (admins) {
+      Promise.allSettled(
+        admins.map((admin) =>
+          createNotification(
+            admin.id,
+            "Pre-closure Request ⚡",
+            `New pre-closure request for Invoice #${invoiceId.split('-')[0].toUpperCase()}`,
+            "warning",
+            "/admin?tab=disputes"
+          )
+        )
       );
     }
-  }
+  });
 
   revalidatePath("/msme/investments");
   return { success: true };

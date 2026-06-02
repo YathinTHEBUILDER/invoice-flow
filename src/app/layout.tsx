@@ -4,6 +4,7 @@ import "./globals.css";
 import { Toaster } from "sonner";
 import Link from "next/link";
 import { Shield } from "lucide-react";
+import { QueryProvider } from "@/components/providers/query-provider";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -26,11 +27,14 @@ export default function RootLayout({
             __html: `document.addEventListener('contextmenu', (e) => e.preventDefault());`
           }}
         />
-        <main className="flex-1 flex flex-col">
-          {children}
-        </main>
+        <QueryProvider>
+          <main className="flex-1 flex flex-col">
+            {children}
+          </main>
+        </QueryProvider>
         <Toaster position="top-right" theme="dark" richColors />
       </body>
     </html>
   );
 }
+

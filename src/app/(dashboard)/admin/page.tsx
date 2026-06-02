@@ -56,40 +56,32 @@ import {
 import { createClient } from "@/lib/client";
 import { toast } from "sonner";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRealtimeAdminQueues } from "@/hooks/use-realtime-admin-queues";
+
 export default function AdminDashboard() {
   const searchParams = useSearchParams();
   const router = useRouter();
+  const queryClient = useQueryClient();
   const tabParam = searchParams.get("tab") || "overview";
 
   const [activeTab, setActiveTab] = useState(tabParam);
-  const [stats, setStats] = useState<any>(null);
-  const [kycQueue, setKycQueue] = useState<any[]>([]);
-  const [invoices, setInvoices] = useState<any[]>([]);
-  const [disputes, setDisputes] = useState<any[]>([]);
-  const [settlements, setSettlements] = useState<any[]>([]);
-  const [withdrawals, setWithdrawals] = useState<any[]>([]);
-  const [auditLogs, setAuditLogs] = useState<any[]>([]);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [settings, setSettings] = useState<any>({});
-  const [preClosureRequests, setPreClosureRequests] = useState<any[]>([]);
-  const [supportTickets, setSupportTickets] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState<boolean | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
+
   const [actionLoading, setActionLoading] = useState<string | null>(null);
   const [selectedRequest, setSelectedRequest] = useState<any>(null);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [rejectionNotes, setRejectionNotes] = useState("");
   const [resolutionNotes, setResolutionNotes] = useState("");
-  const [error, setError] = useState<string | null>(null);
   const [tempVerifiedAmount, setTempVerifiedAmount] = useState<string>("");
 
   useEffect(() => {
     setActiveTab(tabParam);
   }, [tabParam]);
 
-  const loadData = async () => {
-    setLoading(true);
-    setError(null);
-    try {
+  useEffect(() => {
+    async function checkAuth() {
       const supabase = createClient();
       const { data: { user } } = await supabase.auth.getUser();
 
@@ -99,85 +91,94 @@ export default function AdminDashboard() {
         return;
       }
 
-      const { data: isAdmin, error: rpcError } = await supabase.rpc("is_admin");
-      if (rpcError || isAdmin !== true) {
+      const { data, error } = await supabase.rpc("is_admin");
+      if (error || data !== true) {
         toast.error("Access Denied: Administrative authority required.");
         router.push("/");
         return;
       }
-
-      // Fetch stats first as they are critical
-      try {
-        const statsData = await getAdminStats();
-        setStats(statsData);
-      } catch (err) {
-        console.error("Failed to load admin stats:", err);
-        // If stats fail, we might still want to try other things, 
-        // but stats are central to the overview.
-      }
-
-      // Fetch other data in parallel but independently
-      await Promise.all([
-        (async () => {
-          try { setKycQueue(await getKYCQueue()); } 
-          catch (e) { console.error("Failed to load Compliance Queue:", e); }
-        })(),
-        (async () => {
-          try { setInvoices(await getInvoices()); } 
-          catch (e) { console.error("Failed to load Asset List:", e); }
-        })(),
-        (async () => {
-          try { setSettings(await getPlatformSettings()); } 
-          catch (e) { console.error("Failed to load Platform Settings:", e); }
-        })(),
-        (async () => {
-          try { setDisputes(await getDisputeRecords()); } 
-          catch (e) { console.error("Failed to load Dispute Records:", e); }
-        })(),
-        (async () => {
-          try { setSettlements(await getSettlements()); } 
-          catch (e) { console.error("Failed to load Settlement Queue:", e); }
-        })(),
-        (async () => {
-          try { setAuditLogs(await getAuditLogs()); } 
-          catch (e) { console.error("Failed to load Audit Trail:", e); }
-        })(),
-        (async () => {
-          try { setTransactions(await getTransactions()); } 
-          catch (e) { console.error("Failed to load Transaction Ledger:", e); }
-        })(),
-        (async () => {
-          try { setWithdrawals(await getWithdrawalRequests()); } 
-          catch (e) { console.error("Failed to load Withdrawal Queue:", e); }
-        })(),
-        (async () => {
-          try { setPreClosureRequests(await getPreClosureRequests()); } 
-          catch (e) { console.error("Failed to load Pre-closure Queue:", e); }
-        })(),
-        (async () => {
-          try { setSupportTickets(await getSupportTickets()); } 
-          catch (e) { console.error("Failed to load Support Tickets:", e); }
-        })()
-      ]);
-
-    } catch (err: any) {
-      console.error("Critical failure during dashboard load:", err);
-      const errorMessage = err.message || "Unknown error occurred";
-      setError(errorMessage);
-      
-      if (errorMessage.includes("Unauthorized") || errorMessage.includes("Admin access required")) {
-        router.push("/");
-      } else {
-        toast.error(`Portal Sync Error: ${errorMessage}`);
-      }
-    } finally {
-      setLoading(false);
+      setIsAdmin(true);
+      setAuthLoading(false);
     }
-  };
+    checkAuth();
+  }, [router]);
 
-  useEffect(() => {
-    loadData();
-  }, []);
+  // Realtime subscription for admin operational queues
+  useRealtimeAdminQueues(!!isAdmin);
+
+  // Queries
+  const { data: stats, isLoading: statsLoading, error: statsError } = useQuery({
+    queryKey: ["admin-stats"],
+    queryFn: getAdminStats,
+    enabled: !!isAdmin,
+  });
+
+  const { data: kycQueue = [], isLoading: kycLoading } = useQuery({
+    queryKey: ["admin-kyc-queue"],
+    queryFn: getKYCQueue,
+    enabled: !!isAdmin,
+  });
+
+  const { data: invoices = [], isLoading: invoicesLoading } = useQuery({
+    queryKey: ["admin-invoice-queue"],
+    queryFn: getInvoices,
+    enabled: !!isAdmin,
+  });
+
+  const { data: settings = {}, isLoading: settingsLoading } = useQuery({
+    queryKey: ["admin-platform-settings"],
+    queryFn: getPlatformSettings,
+    enabled: !!isAdmin,
+  });
+
+  const { data: disputes = [], isLoading: disputesLoading } = useQuery({
+    queryKey: ["admin-disputes"],
+    queryFn: getDisputeRecords,
+    enabled: !!isAdmin,
+  });
+
+  const { data: settlements = [], isLoading: settlementsLoading } = useQuery({
+    queryKey: ["admin-settlements"],
+    queryFn: getSettlements,
+    enabled: !!isAdmin,
+  });
+
+  const { data: auditLogs = [], isLoading: auditLoading } = useQuery({
+    queryKey: ["admin-audit-logs"],
+    queryFn: getAuditLogs,
+    enabled: !!isAdmin,
+  });
+
+  const { data: transactions = [], isLoading: txLoading } = useQuery({
+    queryKey: ["admin-transactions"],
+    queryFn: getTransactions,
+    enabled: !!isAdmin,
+  });
+
+  const { data: withdrawals = [], isLoading: withdrawalsLoading } = useQuery({
+    queryKey: ["admin-withdrawals"],
+    queryFn: getWithdrawalRequests,
+    enabled: !!isAdmin,
+  });
+
+  const { data: preClosureRequests = [], isLoading: preclosuresLoading } = useQuery({
+    queryKey: ["admin-preclosures"],
+    queryFn: getPreClosureRequests,
+    enabled: !!isAdmin,
+  });
+
+  const { data: supportTickets = [], isLoading: supportLoading } = useQuery({
+    queryKey: ["admin-support-tickets"],
+    queryFn: getSupportTickets,
+    enabled: !!isAdmin,
+  });
+
+  const loading = authLoading || statsLoading;
+  const error = statsError ? (statsError as Error).message : null;
+
+  const handleManualRefresh = () => {
+    queryClient.invalidateQueries();
+  };
 
   const handleKYCUpdate = async (requestId: string, status: "approved" | "rejected", userId: string) => {
     setActionLoading(requestId);
@@ -187,7 +188,8 @@ export default function AdminDashboard() {
         if (result?.data?.success) {
           toast.success("Identity approved successfully.");
           setSelectedRequest(null);
-          await loadData();
+          queryClient.invalidateQueries({ queryKey: ["admin-kyc-queue"] });
+          queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         } else {
           toast.error(result?.serverError || "Failed to approve KYC.");
         }
@@ -201,7 +203,8 @@ export default function AdminDashboard() {
           toast.success("Identity rejected successfully.");
           setSelectedRequest(null);
           setRejectionNotes("");
-          await loadData();
+          queryClient.invalidateQueries({ queryKey: ["admin-kyc-queue"] });
+          queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         } else {
           toast.error(result?.serverError || "Failed to reject KYC.");
         }
@@ -216,7 +219,7 @@ export default function AdminDashboard() {
       const result = await updateSettingAction({ key, value });
       if (result?.data?.success) {
         toast.success(`Platform setting ${key} updated.`);
-        await loadData();
+        queryClient.invalidateQueries({ queryKey: ["admin-platform-settings"] });
       }
     } catch (error) {
       toast.error("Failed to update platform settings.");
@@ -229,7 +232,8 @@ export default function AdminDashboard() {
       const result = await verifySettlementAction({ repaymentId, status });
       if (result?.data?.success) {
         toast.success("Settlement verified successfully.");
-        await loadData();
+        queryClient.invalidateQueries({ queryKey: ["admin-settlements"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       } else {
         toast.error(result?.serverError || "Verification failed.");
       }
@@ -248,7 +252,8 @@ export default function AdminDashboard() {
         if (result?.data?.success) {
           toast.success("Asset verified and live.");
           setSelectedInvoice(null);
-          await loadData();
+          queryClient.invalidateQueries({ queryKey: ["admin-invoice-queue"] });
+          queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         } else {
           toast.error(result?.serverError || "Approval failed.");
         }
@@ -258,7 +263,8 @@ export default function AdminDashboard() {
           toast.success("Asset rejected.");
           setRejectionNotes("");
           setSelectedInvoice(null);
-          await loadData();
+          queryClient.invalidateQueries({ queryKey: ["admin-invoice-queue"] });
+          queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         } else {
           toast.error(result?.serverError || "Rejection failed.");
         }
@@ -277,7 +283,8 @@ export default function AdminDashboard() {
       if (result?.data?.success) {
         toast.success("Dispute resolved successfully.");
         setResolutionNotes("");
-        await loadData();
+        queryClient.invalidateQueries({ queryKey: ["admin-disputes"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       } else {
         toast.error(result?.serverError || "Resolution failed.");
       }
@@ -295,7 +302,8 @@ export default function AdminDashboard() {
         const result = await approveWithdrawalAction({ withdrawalId });
         if (result?.data?.success) {
           toast.success("Withdrawal approved and completed.");
-          await loadData();
+          queryClient.invalidateQueries({ queryKey: ["admin-withdrawals"] });
+          queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         } else {
           toast.error(result?.serverError || "Approval failed.");
         }
@@ -308,7 +316,8 @@ export default function AdminDashboard() {
         const result = await rejectWithdrawalAction({ withdrawalId, notes: reason });
         if (result?.data?.success) {
           toast.success("Withdrawal rejected and funds refunded.");
-          await loadData();
+          queryClient.invalidateQueries({ queryKey: ["admin-withdrawals"] });
+          queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
         } else {
           toast.error(result?.serverError || "Rejection failed.");
         }
@@ -326,7 +335,8 @@ export default function AdminDashboard() {
       const result = await approvePreClosureAction({ requestId });
       if (result?.data?.success) {
         toast.success("Pre-closure approved. Repayment schedule adjusted.");
-        await loadData();
+        queryClient.invalidateQueries({ queryKey: ["admin-preclosures"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       } else {
         toast.error(result?.serverError || "Approval failed.");
       }
@@ -343,7 +353,8 @@ export default function AdminDashboard() {
       const result = await disburseToMSMEAction({ invoiceId });
       if (result?.data?.success) {
         toast.success("Funds disbursed to MSME wallet successfully.");
-        await loadData();
+        queryClient.invalidateQueries({ queryKey: ["admin-invoice-queue"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       } else {
         toast.error(result?.serverError || "Disbursement failed.");
       }
@@ -363,7 +374,8 @@ export default function AdminDashboard() {
       const result = await resolveSupportTicketAction({ ticketId, resolution });
       if (result?.data?.success) {
         toast.success("Ticket resolved.");
-        await loadData();
+        queryClient.invalidateQueries({ queryKey: ["admin-support-tickets"] });
+        queryClient.invalidateQueries({ queryKey: ["admin-stats"] });
       }
     } catch (error) {
       toast.error("Failed to resolve ticket.");
@@ -404,7 +416,7 @@ export default function AdminDashboard() {
           </p>
         </div>
         <Button 
-          onClick={loadData}
+          onClick={handleManualRefresh}
           className="bg-white/5 border border-white/10 hover:bg-white/10 font-black uppercase tracking-widest text-[10px] h-12 px-8"
         >
           <RefreshCcw className="mr-2 h-4 w-4" /> Retry Handshake
@@ -429,7 +441,7 @@ export default function AdminDashboard() {
         </div>
         <Button
           variant="outline"
-          onClick={loadData}
+          onClick={handleManualRefresh}
           className="glass border-white/5 font-black uppercase tracking-widest text-[10px] h-12 px-6 hover:bg-white/5"
         >
           <RefreshCcw className="mr-2 h-4 w-4" /> Refresh Data

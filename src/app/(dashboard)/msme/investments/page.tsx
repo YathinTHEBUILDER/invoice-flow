@@ -35,11 +35,15 @@ import {
 import { toast } from "sonner";
 import { useSearchParams } from "next/navigation";
 
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+
 export default function InvestmentsPage() {
   const searchParams = useSearchParams();
+  const queryClient = useQueryClient();
+  const supabase = createClient();
+
+  const [userId, setUserId] = useState<string | undefined>(undefined);
   const invoiceId = searchParams.get("id");
-  const [fundedInvoices, setFundedInvoices] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
   const [selectedInvoice, setSelectedInvoice] = useState<any>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showPreClosure, setShowPreClosure] = useState(false);
@@ -47,20 +51,20 @@ export default function InvestmentsPage() {
   const [activeTab, setActiveTab] = useState<'details' | 'schedule' | 'history'>('details');
 
   useEffect(() => {
-    fetchFundedInvoices();
-  }, []);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, [supabase]);
 
-  async function fetchFundedInvoices() {
-    setLoading(true);
-    try {
-      const data = await getMSMEInvestments();
-      setFundedInvoices(data || []);
-    } catch (error) {
-      toast.error("Failed to fetch investments.");
-    } finally {
-      setLoading(false);
-    }
-  }
+  // Queries
+  const { data: fundedInvoices = [], isLoading: loading } = useQuery({
+    queryKey: ["msme-investments", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      return await getMSMEInvestments();
+    },
+    enabled: !!userId,
+  });
 
   // Handle direct navigation via ID param
   useEffect(() => {
@@ -70,34 +74,38 @@ export default function InvestmentsPage() {
     }
   }, [invoiceId, fundedInvoices]);
 
-  const handleRepayment = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
-    
-    try {
-      const result = await submitRepaymentProofAction(formData);
+  // Mutations
+  const repaymentMutation = useMutation({
+    mutationFn: submitRepaymentProofAction,
+    onSuccess: (result) => {
       if (result.success) {
         toast.success("Repayment proof submitted.");
         setSelectedInvoice(null);
-        await fetchFundedInvoices();
       } else {
         toast.error(result.error || "Submission failed.");
       }
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ["msme-investments", userId] });
+      queryClient.invalidateQueries({ queryKey: ["msme-stats", userId] });
+    },
+    onError: () => {
       toast.error("System error.");
-    } finally {
+    },
+    onSettled: () => {
       setIsSubmitting(false);
     }
-  };
+  });
 
-  const handleDispute = async (e: React.FormEvent<HTMLFormElement>) => {
+  const handleRepayment = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
-    const formData = new FormData(e.currentTarget);
-    
-    try {
-      const result = await raiseDisputeAction(formData);
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    repaymentMutation.mutate(data);
+  };
+
+  const disputeMutation = useMutation({
+    mutationFn: raiseDisputeAction,
+    onSuccess: (result) => {
       if (result.success) {
         toast.success("Dispute raised successfully.");
         setShowDispute(false);
@@ -105,12 +113,46 @@ export default function InvestmentsPage() {
       } else {
         toast.error(result.error || "Failed to raise dispute.");
       }
-    } catch (error) {
+      queryClient.invalidateQueries({ queryKey: ["msme-investments", userId] });
+    },
+    onError: () => {
       toast.error("System error.");
-    } finally {
+    },
+    onSettled: () => {
       setIsSubmitting(false);
     }
+  });
+
+  const preClosureMutation = useMutation({
+    mutationFn: async ({ invoiceId, details }: { invoiceId: string; details: any }) => {
+      return await requestPreClosureAction(invoiceId, details);
+    },
+    onSuccess: (result) => {
+      if (result.success) {
+        toast.success("Pre-closure request sent to treasury.");
+        setShowPreClosure(false);
+        setSelectedInvoice(null);
+      } else {
+        toast.error(result.error || "Failed to send request.");
+      }
+      queryClient.invalidateQueries({ queryKey: ["msme-investments", userId] });
+    },
+    onError: () => {
+      toast.error("System error.");
+    },
+    onSettled: () => {
+      setIsSubmitting(false);
+    }
+  });
+
+  const handleDispute = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setIsSubmitting(true);
+    const form = e.currentTarget;
+    const data = new FormData(form);
+    disputeMutation.mutate(data);
   };
+
 
   if (loading) {
     return (
@@ -498,18 +540,10 @@ export default function InvestmentsPage() {
               <Button 
                 className="flex-1 h-14 bg-emerald-500 hover:bg-emerald-600 text-white font-bold uppercase tracking-wider text-[11px] rounded-xl"
                 disabled={isSubmitting}
-                onClick={async () => {
+                onClick={() => {
                   setIsSubmitting(true);
                   const details = calculatePreClosureDetails(selectedInvoice.repayments || []);
-                  const result = await requestPreClosureAction(selectedInvoice.id, details);
-                  if (result.success) {
-                    toast.success("Pre-closure request sent to treasury.");
-                    setShowPreClosure(false);
-                    setSelectedInvoice(null);
-                  } else {
-                    toast.error(result.error || "Failed to send request.");
-                  }
-                  setIsSubmitting(false);
+                  preClosureMutation.mutate({ invoiceId: selectedInvoice.id, details });
                 }}
               >
                 {isSubmitting ? <Loader2 className="w-4 h-4 animate-spin" /> : "Confirm Payment"}

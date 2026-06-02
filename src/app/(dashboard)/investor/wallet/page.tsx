@@ -12,11 +12,15 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { useRouter } from "next/navigation";
 
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { useRealtimeWallet } from "@/hooks/use-realtime-wallet";
+
 export default function InvestorWalletPage() {
   const router = useRouter();
-  const [stats, setStats] = useState<any>(null);
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
+  const supabase = createClient();
+  const queryClient = useQueryClient();
+  const [userId, setUserId] = useState<string | undefined>(undefined);
+
   const [isAddingFunds, setIsAddingFunds] = useState(false);
   const [isWithdrawingFunds, setIsWithdrawingFunds] = useState(false);
   const [addAmount, setAddAmount] = useState("");
@@ -24,27 +28,41 @@ export default function InvestorWalletPage() {
   const [processing, setProcessing] = useState(false);
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id);
+    });
+  }, [supabase]);
 
-  async function fetchData() {
-    try {
-      const data = await getInvestorStats();
-      setStats(data);
+  // Hook for real-time wallet & transactions updates
+  useRealtimeWallet(userId);
 
-      const supabase = createClient();
-      const { data: txData } = await supabase
+  // Queries
+  const { data: stats, isLoading: loadingStats } = useQuery({
+    queryKey: ["investor-stats", userId],
+    queryFn: async () => {
+      if (!userId) return null;
+      return await getInvestorStats();
+    },
+    enabled: !!userId,
+  });
+
+  const { data: transactions = [], isLoading: loadingTx } = useQuery({
+    queryKey: ["investor-transactions", userId],
+    queryFn: async () => {
+      if (!userId) return [];
+      const { data, error } = await supabase
         .from('transactions')
-        .select('*')
+        .select('id, created_at, description, type, amount')
+        .eq('user_id', userId)
         .order('created_at', { ascending: false });
       
-      setTransactions(txData || []);
-    } catch (error) {
-      console.error("Failed to fetch wallet data:", error);
-    } finally {
-      setLoading(false);
-    }
-  }
+      if (error) throw error;
+      return data || [];
+    },
+    enabled: !!userId,
+  });
+
+  const loading = !userId || loadingStats || loadingTx;
 
   const handleAddFunds = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -69,7 +87,8 @@ export default function InvestorWalletPage() {
         });
         setAddAmount("");
         setIsAddingFunds(false);
-        fetchData(); // Refresh data
+        queryClient.invalidateQueries({ queryKey: ["investor-stats", userId] });
+        queryClient.invalidateQueries({ queryKey: ["investor-transactions", userId] });
       } else {
         toast.error("Transaction Failed", { description: result?.serverError || "An error occurred." });
       }
@@ -103,7 +122,8 @@ export default function InvestorWalletPage() {
         });
         setWithdrawAmount("");
         setIsWithdrawingFunds(false);
-        fetchData(); // Refresh data
+        queryClient.invalidateQueries({ queryKey: ["investor-stats", userId] });
+        queryClient.invalidateQueries({ queryKey: ["investor-transactions", userId] });
       } else {
         toast.error("Withdrawal Failed", { description: result?.serverError || "An error occurred." });
       }
@@ -412,7 +432,7 @@ export default function InvestorWalletPage() {
                  <p className="text-xs font-bold text-white uppercase tracking-widest">Return Momentum</p>
               </div>
               <p className="text-[10px] text-muted-foreground font-medium leading-relaxed">
-                 Your indicative portfolio return is trending at {stats?.expectedARR || '14.2'}% across your current MSME asset allocation.
+                 Your indicative portfolio return is trending at {(stats as any)?.expectedARR || '14.2'}% across your current MSME asset allocation.
               </p>
            </div>
         </div>
