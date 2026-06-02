@@ -22,8 +22,8 @@ function VerifyContent() {
             <ChevronLeft className="w-4 h-4 mr-1" /> Back to Login
           </Link>
           
-          <Link href="/">
-            <Logo className="scale-110 mb-4" />
+          <Link href="/" aria-label="Go to InvoiceFlow home">
+            <Logo variant="full" theme="dark" priority className="scale-110 mb-4" />
           </Link>
           
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
@@ -38,7 +38,7 @@ function VerifyContent() {
           </h1>
           
           <p className="text-muted-foreground text-sm max-w-sm mx-auto font-medium">
-            We've sent an 8-digit verification code to <span className="text-foreground font-bold">{email}</span>. Please enter it below to continue.
+            We&apos;ve sent an 8-digit verification code to <span className="text-foreground font-bold">{email}</span>. Please enter it below to continue.
           </p>
         </div>
 
@@ -50,7 +50,7 @@ function VerifyContent() {
 
         <div className="text-center">
           <p className="text-muted-foreground font-bold uppercase tracking-widest text-[10px]">
-            Didn't receive the code? Check your spam folder or click resend.
+            Didn&apos;t receive the code? Check your spam folder or click resend.
           </p>
         </div>
       </div>

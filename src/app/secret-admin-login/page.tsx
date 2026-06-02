@@ -51,8 +51,8 @@ export default function SecretAdminLoginPage() {
 
       <div className="w-full max-w-md space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000 relative z-10">
         <div className="flex flex-col items-center text-center space-y-4">
-          <Link href="/">
-            <Logo className="scale-110 mb-2" />
+          <Link href="/" aria-label="Go to InvoiceFlow home">
+            <Logo variant="full" theme="dark" priority className="scale-110 mb-2" />
           </Link>
           
           <div className="inline-flex items-center gap-2 rounded-full border border-primary/20 bg-primary/5 px-3 py-1.5 text-xs font-black uppercase tracking-widest text-primary backdrop-blur-xl">

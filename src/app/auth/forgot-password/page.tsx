@@ -41,8 +41,8 @@ export default function ForgotPasswordPage() {
             <ChevronLeft className="w-4 h-4 mr-1" /> Back to Login
           </Link>
           
-          <Link href="/">
-            <Logo className="scale-110 mb-4" />
+          <Link href="/" aria-label="Go to InvoiceFlow home">
+            <Logo variant="full" theme="dark" priority className="scale-110 mb-4" />
           </Link>
           
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
@@ -101,7 +101,7 @@ export default function ForgotPasswordPage() {
                 onClick={() => setSubmitted(false)}
                 className="mt-4 text-xs font-black uppercase tracking-widest text-muted-foreground hover:text-primary transition-colors"
               >
-                Didn't receive it? Try again
+                Didn&apos;t receive it? Try again
               </button>
             </div>
           )}

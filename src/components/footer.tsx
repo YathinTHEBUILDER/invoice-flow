@@ -10,7 +10,7 @@ export function Footer() {
           
           {/* Brand Col */}
           <div className="col-span-2 md:col-span-1 space-y-5 text-left">
-            <Logo className="scale-100 origin-left" />
+            <Logo variant="full" theme="dark" className="scale-100 origin-left" />
             <p className="text-xs text-neutral-400 leading-relaxed pr-4 font-normal">
               A professional receivables marketplace for invoice financing and smart supply chain finance.
             </p>

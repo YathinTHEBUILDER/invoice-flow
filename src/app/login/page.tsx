@@ -35,8 +35,8 @@ export default function LoginPage() {
       
       <div className="w-full max-w-lg space-y-8 animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="flex flex-col items-center text-center space-y-6">
-          <Link href="/">
-            <Logo className="scale-110 mb-4" />
+          <Link href="/" aria-label="Go to InvoiceFlow home">
+            <Logo variant="full" theme="dark" priority className="scale-110 mb-4" />
           </Link>
           
           <h1 className="text-3xl md:text-5xl font-bold tracking-tight text-white leading-none">
@@ -76,7 +76,7 @@ export default function LoginPage() {
 
         <div className="text-center">
           <p className="text-muted-foreground font-bold uppercase tracking-widest text-xs">
-            Don't have an account?{" "}
+            Don&apos;t have an account?{" "}
             <Link href="/get-started" className="text-primary hover:underline ml-2">
               Get Started <ArrowRight className="inline-block w-3 h-3 ml-1" />
             </Link>

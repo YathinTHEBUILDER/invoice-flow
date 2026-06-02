@@ -119,8 +119,8 @@ export default async function DashboardLayout({
       {/* Premium Sidebar */}
       <aside className="w-72 border-r border-white/5 bg-black/40 backdrop-blur-2xl hidden md:flex flex-col sticky top-0 h-screen">
         <div className="h-24 flex items-center px-8 border-b border-white/5">
-          <Link href="/" className="hover:opacity-80 transition-opacity">
-            <Logo />
+          <Link href="/" className="hover:opacity-80 transition-opacity" aria-label="Go to InvoiceFlow home">
+            <Logo variant="full" theme="dark" />
           </Link>
         </div>
         
@@ -170,7 +170,9 @@ export default async function DashboardLayout({
         <header className="h-24 border-b border-white/5 bg-background/50 backdrop-blur-xl flex items-center justify-between px-8 sticky top-0 z-50">
           <div className="flex items-center gap-4">
             <div className="md:hidden">
-              <Logo />
+              <Link href="/" aria-label="Go to InvoiceFlow home">
+                <Logo variant="mark" theme="dark" />
+              </Link>
             </div>
             <div className="hidden md:flex items-center gap-2 text-xs font-bold text-neutral-400 uppercase tracking-widest">
               <span className="text-neutral-500">InvoiceFlow</span>

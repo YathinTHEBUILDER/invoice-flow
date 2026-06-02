@@ -29,8 +29,8 @@ function GetStartedContent() {
       
       <div className="w-full max-w-4xl space-y-12 animate-in fade-in slide-in-from-bottom-8 duration-1000">
         <div className="flex flex-col items-center text-center space-y-6">
-          <Link href="/">
-            <Logo className="scale-125 mb-8" />
+          <Link href="/" aria-label="Go to InvoiceFlow home">
+            <Logo variant="full" theme="dark" priority className="scale-125 mb-8" />
           </Link>
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-none">
             Smart Setup.

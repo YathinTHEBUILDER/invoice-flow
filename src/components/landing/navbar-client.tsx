@@ -65,8 +65,8 @@ export function NavbarClient({ user }: NavbarClientProps) {
     >
       <div className="max-w-7xl mx-auto flex items-center justify-between px-4 md:px-8">
         {/* Brand Logo */}
-        <Link href="/" className="transition-all hover:opacity-90 active:scale-[0.98]">
-          <Logo />
+        <Link href="/" className="transition-all hover:opacity-90 active:scale-[0.98]" aria-label="Go to InvoiceFlow home">
+          <Logo variant="full" theme="dark" priority />
         </Link>
 
         {/* Desktop Navigation Links */}

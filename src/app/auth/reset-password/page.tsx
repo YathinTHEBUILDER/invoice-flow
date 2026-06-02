@@ -16,8 +16,8 @@ export default function ResetPasswordPage() {
             <ChevronLeft className="w-4 h-4 mr-1" /> Back to Login
           </Link>
           
-          <Link href="/">
-            <Logo className="scale-110 mb-4" />
+          <Link href="/" aria-label="Go to InvoiceFlow home">
+            <Logo variant="full" theme="dark" priority className="scale-110 mb-4" />
           </Link>
           
           <div className="flex items-center gap-3 px-4 py-2 rounded-2xl bg-white/5 border border-white/10">
@@ -32,7 +32,7 @@ export default function ResetPasswordPage() {
           </h1>
           
           <p className="text-muted-foreground text-sm max-w-sm mx-auto font-medium">
-            Please choose a strong password that you haven't used before.
+            Please choose a strong password that you haven&apos;t used before.
           </p>
         </div>
 
