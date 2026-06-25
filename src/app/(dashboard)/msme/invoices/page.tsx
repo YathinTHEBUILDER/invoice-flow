@@ -19,7 +19,7 @@ import {
   Loader2,
   Calendar
 } from "lucide-react";
-import { uploadInvoiceAction, raiseDisputeAction } from "@/app/actions/msme";
+import { uploadInvoiceAction, raiseDisputeAction, getMSMEInvoicesAction } from "@/app/actions/msme";
 import { createClient } from "@/lib/client";
 import { formatINR } from "@/lib/utils";
 import { toast } from "sonner";
@@ -59,12 +59,7 @@ export default function InvoicesPage() {
     queryKey: ["msme-invoices", userId],
     queryFn: async () => {
       if (!userId) return [];
-      const { data } = await supabase
-        .from("invoices")
-        .select("*")
-        .eq("msme_id", userId)
-        .order("created_at", { ascending: false });
-      return data || [];
+      return await getMSMEInvoicesAction();
     },
     enabled: !!userId,
   });
@@ -157,13 +152,19 @@ export default function InvoicesPage() {
       }
       toast.error("Failed to submit invoice");
     },
-    onSuccess: (result) => {
+    onSuccess: (result, newInvoiceForm, context: any) => {
       if (result.success) {
         toast.success("Invoice submitted for verification");
         setShowUploadModal(false);
         setFormData({ dueDate: "", tenure: "" });
+        const formEl = document.getElementById("invoice-upload-form") as HTMLFormElement;
+        if (formEl) formEl.reset();
       } else {
         toast.error(result.error || "Failed to submit invoice");
+        // Revert optimistic update immediately if server validation fails
+        if (context?.oldInvoices) {
+          queryClient.setQueryData(["msme-invoices", userId], context.oldInvoices);
+        }
       }
       queryClient.invalidateQueries({ queryKey: ["msme-invoices", userId] });
       queryClient.invalidateQueries({ queryKey: ["msme-stats", userId] });
@@ -424,7 +425,7 @@ export default function InvoicesPage() {
               </Button>
             </CardHeader>
             <CardContent className="p-8">
-              <form onSubmit={handleUpload} className="space-y-8">
+              <form id="invoice-upload-form" onSubmit={handleUpload} className="space-y-8">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   <div className="space-y-3">
                     <label className="text-[10px] font-bold text-white/40 uppercase tracking-wider">Invoice Number (Auto-Assigned)</label>

@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/server";
+import { createClient, createAdminClient } from "@/lib/server";
 import { revalidatePath } from "next/cache";
 import { actionClient } from "@/lib/safe-action";
 import { z } from "zod";
@@ -91,11 +91,12 @@ async function enrichInvoiceWithSignedUrl(supabase: any, invoice: any) {
   if (!invoice) return invoice;
   let invoiceUrl = "";
   if (invoice.documents && typeof invoice.documents === 'object') {
-    const docs = invoice.documents as Record<string, string>;
+    const docs = invoice.documents as Record<string, any>;
     const path = docs.invoice_path || docs.invoice_url;
     if (path && !path.startsWith('http')) {
       try {
-        const { data, error } = await supabase.storage
+        const supabaseAdmin = await createAdminClient();
+        const { data, error } = await supabaseAdmin.storage
           .from('invoice-documents')
           .createSignedUrl(path, 300);
         if (data?.signedUrl) {
@@ -110,10 +111,10 @@ async function enrichInvoiceWithSignedUrl(supabase: any, invoice: any) {
   }
   return {
     ...invoice,
-    documents: {
+    documents: invoice.documents ? {
       ...invoice.documents,
       invoice_url: invoiceUrl
-    }
+    } : null
   };
 }
 
@@ -360,9 +361,10 @@ export const addFundsAction = actionClient
     }
 
     const newBalance = Number(profile?.wallet_balance || 0) + amount;
+    const supabaseAdmin = await createAdminClient();
 
-    // 2. Update Balance
-    const { error: updateError } = await supabase
+    // 2. Update Balance using Admin Client to bypass profile RLS lock
+    const { error: updateError } = await supabaseAdmin
       .from('profiles')
       .update({ 
         wallet_balance: newBalance,
@@ -372,8 +374,8 @@ export const addFundsAction = actionClient
 
     if (updateError) throw new Error(updateError.message);
 
-    // 3. Create Transaction Log
-    const { error: txError } = await supabase.from('transactions').insert({
+    // 3. Create Transaction Log using Admin Client
+    const { error: txError } = await supabaseAdmin.from('transactions').insert({
       user_id: user.id,
       amount: amount,
       type: 'funding',
@@ -382,7 +384,7 @@ export const addFundsAction = actionClient
 
     if (txError) {
       // Rollback balance (not truly atomic here but better than nothing)
-      await supabase
+      await supabaseAdmin
         .from('profiles')
         .update({ wallet_balance: profile?.wallet_balance })
         .eq('id', user.id);

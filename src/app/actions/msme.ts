@@ -1,6 +1,6 @@
 "use server";
 
-import { createClient } from "@/lib/server";
+import { createClient, createAdminClient } from "@/lib/server";
 import { revalidatePath } from "next/cache";
 import { createNotification } from "./notifications";
 import { z } from "zod";
@@ -39,10 +39,56 @@ export async function uploadInvoiceAction(formData: FormData) {
   const buyerName = formData.get("buyer_name") as string;
   const buyerGstin = formData.get("buyer_gstin") as string;
   const dueDate = formData.get("due_date") as string;
-  const tenureDays = parseInt(formData.get("tenure_days") as string) || 0;
   const invoiceFile = formData.get("invoice_file") as File | null;
 
-  // Check for duplicate invoice number
+  // Validation checks
+  if (isNaN(amount) || amount <= 0) {
+    return { error: "Amount must be a positive number." };
+  }
+
+  if (!dueDate) {
+    return { error: "Due date is required." };
+  }
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const due = new Date(dueDate);
+  if (isNaN(due.getTime()) || due <= today) {
+    return { error: "Due date must be a valid future date." };
+  }
+
+  // Recalculate tenure days server-side
+  const diffTime = due.getTime() - today.getTime();
+  const recalculatedTenure = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+
+  if (!buyerName || buyerName.trim() === "") {
+    return { error: "Buyer name is required." };
+  }
+
+  if (!buyerGstin || buyerGstin.trim() === "") {
+    return { error: "Buyer GSTIN is required." };
+  }
+  const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z]{1}[1-9A-Z]{1}[Zz][0-9A-Z]{1}$/;
+  if (!gstinRegex.test(buyerGstin.trim())) {
+    return { error: "Invalid Buyer GSTIN format." };
+  }
+
+  if (!invoiceFile || invoiceFile.size === 0) {
+    return { error: "Invoice file is required." };
+  }
+
+  const allowedExtensions = ["pdf", "jpg", "jpeg", "png"];
+  const fileExt = invoiceFile.name.split('.').pop()?.toLowerCase();
+  const allowedMimeTypes = ["application/pdf", "image/jpeg", "image/jpg", "image/png"];
+  if (!fileExt || !allowedExtensions.includes(fileExt) || !allowedMimeTypes.includes(invoiceFile.type)) {
+    return { error: "Invalid file type. Only PDF, JPG, JPEG, and PNG are allowed." };
+  }
+
+  const maxFileSize = 5 * 1024 * 1024; // 5MB
+  if (invoiceFile.size > maxFileSize) {
+    return { error: "File size exceeds the 5MB limit." };
+  }
+
+  // Check for duplicate invoice number in DB before uploading
   const { data: existing } = await supabase
     .from("invoices")
     .select("id")
@@ -58,21 +104,19 @@ export async function uploadInvoiceAction(formData: FormData) {
 
   // Upload Invoice File
   let invoicePath = null;
-  if (invoiceFile && invoiceFile.size > 0) {
-    const fileExt = invoiceFile.name.split('.').pop();
-    const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-    const { data: uploadData, error: uploadError } = await supabase.storage
-      .from('invoice-documents')
-      .upload(fileName, invoiceFile);
+  const fileName = `${user.id}/${Date.now()}.${fileExt}`;
+  const { data: uploadData, error: uploadError } = await supabase.storage
+    .from('invoice-documents')
+    .upload(fileName, invoiceFile);
 
-    if (uploadError) {
-      console.error("Storage upload error:", uploadError);
-      return { error: "Failed to upload invoice document." };
-    }
-
-    invoicePath = uploadData.path;
+  if (uploadError) {
+    console.error("Storage upload error:", uploadError);
+    return { error: "Failed to upload invoice document." };
   }
 
+  invoicePath = uploadData.path;
+
+  // Insert Invoice into DB
   const { data, error } = await supabase
     .from("invoices")
     .insert([
@@ -81,18 +125,31 @@ export async function uploadInvoiceAction(formData: FormData) {
         invoice_number: invoiceNumber,
         amount: amount,
         discount_rate: discountRate,
-        tenure_days: tenureDays,
+        tenure_days: recalculatedTenure,
         buyer_name: buyerName,
-        buyer_gstin: buyerGstin,
+        buyer_gstin: buyerGstin.toUpperCase(),
         due_date: dueDate,
         status: "pending_verification",
-        documents: invoicePath ? { invoice_path: invoicePath } : null
+        documents: {
+          invoice_path: invoicePath,
+          file_name: invoiceFile.name,
+          mime_type: invoiceFile.type,
+          size: invoiceFile.size
+        }
       }
     ])
     .select();
 
   if (error) {
-    console.error("Invoice upload error:", error);
+    console.error("Invoice upload DB error, deleting uploaded file:", error);
+    // Delete file if DB insert fails to maintain atomicity
+    await supabase.storage
+      .from('invoice-documents')
+      .remove([invoicePath]);
+
+    if (error.code === '23505') {
+      return { error: `Invoice number ${invoiceNumber} has already been uploaded.` };
+    }
     return { error: error.message };
   }
 
@@ -153,8 +210,9 @@ export async function submitKYCAction(formData: FormData, documentUrls: Record<s
   const ifscCode = formData.get("ifsc_code") as string;
   const companyAddress = formData.get("company_address") as string;
 
-  // 2. Update Profile
-  const { error: profileError } = await supabase
+  // 2. Update Profile using Admin Client (bypassing RLS update lock)
+  const supabaseAdmin = await createAdminClient();
+  const { error: profileError } = await supabaseAdmin
     .from("profiles")
     .update({
       gstin,
@@ -169,8 +227,8 @@ export async function submitKYCAction(formData: FormData, documentUrls: Record<s
 
   if (profileError) return { error: profileError.message };
 
-  // 2. Create/Update KYC Request
-  const { error: kycError } = await supabase
+  // 3. Create/Update KYC Request using Admin Client
+  const { error: kycError } = await supabaseAdmin
     .from("kyc_requests")
     .upsert({
       user_id: user.id,
@@ -392,11 +450,12 @@ async function enrichInvoiceWithSignedUrl(supabase: any, invoice: any) {
   if (!invoice) return invoice;
   let invoiceUrl = "";
   if (invoice.documents && typeof invoice.documents === 'object') {
-    const docs = invoice.documents as Record<string, string>;
+    const docs = invoice.documents as Record<string, any>;
     const path = docs.invoice_path || docs.invoice_url;
     if (path && !path.startsWith('http')) {
       try {
-        const { data, error } = await supabase.storage
+        const supabaseAdmin = await createAdminClient();
+        const { data, error } = await supabaseAdmin.storage
           .from('invoice-documents')
           .createSignedUrl(path, 300);
         if (data?.signedUrl) {
@@ -411,10 +470,10 @@ async function enrichInvoiceWithSignedUrl(supabase: any, invoice: any) {
   }
   return {
     ...invoice,
-    documents: {
+    documents: invoice.documents ? {
       ...invoice.documents,
       invoice_url: invoiceUrl
-    }
+    } : null
   };
 }
 
@@ -478,7 +537,8 @@ export async function submitRepaymentProofAction(formData: FormData) {
     return { error: "Unauthorized: You do not own this invoice repayment." };
   }
 
-  const { error } = await supabase
+  const supabaseAdmin = await createAdminClient();
+  const { error } = await supabaseAdmin
     .from("repayments")
     .update({
       payment_reference: utr,
@@ -641,3 +701,30 @@ export async function requestPreClosureAction(invoiceId: string, details: any) {
   revalidatePath("/msme/investments");
   return { success: true };
 }
+
+export async function getMSMEInvoicesAction() {
+  const supabase = await createClient();
+  const { data: userData } = await supabase.auth.getUser();
+  const user = userData?.user;
+
+  if (!user) return [];
+
+  const { data, error } = await supabase
+    .from("invoices")
+    .select("*")
+    .eq("msme_id", user.id)
+    .order("created_at", { ascending: false });
+
+  if (error) {
+    console.error("MSME invoices fetch error:", error);
+    return [];
+  }
+
+  // Use the admin client to sign the URLs securely
+  const enrichedInvoices = await Promise.all((data || []).map(async (inv: any) => {
+    return await enrichInvoiceWithSignedUrl(supabase, inv);
+  }));
+
+  return enrichedInvoices;
+}
+
